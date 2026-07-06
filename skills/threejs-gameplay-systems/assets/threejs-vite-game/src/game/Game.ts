@@ -9,6 +9,7 @@ import { CameraRig } from '../systems/CameraRig';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { DebugTools, type DebugTuning } from '../systems/DebugTools';
 import { Hud } from '../systems/Hud';
+import { createSeededRandom } from '../utils/random';
 
 const ARENA: ArenaBounds = {
   halfWidth: 11,
@@ -45,6 +46,11 @@ export class Game {
   private score = 0;
   private elapsed = 0;
   private complete = false;
+  // Route ALL gameplay randomness through this.rng (never Math.random) so the
+  // seed() test hook keeps screenshot baselines and bot playtests deterministic.
+  private rng = createSeededRandom(1);
+  private pausedForScreenshot = false;
+  private reducedMotion = false;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     this.renderer = createRenderer(canvas);
@@ -64,6 +70,7 @@ export class Game {
     this.hud.setTarget(this.pickups.length);
     this.cameraRig.snapTo(this.player.group.position);
     resizeRenderer(this.renderer, this.camera, this.tuning.maxDpr);
+    this.installTestHooks();
     this.publishDiagnostics();
   }
 
@@ -80,17 +87,25 @@ export class Game {
     this.player.dispose();
     this.renderer.dispose();
     window.__THREE_GAME_DIAGNOSTICS__ = undefined;
+    window.__THREE_GAME_TEST_HOOKS__ = undefined;
   }
 
   private update(delta: number, elapsed: number): void {
     this.frame += 1;
+    if (this.pausedForScreenshot) {
+      this.publishDiagnostics();
+      return;
+    }
     if (!this.complete) this.elapsed += delta;
 
     resizeRenderer(this.renderer, this.camera, this.tuning.maxDpr);
-    this.player.update(delta, elapsed, this.input, this.tuning, ARENA);
+    // Reduced motion freezes ambient animation time so screenshots are stable.
+    const animDelta = this.reducedMotion ? 0 : delta;
+    const animElapsed = this.reducedMotion ? 0 : elapsed;
+    this.player.update(delta, animElapsed, this.input, this.tuning, ARENA);
 
     for (const pickup of this.pickups) {
-      pickup.update(delta, elapsed);
+      pickup.update(animDelta, animElapsed);
     }
 
     const collected = this.collision.collectPickups(this.player.group.position, this.pickups, 0.55);
@@ -236,6 +251,55 @@ export class Game {
     const texture = new THREE.CanvasTexture(textureCanvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     return texture;
+  }
+
+  private installTestHooks(): void {
+    // Deterministic hooks consumed by tests/visual-regression.template.ts and
+    // bot playtests. Keep these real when evolving the game: silent no-op hooks
+    // produce flaky screenshot baselines.
+    window.__THREE_GAME_TEST_HOOKS__ = {
+      seed: (value: number) => {
+        this.rng = createSeededRandom(value);
+      },
+      setState: (name: string) => {
+        if (name === 'active-play') this.resetRun();
+        else if (name === 'complete') this.completeRun();
+        else console.warn(`Unknown test state: ${name}`);
+      },
+      setPausedForScreenshot: (paused: boolean) => {
+        this.pausedForScreenshot = paused;
+      },
+      setReducedMotion: (enabled: boolean) => {
+        this.reducedMotion = enabled;
+      },
+      hideDebugUi: (hidden: boolean) => {
+        this.debugTools.setHidden(hidden);
+      },
+    };
+  }
+
+  private resetRun(): void {
+    this.score = 0;
+    this.elapsed = 0;
+    this.complete = false;
+    this.player.group.position.set(0, this.player.group.position.y, 0);
+    this.player.velocity.set(0, 0, 0);
+    for (const pickup of this.pickups) {
+      pickup.reset();
+      pickup.group.rotation.y = this.rng() * Math.PI * 2;
+    }
+    this.cameraRig.snapTo(this.player.group.position);
+    this.hud.setTarget(this.pickups.length);
+    this.hud.update(this.score, this.pickups.length, this.elapsed, this.complete);
+  }
+
+  private completeRun(): void {
+    for (const pickup of this.pickups) {
+      if (pickup.active) pickup.collect();
+    }
+    this.score = this.pickups.length;
+    this.complete = true;
+    this.hud.update(this.score, this.pickups.length, this.elapsed, this.complete);
   }
 
   private publishDiagnostics(): void {

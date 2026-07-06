@@ -11,6 +11,7 @@ Generate images using Google's Gemini image API.
 
 Usage:
     uv run generate_image.py --prompt "your image description" --filename "output.png" [--resolution 1K|2K|4K] [--api-key KEY]
+    uv run generate_image.py probe   # prints GEMINI_API_KEY=SET|MISSING and exits
 """
 
 import argparse
@@ -26,7 +27,17 @@ def get_api_key(provided_key: str | None) -> str | None:
     return os.environ.get("GEMINI_API_KEY")
 
 
+def cmd_probe() -> None:
+    """Print the SET|MISSING credential contract line used by skip rules and audits."""
+    status = "SET" if os.environ.get("GEMINI_API_KEY") else "MISSING"
+    print(f"GEMINI_API_KEY={status}")
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "probe":
+        cmd_probe()
+        return
+
     parser = argparse.ArgumentParser(
         description="Generate images using Google's Gemini image API"
     )
@@ -47,8 +58,9 @@ def main():
     parser.add_argument(
         "--resolution", "-r",
         choices=["1K", "2K", "4K"],
-        default="1K",
-        help="Output resolution: 1K (default), 2K, or 4K"
+        default=None,
+        help="Output resolution: 1K, 2K (default for generation), or 4K; "
+             "when editing, defaults to match the input image size"
     )
     parser.add_argument(
         "--api-key", "-k",
@@ -87,7 +99,7 @@ def main():
             print(f"Loaded input image: {args.input_image}")
 
             # Auto-detect resolution if not explicitly set by user
-            if args.resolution == "1K":  # Default value
+            if output_resolution is None:
                 # Map input image size to resolution
                 width, height = input_image.size
                 max_dim = max(width, height)
@@ -101,6 +113,8 @@ def main():
         except Exception as e:
             print(f"Error loading input image: {e}", file=sys.stderr)
             sys.exit(1)
+    if output_resolution is None:
+        output_resolution = "2K"  # production reference default per SKILL.md
 
     # Build contents (image first if editing, prompt only if generating)
     if input_image:
@@ -140,15 +154,26 @@ def main():
 
                 image = PILImage.open(BytesIO(image_data))
 
-                # Ensure RGB mode for PNG (convert RGBA to RGB with white background if needed)
-                if image.mode == 'RGBA':
-                    rgb_image = PILImage.new('RGB', image.size, (255, 255, 255))
-                    rgb_image.paste(image, mask=image.split()[3])
-                    rgb_image.save(str(output_path), 'PNG')
-                elif image.mode == 'RGB':
-                    image.save(str(output_path), 'PNG')
+                suffix = output_path.suffix.lower()
+                if suffix in {".jpg", ".jpeg"}:
+                    # JPEG has no alpha channel: flatten onto white
+                    if image.mode in ("RGBA", "LA", "P"):
+                        rgba = image.convert("RGBA")
+                        flat = PILImage.new("RGB", rgba.size, (255, 255, 255))
+                        flat.paste(rgba, mask=rgba.split()[3])
+                        flat.save(str(output_path), "JPEG", quality=92)
+                    else:
+                        image.convert("RGB").save(str(output_path), "JPEG", quality=92)
                 else:
-                    image.convert('RGB').save(str(output_path), 'PNG')
+                    # PNG supports alpha: preserve it (logos/icons/UI/decals need transparency)
+                    if image.mode not in ("RGB", "RGBA"):
+                        has_alpha = "A" in image.mode or (
+                            image.mode == "P" and "transparency" in image.info
+                        )
+                        image = image.convert("RGBA" if has_alpha else "RGB")
+                    image.save(str(output_path), "PNG")
+                    if image.mode == "RGBA":
+                        print("Alpha channel preserved (RGBA PNG).")
                 image_saved = True
         
         if image_saved:

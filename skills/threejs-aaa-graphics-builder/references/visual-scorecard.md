@@ -2,6 +2,18 @@
 
 Score active-play screenshots, not idle title screens or isolated showroom models. Use desktop and mobile screenshots when mobile is in scope.
 
+Scores are self-assessed against the anchors below, so they drift optimistic. Two countermeasures are mandatory for premium/AAA/showcase claims: cite Measured Evidence for the categories it supports, and run the Fresh-Eyes Review before finalizing.
+
+## Calibration Anchors
+
+Reference screenshots for score calibration are packaged in `threejs-aaa-graphics-builder/assets/scorecard-anchors/`:
+
+- `scene-1.jpg` — score ~1: primitive player and pickups on a flat sparse arena, utility HUD.
+- `scene-2.jpg` — score ~2: authored track kit, imported hero asset, designed genre HUD, intentional lighting.
+- `scene-3.jpg` — score ~2.5-3: dense layered world in active play, readable hero silhouette, event VFX, cohesive HUD.
+
+Before scoring World/environment, Hero/player, Materials/textures, or Lighting/render, view the anchors and compare: if your screenshot reads closer to `scene-1.jpg` than `scene-3.jpg` for that surface, the category is at most a 1-2 regardless of how much code was written.
+
 ## Scoring Scale
 
 - 0: Placeholder. Default primitives, sparse world, unreadable state, debug UI, or no evidence.
@@ -94,6 +106,23 @@ Any of these prevents a premium/AAA/showcase claim:
 - No renderer diagnostics were collected after major graphics work.
 - No technical-art budget or imported/generated asset diagnostics were reported for premium graphics work.
 
+## Measured Evidence
+
+Run the canvas inspector (`npm run inspect:canvas`, or `threejs-qa-release/scripts/inspect-threejs-canvas.mjs`) on desktop and mobile and cite its `metrics` and `renderBudget` blocks in the scorecard. The numbers are advisory signals, not gates, but they must be reported and low values must be explained rather than ignored:
+
+- `colorEntropyBits` below ~3.0 or `dominantColorShare` above ~0.6 suggests a sparse, flat scene — supporting evidence against World/environment or Materials/textures scores above 2.
+- `edgeDensity` below ~0.04 suggests primitive-dominant or empty framing — supporting evidence against World/environment and Hero/player scores above 2.
+- `luminance.contrast` below ~60 suggests fog/darkness compression — supporting evidence against Lighting/render scores above 2.
+- `renderBudget` rows over the tier budget require a documented tradeoff in the technical-art budget (see `references/technical-art.md`).
+- Renderer diagnostics (calls, triangles, geometries, textures) back the Performance evidence category.
+
+## Fresh-Eyes Review
+
+The builder must not be the only grader. For premium/AAA/showcase claims:
+
+- If the runner supports subagents (Task tool or equivalent), spawn a reviewer with ONLY: the active-play screenshots, this scorecard file, and the inspector metrics JSON. No build context, no prior scores. The reviewer fills the scorecard independently; reconcile by taking the lower score per category unless concrete evidence overturns it. Report both score sets.
+- If subagents are unavailable, run an adversarial self-review before finalizing: for each category, write one sentence making the strongest case that the score is a 1, citing what is visible in the screenshot; only then assign the score. Include these sentences in the report.
+
 ## Report Format
 
 ```text
@@ -108,6 +137,9 @@ Visual scorecard:
 - VFX/motion: before X / after Y - evidence:
 - UI/HUD: before X / after Y - evidence:
 - Performance evidence: before X / after Y - evidence:
+Measured evidence: colorEntropyBits / edgeDensity / luminance.contrast /
+  dominantColorShare per viewport, renderer diagnostics, render budget rows
+Fresh-eyes review: subagent scores or adversarial self-review notes
 Average:
 Automatic failures remaining:
 ```

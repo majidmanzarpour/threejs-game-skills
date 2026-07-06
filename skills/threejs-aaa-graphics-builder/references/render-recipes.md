@@ -42,10 +42,11 @@ Avoid many unmeasured dynamic lights. Prefer baked-looking material/emissive cue
 
 ## Materials
 
+Define material roles with the material kit in `references/technical-art.md` (`MeshStandardMaterial` for most surfaces, `MeshPhysicalMaterial` only where the premium feature is visible). At render time:
+
 - Prefer material contrast before post effects: matte vs glossy, metal vs plastic, transparent vs opaque, bright trim vs dark contact.
-- Use `MeshStandardMaterial` for most objects and `MeshPhysicalMaterial` only where the premium feature is visible.
 - Use emissive maps or small emissive parts for signals instead of making entire objects glow.
-- Match material roles across UI and world: danger, reward, shield, boost, objective.
+- Keep material roles matched across UI and world: danger, reward, shield, boost, objective.
 
 ## Fog, Background, And Depth
 
@@ -69,16 +70,7 @@ Always compare screenshots with post enabled/disabled and profile the cost.
 
 ## Event-Driven VFX
 
-Tie effects to state:
-
-- Boost: engine cones, trail ribbons, FOV ease, side streaks, audio pitch.
-- Pickup: ring snap, shard particles, score line to HUD, short light pulse.
-- Hit: impact ring, debris, damage flash, brief hit pause, camera impulse.
-- Near miss/combo: edge spark, badge pulse, streak counter animation.
-- Shield: shell mesh, rim pulse, absorbed impact ripple.
-- Spawn/despawn: anticipation pulse, telegraph, dissolve or scale snap.
-
-Pool effects and reuse geometries/materials. Permanent particle fields should be cheap and sparse.
+Tie effects to state using the event-driven VFX language in `references/technical-art.md` (pickup, hit/fail, boost/speed, near miss/combo, shield/invulnerable, spawn/despawn). Pool effects, reuse geometries/materials, and keep permanent particle fields cheap and sparse.
 
 ## Readability Checks
 
@@ -93,14 +85,6 @@ During active play, confirm:
 
 ## Performance Checks
 
-After render changes, report:
-
-- FPS/frame time if available.
-- Draw calls.
-- Triangles.
-- Geometries, textures, and materials.
-- Composer/post passes.
-- Shadow casters and shadow map settings.
-- DPR cap and mobile notes.
+After render changes, report the renderer diagnostics from `references/technical-art.md` (calls, triangles, geometries, textures, materials, DPR/post/shadow settings), plus FPS/frame time and composer/post pass count when available.
 
 If performance drops, reduce post/shadow cost first, then cull/LOD/instance, then reduce asset density only where it is least visible.

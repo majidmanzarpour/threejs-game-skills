@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Game UI Designer"
   short_description: "Design premium Three.js game UI"
-  default_prompt: "Redesign this Three.js game's HUD and menus so they are polished, readable, responsive, and genre-specific. First load the UI patterns reference, report the reference ledger, and include UI state, text-fit, safe-area, and touch-target evidence."
+  default_prompt: "Load threejs-game-ui-designer/SKILL.md (try ~/.codex/skills/threejs-game-ui-designer/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly. Non-negotiables: load the UI patterns reference first; report the reference ledger plus UI state, text-fit, safe-area, and touch-target evidence."

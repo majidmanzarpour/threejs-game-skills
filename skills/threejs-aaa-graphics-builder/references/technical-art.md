@@ -22,31 +22,48 @@ Before implementation, write:
 
 ## Render Budget Starting Points
 
-These are not universal limits. Use them as a starting contract, then measure on the target game:
+These are starting contracts, not universal limits — measure on the target game, and document every deliberate overrun as a tradeoff. The canvas inspector (`npm run inspect:canvas`) compares live diagnostics against the same numbers and reports over-budget rows.
 
-- Draw calls: keep active-play calls low; repeated world/detail pieces should be instanced or merged by material.
+| Metric (worst active-play view) | Desktop tier | Mobile tier |
+| --- | --- | --- |
+| Draw calls (`info.render.calls`) | <= 300 | <= 150 |
+| Triangles (`info.render.triangles`) | <= 750k | <= 300k |
+| Geometries (`info.memory.geometries`) | <= 300 | <= 200 |
+| Textures (`info.memory.textures`) | <= 60 | <= 40 |
+| Texture memory (est.) | <= 256 MB | <= 128 MB |
+| Shadow-casting lights | <= 2 | 1 |
+| Shadow map size | <= 2048 | <= 1024 |
+| DPR cap | 2 | 1.5-2 |
+| Post passes (beyond render+output) | <= 2 | 0-1 |
+
+How to spend within them:
+
+- Draw calls: repeated world/detail pieces should be instanced or merged by material.
 - Triangles: spend on silhouettes near the camera; reduce background detail through LOD, impostors, or simplified meshes.
 - Materials: share material roles aggressively. Unique material count often grows faster than geometry count.
 - Textures: keep opaque large images compressed or small; avoid unique 2K+ textures for tiny repeated props.
-- DPR: cap for mobile/high-density displays before deleting all art.
-- Shadows: reserve real shadows for hero objects and grounding anchors; use blob/contact meshes for small repeated props.
-- Post: every pass must earn its cost and preserve gameplay clarity.
+- Shadows: reserve real shadows for hero objects and grounding anchors; use blob/contact meshes for small repeated props (see `references/shader-cookbook.md` for the cheap contact-shadow recipe).
+- Post: every pass must earn its cost and preserve gameplay clarity; concrete chain settings are in `references/shader-cookbook.md`.
 
 Always report actual renderer diagnostics after the graphics pass: calls, triangles, geometries, textures, material count if available, post passes, shadow settings, DPR cap, and bottlenecks.
 
 ## Material And Shader System
 
-Use a material kit:
+Use a material kit of named shared roles, not one-off colors. Reuse each role across every mesh that plays the same part:
 
-- Body primary/secondary.
-- Trim and edge highlights.
-- Hazard/damage.
-- Reward/value.
-- Shield/boost/status.
-- Glass/lens/cockpit.
-- Ground/contact.
-- Decal dark/light.
-- UI/world shared signal colors.
+- `bodyPrimary`: dominant player/world shell.
+- `bodySecondary`: panel contrast.
+- `trim`: rails, bevel highlights, borders, edge highlights.
+- `hazard`: danger surfaces, damage cues, warning stripes.
+- `reward`: collectible surfaces with readable value.
+- `shieldBoost`: shield, boost, and status states.
+- `glass`: cockpit, shield, lens, visor.
+- `emissiveSignal`: authored glow strips, status lights, beacon cores.
+- `groundContact`: dark matte surfaces and shadow receivers.
+- `decalDark` and `decalLight`: panel lines, scratches, numbers, icons.
+- UI/world signal colors shared between HUD and diegetic markers.
+
+Use `MeshStandardMaterial` for most surfaces. Use `MeshPhysicalMaterial` selectively for cockpit glass, clearcoat panels, iridescent shields, or premium hero details. Share materials across repeated meshes.
 
 Shader or `onBeforeCompile` work must have a reason:
 
@@ -55,7 +72,7 @@ Shader or `onBeforeCompile` work must have a reason:
 - Performance: cheap procedural variation instead of many textures.
 - Composition: separating player/threat/reward from background.
 
-Reject shader work that only adds noise, bloom bait, or hidden cost without improving active-play decisions.
+Reject shader work that only adds noise, bloom bait, or hidden cost without improving active-play decisions. When shader work is justified, use the proven recipes in `references/shader-cookbook.md` (material values, onBeforeCompile patterns, sky, post chain) instead of improvising GLSL.
 
 ## VFX Readability
 
@@ -71,11 +88,14 @@ Every VFX effect must answer:
 
 Use event-driven VFX over permanent particle clutter:
 
-- Pickup: short burst, collection line, HUD echo.
-- Hit/fail: impact ring, debris, short camera impulse, state flash.
-- Boost: trail, FOV ease, speed lines, audio pitch hook.
-- Spawn: anticipation pulse and telegraph.
-- Shield: rim pulse and absorbed-impact ripple.
+- Pickup: ring contraction, shard burst, score trail, brief HUD echo.
+- Hit/fail: impact ring, debris, damage flash, brief hit pause, camera impulse.
+- Boost/speed: engine trail, lane streaks, FOV ease, side streaks, audio pitch.
+- Near miss/combo: side spark, line snap, badge pulse, streak counter.
+- Shield/invulnerable: refractive shell, rim pulse, absorbed-impact ripple, material swap.
+- Spawn/despawn: anticipation pulse, telegraph, dissolve or scale snap.
+
+Pool effects and reuse geometries/materials. Permanent particle fields must stay cheap and sparse.
 
 ## Instancing, LOD, And Culling
 

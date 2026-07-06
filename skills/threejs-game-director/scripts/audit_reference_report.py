@@ -13,14 +13,18 @@ BASE_REQUIRED = [
     "skill-loading ledger",
     "reference ledger",
     "phase ledger",
-    "game design brief",
-    "core loop",
-    "level/encounter plan",
     "gameplay systems",
     "aaa graphics",
     "ui",
     "debug/profile",
     "qa/release",
+]
+
+# Required by default; skip with --no-design for debug/perf/QA-only reports.
+DESIGN_REQUIRED = [
+    "game design brief",
+    "core loop",
+    "level/encounter plan",
 ]
 
 PHYSICS_MARKERS = [
@@ -40,6 +44,8 @@ PREMIUM_SCORECARD = [
     "vfx/motion",
     "ui/hud",
     "performance evidence",
+    "measured evidence",
+    "fresh-eyes review",
     "average",
     "automatic failures",
 ]
@@ -142,11 +148,25 @@ def normalize(text: str) -> str:
     text = text.replace("qa and release", "qa/release")
     text = text.replace("qa release", "qa/release")
     text = text.replace("page errors", "page error")
+    text = text.replace("fresh eyes review", "fresh-eyes review")
+    text = text.replace("fresh-eyes scorecard review", "fresh-eyes review")
+    text = text.replace("independent reviewer scores", "fresh-eyes review")
+    text = text.replace("adversarial self-review", "fresh-eyes review")
+    text = text.replace("measured visual evidence", "measured evidence")
+    text = text.replace("inspector metrics", "measured evidence")
     return re.sub(r"\s+", " ", text)
 
 
+def marker_pattern(marker: str) -> re.Pattern[str]:
+    """Match markers on word boundaries so short markers like 'ui' cannot be
+    satisfied incidentally by substrings of unrelated words (e.g. 'build')."""
+    prefix = r"\b" if re.match(r"\w", marker) else ""
+    suffix = r"\b" if re.search(r"\w$", marker) else ""
+    return re.compile(prefix + re.escape(marker) + suffix)
+
+
 def missing_markers(text: str, markers: list[str]) -> list[str]:
-    return [marker for marker in markers if marker not in text]
+    return [marker for marker in markers if not marker_pattern(marker).search(text)]
 
 
 def has_external_output_evidence(text: str) -> bool:
@@ -187,6 +207,11 @@ def main() -> int:
         action="store_true",
         help="Require generated/integrated audio evidence or a real blocker.",
     )
+    parser.add_argument(
+        "--no-design",
+        action="store_true",
+        help="Skip game-design markers (design brief, core loop, level/encounter plan) for debug/perf/QA-only reports.",
+    )
     args = parser.parse_args()
 
     report_path = Path(args.report)
@@ -196,6 +221,8 @@ def main() -> int:
 
     text = normalize(report_path.read_text(encoding="utf-8"))
     missing = missing_markers(text, BASE_REQUIRED)
+    if not args.no_design:
+        missing.extend(missing_markers(text, DESIGN_REQUIRED))
 
     if args.premium:
         missing.extend(missing_markers(text, PREMIUM_SCORECARD))

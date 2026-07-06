@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Gameplay Systems"
   short_description: "Design and build playable Three.js systems"
-  default_prompt: "Create or improve this Three.js game's design brief, core loop, level/encounter plan, playable loop, architecture, mechanics, controls, camera, difficulty, and feel with browser verification. First load the gameplay workflows reference and the game design/level design reference when broad gameplay is in scope. Report the reference ledger, design brief, level plan, tuning notes, and gameplay checklist outcome."
+  default_prompt: "Load threejs-gameplay-systems/SKILL.md (try ~/.codex/skills/threejs-gameplay-systems/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly, including its reference-loading rules and reference ledger. Non-negotiables: design brief, core loop contract, and level/encounter plan before broad implementation; verify through build, browser, and one real input path; report the reference ledger and checklist outcomes."

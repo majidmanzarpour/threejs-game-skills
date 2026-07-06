@@ -33,12 +33,12 @@ action.play();
 mixer.update(deltaSeconds);
 ```
 
-Animation intake notes:
+Animation intake notes (the underlying Tripo API behavior and prohibitions — NlaTrack naming, batched-vs-single retarget, `animate_in_place` corruption — are documented canonically in `api-notes.md`; this section is the engine-side fix):
 
 - A batched retarget returns ONE GLB whose clips are named `NlaTrack`, `NlaTrack.001`, … in request order. The names carry no meaning: map clips to presets by index against the order you requested, rename them after load (`clip.name = 'walk'`), then select by your own names.
 - Log `gltf.animations.map(c => `${c.name} ${c.tracks.length} tracks`)` after load. A healthy humanoid clip drives many bones; clips with only a handful of tracks mean the upstream auto-rig was degenerate — fix the rig, not the runtime.
 - Do NOT strip or neutralize twist-bone tracks (`UpperarmTwist`, `ForearmTwist`, …) on v1.0 rigs: Tripo skins most of the limb mesh to the twist bones, and their baked values differ greatly from the GLB rest pose — removing the tracks collapses the limbs into the torso. Tripo's slightly open, palm-forward hands are the preset house style, not corruption.
-- Never retarget with `animate_in_place=true` (it corrupts the bake — mirrored limbs, exploded skinning). Convert to in-place at import instead, and do it precisely:
+- Never retarget with `animate_in_place=true` (see `api-notes.md` for why it corrupts the bake). Convert to in-place at import instead, and do it precisely:
   - Touch ONLY the top root bone's position track (`Root.position`). Tripo FBX clips bake position tracks on EVERY bone with values that differ from FBXLoader's rest transforms; filtering Hip/Pelvis or pattern-matching broadly collapses the skeleton into a hunch.
   - Zero the HORIZONTAL components only — keep Y. Vertical root motion IS the animation for jumps (and the bob in gaits); deleting the whole track turns a jump into grounded hand-waving.
 

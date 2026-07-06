@@ -38,20 +38,7 @@ Use `threejs-3d-generator` when generated model fidelity will materially improve
 
 For premium hero surfaces, procedural-only is not a valid final choice unless a real blocker is recorded: missing key from the credential probe, API/network/quota error after an attempted command, user requested no external assets, or offline-only constraint. Repeated low-value props can stay procedural.
 
-Asset sourcing ledger:
-
-```text
-External asset sourcing:
-- Credential probe output:
-- Hero/player:
-- Enemies/vehicles/weapons:
-- Signature props/pickups:
-- World/sky/background:
-- Materials/textures/decals:
-- Logos/icons/GUI art:
-- Chosen sources per surface: procedural / threejs-image-generator / threejs-3d-generator / hybrid
-- External assets generated: yes/no, task IDs/paths or allowed skip reason:
-```
+Fill the external asset sourcing ledger before the graphics phase using the canonical template in `threejs-game-director/references/phase-playbook.md` (Ledger Templates). It records the credential probe output, the chosen source per surface (procedural / `threejs-image-generator` / `threejs-3d-generator` / hybrid), and the generated outputs or allowed blocker for each surface.
 
 ## Production Surfaces
 
@@ -71,32 +58,13 @@ For imported generated 3D assets, also require downloaded GLB/PBR output, import
 
 ## Technical Art Contract
 
-Before broad implementation, define:
-
-- Hero surfaces that deserve the highest detail.
-- Support surfaces that should be procedural, instanced, culled, or simplified.
-- Render budget target: draw calls, triangles, textures, materials, DPR cap, shadow/post budget.
-- Material kit roles and shader/VFX purpose.
-- Instancing/LOD/culling plan.
-- Imported/generated asset cleanup plan.
+Before broad implementation, write the technical art brief and render budget from `references/technical-art.md`: hero vs support surfaces, render budget target, material kit roles, shader/VFX purpose, instancing/LOD/culling plan, and imported asset cleanup. Treat that brief as part of this graphics architecture.
 
 Do not add costly effects until this contract exists. A technical-art pass should make the scene more authored and more measurable at the same time.
 
 ## Material Library
 
-Create named material roles instead of one-off colors:
-
-- `bodyPrimary`: dominant player/world shell.
-- `bodySecondary`: panel contrast.
-- `trim`: rails, bevel highlights, borders.
-- `hazard`: danger surfaces, damage cues, warning stripes.
-- `reward`: collectible surfaces with readable value.
-- `glass`: cockpit, shield, lens, visor.
-- `emissiveSignal`: authored glow strips, status lights, beacon cores.
-- `groundContact`: dark matte surfaces and shadow receivers.
-- `decalDark` and `decalLight`: panel lines, scratches, numbers, icons.
-
-Use `MeshStandardMaterial` for most surfaces. Use `MeshPhysicalMaterial` selectively for cockpit glass, clearcoat panels, iridescent shields, or premium hero details. Share materials across repeated meshes.
+Implement the named material-role kit defined in `references/technical-art.md` (`bodyPrimary`, `bodySecondary`, `trim`, `hazard`, `reward`, `glass`, `emissiveSignal`, `groundContact`, `decalDark`/`decalLight`, plus shared UI/world signal colors) in `src/assets/MaterialLibrary.ts`. Create named roles instead of one-off colors and share materials across repeated meshes.
 
 ## Procedural Texture And Decal Kit
 
@@ -161,21 +129,12 @@ Own renderer setup in one place:
 
 ## VFX System
 
-Effects should be event-driven, pooled, and readable:
-
-- Pickup: ring contraction, shard burst, score trail, brief HUD echo.
-- Hit/fail: impact flash, debris, camera impulse, temporary slow/hit pause.
-- Boost/speed: engine trail, lane streaks, FOV ease, audio pitch.
-- Near miss/combo: side spark, line snap, badge pulse.
-- Shield/invulnerable: refractive shell, rim pulse, material swap.
-
-Avoid permanent particle clutter. Effects must clarify state.
+Implement the event-driven VFX language from `references/technical-art.md` in `src/systems/VfxSystem.ts`. Effects should be pooled, readable, and tied to state; they must clarify state instead of adding permanent particle clutter.
 
 ## Diagnostics
 
-Expose or log:
+Own diagnostics in `src/systems/QualityDiagnostics.ts`. Report the renderer diagnostics defined in `references/technical-art.md` (calls, triangles, geometries, textures, material count, DPR/post/shadow settings), plus these architecture-specific counts:
 
-- Renderer calls, triangles, geometries, textures.
 - Scene mesh count, instanced mesh count, unique materials/geometries/textures.
 - Approximate visible prop counts by layer.
 - Screenshot paths and visual scorecard.
@@ -183,13 +142,7 @@ Expose or log:
 
 ## Browser Game Budgets
 
-Budgets vary by game and device, but start with explicit targets:
-
-- Keep draw calls low through instancing and shared materials.
-- Prefer many small details through instanced meshes over many unique mesh/material pairs.
-- Cap DPR before removing all visual detail.
-- Use LOD or distance culling for background props.
-- Measure after every major graphics pass.
+Use the render budget starting points and instancing/LOD/culling guidance in `references/technical-art.md`, then measure on the target game after every major graphics pass.
 
 ## Implementation Order
 

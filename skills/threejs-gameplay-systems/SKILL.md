@@ -1,6 +1,6 @@
 ---
 name: threejs-gameplay-systems
-description: "Build and iterate playable Three.js game systems. Combines starter scaffold creation, architecture, game design, level design, gameplay implementation, combat/encounter design, and game-feel tuning. Use for first playable slices, new Vite/TypeScript/Three.js game setup, design briefs, core loops, level/arena/track/wave/hole/puzzle design, game loops, entity systems, input, collision/physics, scoring, objectives, audio hooks, camera, controls, difficulty, feedback, and maintainable structure."
+description: "Build and iterate playable Three.js game systems. Combines starter scaffold creation, architecture, game design, level design, gameplay implementation, combat/encounter design, and game-feel tuning (hitstop, screenshake, easing, impact feedback). Use for first playable slices, new Vite/TypeScript/Three.js game setup, design briefs, core loops, level/arena/track/wave/hole/puzzle design, game loops, entity systems, input, collision/physics, scoring, objectives, audio hooks, camera, controls, difficulty, feedback, juice, and maintainable structure."
 ---
 
 # Three.js Gameplay Systems
@@ -19,11 +19,15 @@ Load `references/gameplay-workflows.md` as the first action when the task includ
 
 Load `references/game-design-level-design.md` before broad new-game creation, major gameplay changes, level/arena/track/wave/hole/puzzle design, combat/encounter design, progression/difficulty work, or any claim that gameplay is premium, polished, complete, or less generic.
 
-Load `references/physics-engine-selection.md` before adding or changing physics, collision-heavy gameplay, vehicle movement, rolling balls, mini-golf, pool/snooker, pinball, rigid-body puzzles, character controllers, sensors, high-speed projectiles, moving platforms, or physics QA. Track both references in a reference ledger with yes/no, path, and failure reason. Do not mark the gameplay phase complete while a required reference is skipped.
+Load `references/physics-engine-selection.md` before adding or changing physics, collision-heavy gameplay, vehicle movement, rolling balls, mini-golf, pool/snooker, pinball, rigid-body puzzles, character controllers, sensors, high-speed projectiles, moving platforms, or physics QA.
+
+Load `references/game-feel.md` before feel/juice/impact tuning, or before claiming gameplay is premium or polished. Track every loaded reference in a reference ledger with yes/no, path, and failure reason. Do not mark the gameplay phase complete while a required reference is skipped.
 
 Load `references/checklists/new-game-definition-of-done.md` before claiming a new game or first playable slice is complete.
 
 Load `references/checklists/game-design-level-design.md` before claiming a new game, major gameplay upgrade, level/encounter pass, premium gameplay, or polished gameplay is complete.
+
+Load `references/checklists/game-feel.md` before claiming feel/impact tuning or premium gameplay is complete.
 
 Load `references/checklists/endless-runner-premium-quality.md` for endless runner work.
 
@@ -37,7 +41,7 @@ Load `threejs-audio-generator` when implementing real SFX, ambience, UI sounds, 
 4. Define the level/encounter plan before implementation: start, first decision, first threat, first reward, landmarks, escalation, recovery beats, readability, and tuning knobs.
 5. Choose small architecture boundaries: `core`, `game`, `entities`, `systems`, `assets`, `ui`, `tests`.
 6. Implement mechanics in playable increments: input, state, entity, collision/physics, feedback, HUD/audio hook, diagnostics.
-7. Tune feel: movement, acceleration, camera follow/FOV/shake, impact, cooldowns, difficulty, restart loop.
+7. Tune feel with `references/game-feel.md`: movement, acceleration, camera follow/FOV/shake, hitstop, impact feedback, cooldowns, difficulty, restart loop.
 8. Keep hot paths allocation-light and update order explicit.
 9. Verify with build, browser, screenshot, canvas pixels, console/page errors, and one real input path.
 
@@ -54,10 +58,7 @@ The script copies `assets/threejs-vite-game/`, rewrites the project name in `pac
 ## Library Guidance
 
 - Use TypeScript, Vite, Three.js modules.
-- Custom collision for simple arcade triggers and pickups.
-- Rapier is the default robust physics engine for serious Three.js browser games with rigid bodies, sensors, balls, ramps, many contacts, or high-speed collisions.
-- Use `cannon-es` only as a lightweight JS fallback for small/simple rigid-body scenes.
-- Use custom collision when authored arcade feel is more important than simulation.
+- Physics/collision engine choice (custom collision vs Rapier vs cannon-es), timestep, and collider strategy: follow `references/physics-engine-selection.md`.
 - `lil-gui` for live-tuned constants when useful.
 - Web Audio for runtime playback and procedural feedback; `threejs-audio-generator` for generated game audio assets.
 

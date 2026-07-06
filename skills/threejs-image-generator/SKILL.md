@@ -11,6 +11,8 @@ Create game-useful 2D assets and references for Three.js projects. This skill is
 
 Provider: Google's Gemini image API.
 
+Resolve `<this-skill-dir>` in the commands below in this order: `~/.claude/skills/threejs-image-generator`, `~/.codex/skills/threejs-image-generator`, `~/.agents/skills/threejs-image-generator`, or repo `skills/threejs-image-generator`.
+
 ## When To Use
 
 Use this skill before procedural-only fallback when a Three.js game needs:
@@ -25,47 +27,28 @@ For premium/AAA/showcase graphics work, generate at least one relevant image for
 
 ## API Key
 
-Never store API keys in skill files or browser/game code. The script checks:
+Never store API keys in skill files or browser/game code, and never paste a key value into a report. The script reads `--api-key` or `GEMINI_API_KEY`.
 
-1. `--api-key`
-2. `GEMINI_API_KEY`
-
-Before declaring the key unavailable in a `threejs-game-director` or `threejs-aaa-graphics-builder` workflow, run the director credential probe and paste its literal SET/MISSING output:
+Step 0, before declaring the key unavailable: run this skill's own probe and paste its literal output into the report.
 
 ```bash
-bash ~/.codex/skills/threejs-game-director/scripts/probe_asset_credentials.sh
+uv run <this-skill-dir>/scripts/generate_image.py probe   # prints GEMINI_API_KEY=SET|MISSING
 ```
 
-For Claude installs:
-
-```bash
-bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
-```
-
-If the probe says `GEMINI_API_KEY=SET` but the script sees no key, run through a shell that sources the user's profile:
-
-```bash
-zsh -c 'source "$HOME/.zprofile" 2>/dev/null; source "$HOME/.zshrc" 2>/dev/null; uv run ~/.codex/skills/threejs-image-generator/scripts/generate_image.py --prompt "..." --filename assets/concepts/example.png'
-```
+`GEMINI_API_KEY=MISSING` is only a valid skip/blocker reason when this output is shown. Keys defined only in a shell profile can be absent from the process env; if the plain probe prints MISSING unexpectedly, wrap it: `zsh -lc 'source ~/.zprofile 2>/dev/null || true; source ~/.zshrc 2>/dev/null || true; uv run <this-skill-dir>/scripts/generate_image.py probe'`. When the director skill is loaded, prefer `threejs-game-director/scripts/probe_asset_credentials.sh`, which probes all three asset keys at once.
 
 ## Tool Script
 
 Run from the user's current project directory so output lands in the game project:
 
 ```bash
-uv run ~/.codex/skills/threejs-image-generator/scripts/generate_image.py --prompt "your image description" --filename assets/concepts/output.png --resolution 2K
-```
-
-Claude install path:
-
-```bash
-uv run ~/.claude/skills/threejs-image-generator/scripts/generate_image.py --prompt "your image description" --filename assets/concepts/output.png --resolution 2K
+uv run <this-skill-dir>/scripts/generate_image.py --prompt "your image description" --filename assets/concepts/output.png --resolution 2K
 ```
 
 Edit an existing image:
 
 ```bash
-uv run ~/.codex/skills/threejs-image-generator/scripts/generate_image.py \
+uv run <this-skill-dir>/scripts/generate_image.py \
   --input-image assets/concepts/ship.png \
   --prompt "turn this into a battle-worn red racing livery with clearer material zones" \
   --filename assets/concepts/ship-red-livery.png \
@@ -75,7 +58,7 @@ uv run ~/.codex/skills/threejs-image-generator/scripts/generate_image.py \
 Resolution mapping:
 
 - `1K`: quick concepts, icons, draft sheets.
-- `2K`: default production reference for image-to-3D, textures, backgrounds, UI panels.
+- `2K`: default production reference for image-to-3D, textures, backgrounds, UI panels. This is also the script default when `--resolution` is omitted.
 - `4K`: hero splash/title art, high-detail texture references, large sky/background plates.
 
 ## Prompt Patterns

@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Image Generator"
   short_description: "Generate concepts, textures, icons, decals, and UI art for Three.js games"
-  default_prompt: "Generate or edit a game-useful image asset for a Three.js project. Run the credential probe before declaring the key unavailable, save outputs inside the project assets directory, and report the prompt, resolution, output path, intended runtime use, and whether the image feeds threejs-3d-generator."
+  default_prompt: "Load threejs-image-generator/SKILL.md (try ~/.codex/skills/threejs-image-generator/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly. Non-negotiables: run the probe before declaring the key unavailable; save outputs inside the project assets directory; report prompt, resolution, output path, intended runtime use, and whether the image feeds threejs-3d-generator."

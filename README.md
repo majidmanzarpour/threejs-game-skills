@@ -182,24 +182,28 @@ For meaningful Three.js work, the skills should gather evidence before claiming 
 - local browser run
 - browser console and page error check
 - Playwright screenshot
-- canvas nonblank pixel check
+- canvas nonblank pixel check, plus the inspector's measured metrics (color entropy, edge density, luminance contrast, render budget rows)
 - desktop and mobile viewport pass
 - interaction check for the main control path
+- game design brief, core loop contract, and level/encounter plan for broad game creation
 - performance snapshot when graphics, assets, shaders, or post-processing changed
+- technical art budget target-vs-actuals when premium graphics changed
 - UI text-fit, overlap, safe-area, and touch-target checks when UI changed
-- visual scorecard for premium, AAA, showcase, or less-basic claims
+- visual scorecard with measured evidence and a fresh-eyes review for premium, AAA, showcase, or less-basic claims
+- visual test harness decision (screenshot baselines added/extended/skipped) for release-ready visual QA
+- bot playtest metrics for release-ready gameplay claims
 - external asset/audio sourcing ledger when generated assets or audio are in scope
 
 Premium/AAA claims should not rely on a static scene, placeholder cubes, generic stat-card HUDs, or unverified screenshots. The game should have an active playable loop and a filled visual scorecard.
 
 ## Skill System
 
-- `threejs-game-director`: main entrypoint for complete game builds and orchestration.
-- `threejs-gameplay-systems`: playable loop, architecture, mechanics, entities, controls, camera, physics, and feel.
-- `threejs-aaa-graphics-builder`: visual scorecard, asset architecture, models, materials, VFX, render polish.
+- `threejs-game-director`: main entrypoint for complete game builds and orchestration — runner capability check, skill path ladder, phase playbook, ledgers, report audit.
+- `threejs-gameplay-systems`: playable loop, architecture, game design and level design, mechanics, entities, controls, camera, physics selection, and game feel (hitstop, screenshake, easing, impact feedback).
+- `threejs-aaa-graphics-builder`: visual scorecard with calibration anchors, technical art budgets, shader/material cookbook, asset architecture, models, materials, VFX, render polish.
 - `threejs-game-ui-designer`: HUDs, menus, overlays, responsive UI, icons, safe areas, UI states.
 - `threejs-debug-profiler`: scene/runtime/render bugs, mobile bugs, performance profiling, renderer metrics.
-- `threejs-qa-release`: browser QA, screenshots, canvas pixels, responsive checks, production build, release risk report.
+- `threejs-qa-release`: browser QA, screenshots, canvas pixels with measured metrics, visual test harness, bot playtests, responsive checks, production build, release risk report.
 - `threejs-3d-generator`: Tripo API text/image-to-3D, texture, auto-rig, animation, conversion, download, and Three.js import guidance.
 - `threejs-image-generator`: Gemini image generation for concepts, textures, decals, skies, icons, GUI art, and image-to-3D inputs.
 - `threejs-audio-generator`: ElevenLabs-backed SFX, ambience, UI sounds, voice/TTS, voice conversion, cleanup, and Three.js audio integration.

@@ -40,7 +40,7 @@ Avoid title-only screenshots unless title/menu work is the actual change.
 
 ## Determinism Requirements
 
-Expose test hooks when practical:
+Scaffold-generated games ship a working implementation of these hooks (`src/game/Game.ts` `installTestHooks`, typed in `src/vite-env.d.ts`) plus a seeded RNG in `src/utils/random.ts`. Keep the hooks real as the game evolves — the template fails loudly if the hooks object is missing, because silent no-op hooks capture live animating scenes and every rerun diffs. For non-scaffold games, implement the same contract:
 
 ```ts
 window.__THREE_GAME_TEST_HOOKS__ = {

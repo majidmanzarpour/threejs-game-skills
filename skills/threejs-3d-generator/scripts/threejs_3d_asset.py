@@ -457,8 +457,6 @@ def cmd_postprocess(args: argparse.Namespace) -> None:
     }
     default_versions = {
         "texture_model": "v3.0-20250812",
-        "animate_rig": RIG_MODEL_VERSION,
-        "animate_retarget": RIG_MODEL_VERSION,
         "highpoly_to_lowpoly": "P-v2.0-20251225",
     }
     if task_type == "animate_prerigcheck":
@@ -469,6 +467,23 @@ def cmd_postprocess(args: argparse.Namespace) -> None:
         # Omit model_version and let the API choose (needed when retargeting v1.0 rigs:
         # the retarget enum rejects v1.0-20240301 as an explicit value).
         pass
+    elif task_type in {"animate_rig", "animate_retarget"} and not args.model_version:
+        # Route by body plan, same as character-pipeline: the v2.x rigger fails on
+        # humanoids (0/16, see api-notes.md), so biped must use v1.0.
+        rig_type = args.rig_type or "biped"
+        if not args.rig_type:
+            eprint(
+                "note: no --rig-type given; assuming biped when choosing the rig model "
+                "version (pass --rig-type or an explicit --model-version to override)"
+            )
+        resolved = resolve_rig_version(rig_type, None)
+        if task_type == "animate_retarget" and resolved.startswith("v1.0"):
+            # The retarget schema rejects explicit v1.0; omitting model_version selects
+            # the legacy path (which forces FBX output and one animation per task below).
+            eprint("note: v1.0-rig retarget: omitting model_version (API rejects explicit v1.0)")
+        else:
+            payload["model_version"] = resolved
+            eprint(f"Using model_version={resolved} for rig_type={rig_type}")
     else:
         model_version = args.model_version or default_versions.get(task_type)
         if model_version:
@@ -838,6 +853,12 @@ def cmd_validate_rig(args: argparse.Namespace) -> None:
     print("Rig looks structurally valid.")
 
 
+def cmd_probe(args: argparse.Namespace) -> None:
+    """Print the SET|MISSING credential contract line used by skip rules and audits."""
+    status = "SET" if os.environ.get("TRIPO_API_KEY") else "MISSING"
+    print(f"TRIPO_API_KEY={status}")
+
+
 def add_shared_runtime_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--api-key")
     parser.add_argument("--wait", action="store_true")
@@ -850,6 +871,9 @@ def add_shared_runtime_args(parser: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Tripo OpenAPI 3D asset helper")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    probe = sub.add_parser("probe", help="print TRIPO_API_KEY=SET|MISSING")
+    probe.set_defaults(func=cmd_probe)
 
     text = sub.add_parser("text", help="submit text_to_model")
     text.add_argument("--prompt", required=True)

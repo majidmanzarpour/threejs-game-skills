@@ -211,3 +211,26 @@ Verification:
 - Report renderer diagnostics.
 - Confirm no console/page errors and no obvious collision/occlusion issues.
 - If the world is still dominated by stretched boxes, continue the prop-kit pass.
+
+---
+
+# Fresh-Eyes Scorecard Review Prompt
+
+Use for the independent review pass required by `references/visual-scorecard.md` for premium/AAA/showcase claims. Give the reviewer ONLY the inputs below — no build history, no prior scores, no description of the work performed.
+
+Inputs:
+- Active-play screenshots (desktop and mobile): <paths>
+- Scorecard rubric: `threejs-aaa-graphics-builder/references/visual-scorecard.md`
+- Calibration anchors: `threejs-aaa-graphics-builder/assets/scorecard-anchors/`
+- Inspector metrics JSON: <paths>
+
+Task:
+- Score all ten scorecard categories from the screenshots alone, using the 0-3 anchors and calibration images.
+- Cross-check scores against the metrics (colorEntropyBits, edgeDensity, luminance.contrast, dominantColorShare, renderBudget) and flag any score the numbers contradict.
+- List every automatic failure you can see in the screenshots.
+- Do not give benefit of the doubt: if a surface could be a 1 or a 2, score it 1 and say what visible change would earn the 2.
+
+Report:
+- Ten category scores with one-sentence visual evidence each.
+- Automatic failures observed.
+- The three highest-impact changes to raise the lowest scores.

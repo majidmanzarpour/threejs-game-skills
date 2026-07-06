@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Audio Generator"
   short_description: "Generate SFX, ambience, voice, and cleaned audio assets for Three.js games"
-  default_prompt: "Create game-ready audio assets for a Three.js project. Load the audio workflow reference, run the credential probe before declaring the key unavailable, generate or process local audio files with the helper script, and report the audio matrix, prompts/text/input files, output paths, runtime trigger mapping, and verification notes."
+  default_prompt: "Load threejs-audio-generator/SKILL.md (try ~/.codex/skills/threejs-audio-generator/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly. Non-negotiables: run the probe before declaring the key unavailable; load the audio workflow reference; report the audio matrix, output paths, runtime trigger mapping, and verification notes."

@@ -143,4 +143,4 @@ Non-biped coverage is one locomotion clip per rig type — there is NO fly, craw
 - Use `geometry_quality=detailed` only when the asset needs it and budget allows.
 - Use `face_limit`, `smart_low_poly`, conversion, or low-poly postprocess for browser/mobile budgets.
 - Use T-pose/A-pose references for rigged characters; keep `quad` and `generate_parts` off for anything that will be rigged.
-- Always pin `model_version` on rig/retarget tasks; the unpinned defaults are legacy versions.
+- Rig/retarget version routing: the CLI routes by `--rig-type` (biped -> `v1.0-20240301`, creatures -> `v2.5-20260210`; v1.0 retargets omit `model_version` because the enum rejects it). Pass `--rig-type` on standalone `postprocess` calls so the routing is correct; only pin `--model-version` to override. Raw API callers must pin explicitly — the server's unpinned defaults are legacy versions.

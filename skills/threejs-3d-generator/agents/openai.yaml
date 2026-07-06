@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js 3D Generator"
   short_description: "Generate, texture, rig, animate, and convert Three.js game assets"
-  default_prompt: "Generate a game-ready 3D asset for a Three.js game. First run the credential probe, load the required provider API reference, and load Three.js integration or image-generator workflow references when relevant. Use threejs-image-generator first if a 2D concept/reference/texture/logo would improve the result. Download the outputs, report credential probe output, reference ledger, task IDs, files, and Three.js import/performance notes."
+  default_prompt: "Load threejs-3d-generator/SKILL.md (try ~/.codex/skills/threejs-3d-generator/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly, including its reference gates. Non-negotiables: run the probe before declaring the key unavailable; load api-notes before provider calls; use threejs-image-generator first when a 2D concept/reference would improve the result; download outputs immediately; report task IDs, file paths, and Three.js import notes."

@@ -12,12 +12,12 @@
 - World kit includes reusable modules and does not rely on one repeated skyline/block/road primitive.
 - The scene has foreground, midground, and background depth instead of one flat play lane.
 - Lighting, shadows, fog, and post-processing clarify depth and mood without hiding gameplay.
-- Procedural models use authored factories, shared materials, reusable prop kits, and collision proxies.
+- Procedural models use the authored factories, shared material kit, reusable prop kits, and collision proxies from `references/implementation-blueprint.md` and `references/technical-art.md`.
 - Movement, camera, speed, impact, and restart loop feel tuned through play, not just configured.
 - Audio/visual feedback exists for core actions and state transitions.
 - Mobile viewport preserves framing, safe areas, touch targets, and text fit.
-- Renderer diagnostics are reviewed when visual fidelity changes.
-- Visual scorecard passes: every category at least 2 and average at least 2.3.
+- Renderer diagnostics from `references/technical-art.md` are reviewed when visual fidelity changes.
+- Visual scorecard in `references/visual-scorecard.md` passes: every category at least 2 and average at least 2.3.
 - Build, browser run, console/page errors, screenshots, nonblank canvas, interaction, and responsive checks all pass.
 - A screenshot critique identifies no unresolved high-impact placeholder-quality blockers.
 - If any premium surface was intentionally deferred, the final report says which one and why.

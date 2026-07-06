@@ -14,17 +14,7 @@ Generate clean reference images before image-to-3D for:
 - Props/pickups: centered object, plain background, strong silhouette, no text baked in unless wanted.
 - Terrain/world modules: tileable rocks, cliffs, rails, gates, arena pieces, modular set dressing.
 
-Prompt pattern:
-
-```text
-Create a clean 3D-generation reference image of [asset]. Centered single object, plain light background, full object visible, readable silhouette, [style], [materials], no motion blur, no cropped parts.
-```
-
-For riggable characters:
-
-```text
-Create a full-body T-pose character reference for 3D rigging: [character details]. Arms out, legs visible, symmetrical stance, plain background, front-facing, readable costume layers.
-```
+For the actual prompt wording (image-to-3D reference, riggable character/creature, texture/material, logo/icon/UI, sky/background), use the templates in `threejs-image-generator`'s SKILL.md under "Prompt Patterns" — that skill is the canonical source. The notes here cover only how those references pair into the 3D pipeline.
 
 ## Texture And Material References
 
@@ -35,12 +25,6 @@ Use `threejs-image-generator` for:
 - Metal, leather, fabric, glass, ceramic, wood, painted plastic, worn armor.
 - Sky, clouds, nebula, city haze, horizon plates, menu backgrounds.
 - Faction marks, logos, numbers, signs, pickup icons, hazard labels.
-
-Prompt pattern:
-
-```text
-Create a seamless game texture reference for [surface], top-down/orthographic, no perspective, no strong shadows, PBR-friendly color, [style/material details].
-```
 
 ## UI And Logo Use Cases
 

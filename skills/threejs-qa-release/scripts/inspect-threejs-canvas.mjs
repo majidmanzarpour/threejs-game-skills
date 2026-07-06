@@ -4,6 +4,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 
+// Starting-point render budgets (see threejs-aaa-graphics-builder
+// references/technical-art.md). Over-budget rows are reported, not fatal.
+const RENDER_BUDGETS = {
+  desktop: { calls: 300, triangles: 750_000, geometries: 300, textures: 60 },
+  mobile: { calls: 150, triangles: 300_000, geometries: 200, textures: 40 },
+};
+
 function parseArgs(argv) {
   const args = {
     url: 'http://127.0.0.1:5188',
@@ -29,7 +36,93 @@ function parseArgs(argv) {
   return args;
 }
 
-async function sampleCanvas(page) {
+const round = (value, digits) => Number(value.toFixed(digits));
+
+// Objective pixel statistics used as "Measured Evidence" in the visual
+// scorecard. Computed on a coarse luminance grid so cost stays trivial.
+function computePixelMetrics(png) {
+  const stepX = Math.max(1, Math.floor(png.width / 160));
+  const stepY = Math.max(1, Math.floor(png.height / 90));
+  const cols = Math.floor(png.width / stepX);
+  const rows = Math.floor(png.height / stepY);
+  const luminance = new Float64Array(cols * rows);
+  const bucketCounts = new Map();
+  let samples = 0;
+
+  for (let gy = 0; gy < rows; gy += 1) {
+    for (let gx = 0; gx < cols; gx += 1) {
+      const offset = ((gy * stepY) * png.width + gx * stepX) * 4;
+      const r = png.data[offset];
+      const g = png.data[offset + 1];
+      const b = png.data[offset + 2];
+      luminance[gy * cols + gx] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const key = `${r >> 4},${g >> 4},${b >> 4}`;
+      bucketCounts.set(key, (bucketCounts.get(key) ?? 0) + 1);
+      samples += 1;
+    }
+  }
+
+  const sorted = Array.from(luminance).sort((a, b) => a - b);
+  const mean = sorted.reduce((sum, v) => sum + v, 0) / sorted.length;
+  const p5 = sorted[Math.floor(sorted.length * 0.05)];
+  const p95 = sorted[Math.floor(sorted.length * 0.95)];
+
+  let entropy = 0;
+  let dominant = 0;
+  for (const count of bucketCounts.values()) {
+    const p = count / samples;
+    entropy -= p * Math.log2(p);
+    dominant = Math.max(dominant, count);
+  }
+
+  let edges = 0;
+  let checked = 0;
+  for (let gy = 0; gy < rows - 1; gy += 1) {
+    for (let gx = 0; gx < cols - 1; gx += 1) {
+      const i = gy * cols + gx;
+      const dx = Math.abs(luminance[i] - luminance[i + 1]);
+      const dy = Math.abs(luminance[i] - luminance[i + cols]);
+      if (Math.max(dx, dy) > 12) edges += 1;
+      checked += 1;
+    }
+  }
+
+  return {
+    colorBuckets: bucketCounts.size,
+    colorEntropyBits: round(entropy, 2),
+    edgeDensity: round(edges / checked, 3),
+    luminance: {
+      mean: round(mean, 1),
+      p5: round(p5, 1),
+      p95: round(p95, 1),
+      contrast: round(p95 - p5, 1),
+    },
+    dominantColorShare: round(dominant / samples, 3),
+    nonBackgroundShare: round(1 - dominant / samples, 3),
+  };
+}
+
+function checkRenderBudget(renderer, mode) {
+  if (!renderer) return null;
+  const budget = RENDER_BUDGETS[mode];
+  const rows = Object.entries(budget).map(([metric, limit]) => {
+    const actual = renderer[metric];
+    return {
+      metric,
+      actual: typeof actual === 'number' ? actual : null,
+      limit,
+      ok: typeof actual === 'number' ? actual <= limit : null,
+    };
+  });
+  return {
+    tier: mode,
+    note: 'starting-point budget; adjust per game and document overrides',
+    rows,
+    withinBudget: rows.every((row) => row.ok !== false),
+  };
+}
+
+async function sampleCanvas(page, mode) {
   const locator = page.locator('canvas').first();
   const rect = await locator.boundingBox();
   if (!rect || rect.width < 32 || rect.height < 32) {
@@ -76,6 +169,8 @@ async function sampleCanvas(page) {
     alphaPixels,
     variance,
     colorBuckets: colors.size,
+    metrics: computePixelMetrics(png),
+    renderBudget: checkRenderBudget(diagnostics.game?.renderer ?? null, mode),
     diagnostics: diagnostics.game,
   };
 }
@@ -101,20 +196,21 @@ async function main() {
   await page.waitForSelector('canvas', { state: 'visible', timeout: 10_000 });
   await page.waitForTimeout(args.wait);
 
-  const result = await sampleCanvas(page);
-  const screenshotPath = path.join(args.out, args.mobile ? 'mobile.png' : 'desktop.png');
+  const mode = args.mobile ? 'mobile' : 'desktop';
+  const result = await sampleCanvas(page, mode);
+  const screenshotPath = path.join(args.out, `${mode}.png`);
   await page.screenshot({ path: screenshotPath, fullPage: true });
 
   const report = {
     url: args.url,
-    mode: args.mobile ? 'mobile' : 'desktop',
+    mode,
     screenshotPath,
     result,
     consoleErrors,
     pageErrors,
   };
 
-  await writeFile(path.join(args.out, args.mobile ? 'mobile.json' : 'desktop.json'), `${JSON.stringify(report, null, 2)}\n`);
+  await writeFile(path.join(args.out, `${mode}.json`), `${JSON.stringify(report, null, 2)}\n`);
   await browser.close();
 
   console.log(JSON.stringify(report, null, 2));

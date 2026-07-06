@@ -45,6 +45,11 @@ export class Pickup {
     this.group.visible = false;
   }
 
+  reset(): void {
+    this.active = true;
+    this.group.visible = true;
+  }
+
   dispose(): void {
     this.coreGeometry.dispose();
     this.ringGeometry.dispose();

@@ -22,6 +22,7 @@ These references are required phase-entry gates, not optional reading:
 - Load `references/model-recipes.md` before building or upgrading hero/player, obstacle, enemy, pickup, world-kit, material, or prop models.
 - Load `references/render-recipes.md` before changing lighting, tone mapping, shadows, fog, post-processing, materials, or render composition.
 - Load `references/technical-art.md` before premium/AAA/showcase graphics work, shaders/material systems, VFX systems, generated/imported asset cleanup, LOD/instancing work, or visual changes that could affect browser performance.
+- Load `references/shader-cookbook.md` before writing any custom shader, `onBeforeCompile` injection, material recipe, sky, or post-processing chain — use its proven values and GLSL patterns instead of improvising.
 - Load `references/checklists/aaa-game-quality-gate.md` and `references/checklists/aaa-visual-scorecard.md` before declaring a game premium, AAA, showcase, complete, release-ready, or less basic.
 - Load the relevant checklist before focused work: `references/checklists/procedural-model-quality.md`, `references/checklists/material-lighting-quality.md`, `references/checklists/performance-safe-visual-detail.md`, or `references/checklists/technical-art-quality.md`.
 - Load `references/prompt-templates.md` only when the user asks for reusable prompts, a graphics-pass prompt, or a task template.
@@ -46,8 +47,9 @@ External asset sourcing gate:
 5. Upgrade every weak visible surface, not only one hero object.
 6. Add lighting/render/material polish after authored forms exist.
 7. Add event-driven VFX tied to gameplay state.
-8. Re-score screenshots. Continue until every premium category is at least 2/3 or report exact blockers.
-9. Verify renderer diagnostics, technical-art budget, desktop/mobile screenshots, console/page errors, canvas pixels, imported asset budgets, and playability.
+8. Re-score screenshots against the calibration anchors, citing the inspector's measured metrics. Continue until every premium category is at least 2/3 or report exact blockers.
+9. Run the fresh-eyes review per `references/visual-scorecard.md` before finalizing premium/AAA/showcase claims.
+10. Verify renderer diagnostics against the render budget table, technical-art budget, desktop/mobile screenshots, console/page errors, canvas pixels, imported asset budgets, and playability.
 
 ## Core Rule
 
