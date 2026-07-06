@@ -20,17 +20,20 @@ Game idea:
 
 Requirements:
 - Use TypeScript, Vite, and Three.js modules.
+- Start with a compact game design brief, core loop contract, and level/encounter plan before implementation.
 - Build a playable loop, not a static scene.
 - Keep the first version small enough to verify quickly, then continue quality passes if the target is complete/premium.
 - Include desktop keyboard input and mobile touch input when target devices include mobile.
 - Add HUD feedback for objective, score, health, time, or state.
-- For premium requests, replace prototype HUD/models/world detail with designed UI, procedural asset kits, and renderer diagnostics.
+- For premium requests, replace prototype HUD/models/world detail with designed UI, procedural asset kits, technical art budget, and renderer diagnostics.
+- During QA, decide whether a visual test harness is warranted; add/extend it for release-ready visual states or report the skip reason.
 - Run build and visual verification before reporting done.
 
 Final response:
 - list files created or changed
 - describe playable controls
 - report build, browser, console, screenshot, canvas-pixel, and viewport evidence
+- report game design brief, level/encounter plan, technical-art budget, and visual-harness decision when in scope
 - list remaining risks
 
 ---
@@ -47,18 +50,19 @@ Target:
 - Performance budget:
 
 Automatic skill flow:
+- Use `threejs-gameplay-systems` first for game design brief, core loop contract, level/encounter plan, controls, camera, impact, difficulty, and restart loop.
 - Use the director's active-play screenshot scorecard first if screenshots exist or can be captured.
 - Use `threejs-aaa-graphics-builder` when screenshots still look basic or when multiple graphics surfaces are weak.
 - Use `threejs-game-ui-designer` for HUD, menus, overlays, icons, text fit, and touch UI.
-- Use `threejs-gameplay-systems` for speed, controls, camera, impact, difficulty, and restart loop.
 - Use `threejs-debug-profiler` before and after expensive visual changes.
-- Use `threejs-qa-release` before calling the pass complete.
+- Use `threejs-qa-release` before calling the pass complete, including a visual test harness decision when release-ready visual regression risk exists.
 
 Quality priorities:
 - Prefer a smaller authored vertical slice over a larger placeholder game.
 - Replace utility HUD boxes with designed, genre-specific interface states.
 - Replace placeholder primitives with authored silhouettes and reusable procedural kits.
 - Build a minimum premium asset set: hero/player, three obstacle/enemy variants, two reward/interactable variants, world prop kit, and material kit.
+- Add a technical art brief: material kit, VFX language, instancing/LOD/culling strategy, imported asset cleanup, DPR/shadow/post tradeoffs, and render budget.
 - Add depth layers, parallax, foreground/midground/background composition, and material contrast.
 - Make rewards, threats, player state, and objectives readable during motion.
 - Add feedback for speed, pickup, near miss, hit, fail, restart, streak, and milestone.
@@ -77,6 +81,7 @@ Verification:
 - Check console/page errors and nonblank canvas pixels.
 - Check UI text fit, overlap, safe areas, and touch targets.
 - Report draw calls, triangles, geometries, textures, and frame-time/FPS evidence when available.
+- Report technical art budget/readability evidence and visual test harness added/extended/skipped.
 - Compare against `threejs-aaa-graphics-builder/references/checklists/aaa-game-quality-gate.md`.
 - Compare against `threejs-aaa-graphics-builder/references/checklists/aaa-visual-scorecard.md`.
 - Do not report the task as premium-complete if any prototype rejection test still fails.

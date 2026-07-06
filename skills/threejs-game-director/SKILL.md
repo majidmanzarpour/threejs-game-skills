@@ -105,20 +105,25 @@ References are not optional enrichment. They are phase-entry gates. For broad ga
 Required phase references:
 
 - Gameplay systems: `threejs-gameplay-systems/references/gameplay-workflows.md`
+- Game design and level design, for broad new-game creation, major gameplay upgrades, level/arena/track/wave/hole/puzzle work, encounter design, progression/difficulty work, or premium gameplay claims: `threejs-gameplay-systems/references/game-design-level-design.md`
 - Physics selection, when physics/collision-heavy gameplay is in scope: `threejs-gameplay-systems/references/physics-engine-selection.md`
 - New game completion checklist, when creating a game or first playable slice: `threejs-gameplay-systems/references/checklists/new-game-definition-of-done.md`
+- Game design and level design checklist, when creating a game, upgrading major gameplay, designing levels/encounters, or claiming premium gameplay: `threejs-gameplay-systems/references/checklists/game-design-level-design.md`
 - Endless runner checklist, when building or upgrading an endless runner: `threejs-gameplay-systems/references/checklists/endless-runner-premium-quality.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/visual-scorecard.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/implementation-blueprint.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/model-recipes.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/render-recipes.md`
+- Technical art, for premium/AAA/showcase graphics, shaders/material systems, VFX systems, generated/imported asset cleanup, LOD/instancing, or visual performance work: `threejs-aaa-graphics-builder/references/technical-art.md`
 - AAA graphics checklists, for premium/AAA/showcase claims: `threejs-aaa-graphics-builder/references/checklists/aaa-game-quality-gate.md` and `threejs-aaa-graphics-builder/references/checklists/aaa-visual-scorecard.md`
+- Technical art checklist, for premium/AAA/showcase graphics or visual performance claims: `threejs-aaa-graphics-builder/references/checklists/technical-art-quality.md`
 - UI: `threejs-game-ui-designer/references/ui-patterns.md`
 - UI checklists, when UI/HUD/menu/touch layout is in scope: `threejs-game-ui-designer/references/checklists/game-ui-quality.md`, `threejs-game-ui-designer/references/checklists/hud-readability.md`, and `threejs-game-ui-designer/references/checklists/responsive-ui-fit.md`
 - Debug/profile: `threejs-debug-profiler/references/debug-profile-checklists.md`
 - Debug/profile checklists, when debugging or profiling: `threejs-debug-profiler/references/checklists/scene-debugging.md` or `threejs-debug-profiler/references/checklists/performance-profile.md`
 - QA/release: `threejs-qa-release/references/qa-release-checklists.md`
 - QA/release checklists, for final verification: `threejs-qa-release/references/checklists/visual-verification.md`, `threejs-qa-release/references/checklists/playtest-qa.md`, and `threejs-qa-release/references/checklists/release.md`
+- Visual test harness, when premium/release-ready visual QA, generated asset visibility, UI regression protection, or screenshot baselines are warranted: `threejs-qa-release/references/visual-test-harness.md` and `threejs-qa-release/references/checklists/visual-test-harness.md`
 - 3D generator, when loaded by the external asset sourcing gate: `threejs-3d-generator/references/api-notes.md`
 - 3D generator, when loaded for a game: `threejs-3d-generator/references/threejs-integration.md`
 - 3D plus image generator, when both are loaded: `threejs-3d-generator/references/image-generator-workflows.md`
@@ -172,17 +177,22 @@ Track both skill loading and phase execution:
   - Audio assets generated or skip reason:
 - Required references loaded:
   - Gameplay workflows: yes/no/not-needed, path or reason:
+  - Game design and level design: yes/no/not-needed, path or reason:
   - Physics engine selection: yes/no/not-needed, path or reason:
   - Gameplay/new-game checklists: yes/no/not-needed, path or reason:
+  - Gameplay design/level checklist: yes/no/not-needed, path or reason:
   - Visual scorecard: yes/no/not-needed, path or reason:
   - Graphics implementation blueprint: yes/no/not-needed, path or reason:
   - Model recipes: yes/no/not-needed, path or reason:
   - Render recipes: yes/no/not-needed, path or reason:
+  - Technical art: yes/no/not-needed, path or reason:
   - Graphics checklists: yes/no/not-needed, path or reason:
+  - Technical art checklist: yes/no/not-needed, path or reason:
   - UI patterns: yes/no/not-needed, path or reason:
   - UI checklists: yes/no/not-needed, path or reason:
   - Debug/profile checklists: yes/no/not-needed, path or reason:
   - QA/release checklists: yes/no/not-needed, path or reason:
+  - Visual test harness: yes/no/not-needed, path or reason:
   - 3D generator API notes: yes/no/not-needed, path or reason:
   - 3D generator Three.js integration: yes/no/not-needed, path or reason:
   - 3D/image generator workflows: yes/no/not-needed, path or reason:
@@ -199,12 +209,13 @@ A phase is done only with implementation plus verification evidence.
 ## Phase Routing
 
 - `threejs-gameplay-systems`: first playable slice, architecture, mechanics, entities, input, camera, controls, game feel.
+- Game design and level design: design brief, player promise, core loop contract, level/arena/track/wave/hole/puzzle plan, encounter pacing, difficulty curve, tuning constants, and fun-factor rejection tests. This runs before implementation for broad game builds.
 - Physics selection: engine choice, fixed timestep, collider strategy, sensors, collision proxies, CCD, diagnostics, and QA for physics-heavy games.
 - External asset sourcing: credential probe, generator skill loading, asset source decision, task IDs/output files or blocker evidence. This phase must be done before `threejs-aaa-graphics-builder` can be marked done for premium graphics work.
-- `threejs-aaa-graphics-builder`: basic-looking screenshots, asset architecture, models, materials, VFX, lighting/render, visual scorecard.
+- `threejs-aaa-graphics-builder`: basic-looking screenshots, asset architecture, models, materials, technical art, VFX, lighting/render, visual scorecard.
 - `threejs-game-ui-designer`: HUDs, menus, overlays, responsive UI, icons, safe areas, UI states.
 - `threejs-debug-profiler`: blank canvas, render/runtime bugs, loading, resize, mobile input/render bugs, performance profiling.
-- `threejs-qa-release`: browser QA, screenshots, canvas pixels, responsive checks, production build, preview, release notes.
+- `threejs-qa-release`: browser QA, screenshots, canvas pixels, responsive checks, visual test harness decision, production build, preview, release notes.
 - `threejs-3d-generator`: external AI-generated models, GLB/FBX outputs, text/image-to-3D, texturing, auto-rigging, animation, conversion.
 - `threejs-image-generator`: 2D concept/reference images, image-to-model inputs, textures, sky/backgrounds, logos, icons, GUI elements, decals.
 - `threejs-audio-generator`: generated SFX, looping ambience, UI sounds, voice/TTS, voice conversion, cleanup/isolation, and game audio runtime planning.
@@ -238,6 +249,7 @@ The scorecard must use the exact categories from `threejs-aaa-graphics-builder/r
 - Build/typecheck.
 - Local browser run.
 - Console/page error check.
+- Game design brief and level/encounter plan for broad game creation or major gameplay changes.
 - Active desktop and mobile screenshots.
 - Nonblank canvas pixel evidence.
 - Main input/objective/fail or restart path.
@@ -246,6 +258,8 @@ The scorecard must use the exact categories from `threejs-aaa-graphics-builder/r
 - Credential probe output and real external asset outputs or blocker evidence for premium/AAA asset-category claims.
 - Audio matrix/generated audio evidence or a reported blocker for premium active gameplay claims.
 - Renderer diagnostics when graphics changed.
+- Technical art budget and VFX/readability evidence when premium graphics changed.
+- Visual test harness decision for premium/release-ready UI, generated asset, or visual regression risk.
 - Final ledger with evidence and remaining blockers.
 
 ## Report Audit
@@ -256,8 +270,8 @@ When shell tools are available, draft the final evidence report to a temporary m
 python3 <director-skill-dir>/scripts/audit_reference_report.py --premium /path/to/final-report.md
 ```
 
-Use `--premium` for premium, AAA, showcase, high-fidelity, polished, complete, release-ready, or "less basic" claims. Add `--physics` for physics-heavy games such as pool/snooker, mini-golf, pinball, marble racers, physics puzzles, rigid-body games, or games with many sensors/colliders. Add `--audio` when generated or integrated audio is in scope, and for premium active-gameplay claims unless the user requested silent/offline-only output. If the audit fails, fix the missing report sections or state the exact blocker instead of claiming completion. If the script is unavailable, manually enforce the same required sections: skill-loading ledger, reference ledger, external asset/audio sourcing ledger, phase checklist, visual scorecard, physics/audio diagnostics when relevant, verification evidence, and remaining risks.
+Use `--premium` for premium, AAA, showcase, high-fidelity, polished, complete, release-ready, or "less basic" claims. Add `--physics` for physics-heavy games such as pool/snooker, mini-golf, pinball, marble racers, physics puzzles, rigid-body games, or games with many sensors/colliders. Add `--audio` when generated or integrated audio is in scope, and for premium active-gameplay claims unless the user requested silent/offline-only output. If the audit fails, fix the missing report sections or state the exact blocker instead of claiming completion. If the script is unavailable, manually enforce the same required sections: skill-loading ledger, reference ledger, game design brief, core loop contract, level/encounter plan, external asset/audio sourcing ledger, technical art budget, visual harness decision, phase checklist, visual scorecard, physics/audio diagnostics when relevant, verification evidence, and remaining risks.
 
 ## Final Response
 
-Report the skill-loading ledger, reference ledger, external asset sourcing ledger, phase ledger, files changed, run URL, controls, verification commands, screenshots/artifacts, renderer/performance notes, quality gates passed, skipped phases, and remaining risks. For premium/AAA/showcase claims, include the filled visual scorecard and automatic failures remaining. Be precise: "invoked" means a slash/tool skill invocation; "loaded" means the `SKILL.md` or reference file was read into context; "executed phase" means the work was performed under either loaded skill guidance or the director fallback.
+Report the skill-loading ledger, reference ledger, game design brief, core loop contract, level/encounter plan, external asset sourcing ledger, phase ledger, files changed, run URL, controls, verification commands, screenshots/artifacts, renderer/performance notes, technical art budget, visual test harness decision, quality gates passed, skipped phases, and remaining risks. For premium/AAA/showcase claims, include the filled visual scorecard and automatic failures remaining. Be precise: "invoked" means a slash/tool skill invocation; "loaded" means the `SKILL.md` or reference file was read into context; "executed phase" means the work was performed under either loaded skill guidance or the director fallback.

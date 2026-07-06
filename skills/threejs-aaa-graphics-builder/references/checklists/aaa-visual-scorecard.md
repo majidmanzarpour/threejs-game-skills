@@ -13,6 +13,7 @@ Use with `threejs-aaa-graphics-builder/references/visual-scorecard.md`.
 - VFX/motion category scored 0-3.
 - UI/HUD category scored 0-3.
 - Performance evidence category scored 0-3.
-- No automatic failure is present: primitive-dominant screenshot, stat-card HUD, glow-only detail, color-only readability, idle-only evidence, or missing renderer diagnostics.
+- No automatic failure is present: primitive-dominant screenshot, stat-card HUD, glow-only detail, color-only readability, idle-only evidence, missing renderer diagnostics, or missing technical-art budget for premium graphics work.
+- Technical-art evidence includes material kit, VFX readability, instancing/LOD/culling decision, DPR/post/shadow tradeoffs, and imported asset diagnostics when generated/imported assets are used.
 - Premium gate passes only when every category is at least 2 and average score is at least 2.3.
 - Showcase gate passes only when at least six categories are 3, no category is below 2, and average score is at least 2.7.

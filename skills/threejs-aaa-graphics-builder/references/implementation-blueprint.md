@@ -1,6 +1,6 @@
 # AAA Graphics Implementation Blueprint
 
-Use this when a Three.js game reads as basic even after it is playable. The goal is a production graphics architecture that can be iterated, scored, profiled, and reused.
+Use this when a Three.js game reads as basic even after it is playable. The goal is a production graphics architecture that can be iterated, scored, profiled, and reused. For premium/AAA/showcase work, also load `references/technical-art.md` and treat the technical art brief and budget as part of the graphics architecture.
 
 ## Recommended Ownership
 
@@ -68,6 +68,19 @@ A premium pass must touch every weak visible surface:
 - Diagnostics: renderer counts, material/geometry/texture counts, screenshots, scorecard.
 
 For imported generated 3D assets, also require downloaded GLB/PBR output, import wrappers with scale/pivot/bounds, simple collision proxies, animation clips when relevant, and triangle/material/texture/file-size diagnostics.
+
+## Technical Art Contract
+
+Before broad implementation, define:
+
+- Hero surfaces that deserve the highest detail.
+- Support surfaces that should be procedural, instanced, culled, or simplified.
+- Render budget target: draw calls, triangles, textures, materials, DPR cap, shadow/post budget.
+- Material kit roles and shader/VFX purpose.
+- Instancing/LOD/culling plan.
+- Imported/generated asset cleanup plan.
+
+Do not add costly effects until this contract exists. A technical-art pass should make the scene more authored and more measurable at the same time.
 
 ## Material Library
 

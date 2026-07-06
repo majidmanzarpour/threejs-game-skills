@@ -1,14 +1,15 @@
 # Gameplay Workflows
 
-Use this reference for first playable slices, architecture, mechanics, entities, controls, camera, physics, audio hooks, and game-feel iteration.
+Use this reference for first playable slices, architecture, mechanics, entities, controls, camera, physics, audio hooks, and game-feel iteration. For broad game creation, level/arena/track/wave/hole/puzzle work, encounter design, progression, difficulty, or premium gameplay claims, also load `references/game-design-level-design.md`.
 
 ## First Playable Slice
 
 The first slice must be playable, not just rendered.
 
 1. Inspect folder, scripts, dependencies, current renderer, app entrypoint, CSS, assets, and tests.
-2. Define the loop in one sentence: verb, objective, pressure, reward, fail/retry.
-3. Implement only the mechanics needed for that loop:
+2. Define the design brief and core loop contract from `references/game-design-level-design.md`.
+3. Define the level/encounter plan: first decision, first threat, first reward, escalation, recovery beats, and readability.
+4. Implement only the mechanics needed for that loop:
    - renderer and scene
    - camera and resize
    - update/render loop
@@ -21,15 +22,15 @@ The first slice must be playable, not just rendered.
    - fail/retry state
    - minimal HUD state
    - one audio/VFX feedback hook
-4. Add diagnostics when possible:
+5. Add diagnostics when possible:
    - `window.__THREE_GAME_DIAGNOSTICS__`
    - renderer info
    - game state snapshot
    - input state
    - active entity counts
-5. Verify build, browser, console/page errors, screenshot, nonblank canvas, and one real input path.
+6. Verify build, browser, console/page errors, screenshot, nonblank canvas, and one real input path.
 
-Reject a slice that cannot be controlled or restarted.
+Reject a slice that cannot be controlled or restarted. Also reject a slice where the level/arena/track/wave/table/puzzle is purely decorative and does not shape the player's decisions.
 
 ## Architecture Boundaries
 
@@ -137,6 +138,19 @@ Run several short loops and tune one axis at a time:
 - Difficulty ramp and pacing.
 
 Record meaningful constants changed. If the game feels worse after a pass, revert or reduce the last tuning change instead of layering compensating changes.
+
+## Design And Level Iteration
+
+When a prototype is technically playable but bland, iterate the design before adding more art:
+
+- Tighten the player promise and primary verb.
+- Add a decision in the first 30 seconds.
+- Move hazards/rewards so the player chooses between safety, speed, score, or resource gain.
+- Add a learning beat before a punishing combination.
+- Add one recovery beat after high pressure.
+- Replace random placement with authored pacing rules or seeded patterns.
+- Tune the camera to frame the next decision, not only the player object.
+- Report what changed in the design brief, level plan, or difficulty curve.
 
 ## Audio Hooks
 

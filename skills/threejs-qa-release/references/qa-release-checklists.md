@@ -22,6 +22,7 @@ Minimum meaningful QA:
 - Renderer diagnostics captured when graphics complexity changed.
 - Imported/generated asset paths, file sizes, and runtime load behavior checked when external assets changed.
 - Audio unlock, decode/load, loop cleanup, mute/volume, and main SFX triggers checked when audio changed.
+- Visual test harness decision recorded when work is premium, release-ready, UI-heavy, generated-asset-heavy, or likely to regress visually.
 
 ## Interaction QA
 
@@ -56,6 +57,18 @@ For premium/AAA/showcase or "less basic" requests:
 - Confirm UI and VFX do not obscure threats, rewards, player, or next decision.
 - Confirm desktop and mobile framing both show the playable path.
 - For generated 3D assets, confirm imported models have correct scale, orientation, material readability, collision proxies, and animation clips in active gameplay.
+- Decide whether to add/extend visual regression baselines. If skipped, record why the scene is not deterministic, not valuable enough yet, or covered by smoke checks only.
+
+## Visual Test Harness QA
+
+When a visual harness is warranted:
+
+- Add deterministic hooks or test setup for random seed, camera shake, particles, time, debug UI, and active state.
+- Cover active desktop and active mobile screenshots when mobile is in scope.
+- Cover changed HUD/menu/fail/generated-asset states.
+- Use Playwright screenshot comparisons with deliberate thresholds.
+- Keep canvas-pixel smoke and interaction tests; visual baselines are additional evidence.
+- Report baseline update command, compare command, snapshot paths, masks, thresholds, and flake risks.
 
 ## Mobile QA
 
@@ -108,6 +121,7 @@ Console/page/network errors:
 Canvas pixel check:
 Desktop/mobile viewports:
 Renderer/performance diagnostics:
+Visual test harness:
 Physics diagnostics:
 External asset evidence:
 Audio evidence:

@@ -12,6 +12,9 @@ Use this reference only after `threejs-game-director` has attempted to load the 
 - Record an external asset sourcing ledger before the graphics phase.
 - Record sibling skill loading paths or failure reasons in the ledger.
 - Load each phase's required reference files at phase entry. Do not defer references until final judgment.
+- Broad game builds start with a compact game design brief and level/encounter plan before implementation.
+- Premium graphics phases include a technical-art budget and readability pass, not only visual polish.
+- QA phases decide whether a visual test harness is warranted and report added/extended/skipped evidence.
 - Record every required reference path or failure reason in the reference ledger.
 - A phase cannot be marked `done` if its required references were skipped.
 - A broad game request is not complete after a first playable slice when the user asked for premium, AAA, polished, showcase, complete, release-ready, or "less basic".
@@ -59,20 +62,25 @@ For premium claims with hero surfaces such as player, enemy, boss, creature, veh
 Load these files before the matching phase starts:
 
 - Gameplay systems: `threejs-gameplay-systems/references/gameplay-workflows.md`
+- Game design and level design, for broad new-game creation, major gameplay upgrades, level/arena/track/wave/hole/puzzle work, encounter design, progression/difficulty work, or premium gameplay claims: `threejs-gameplay-systems/references/game-design-level-design.md`
 - Physics selection, when physics/collision-heavy gameplay is in scope: `threejs-gameplay-systems/references/physics-engine-selection.md`
 - New-game checklist, when creating a game or first playable slice: `threejs-gameplay-systems/references/checklists/new-game-definition-of-done.md`
+- Game design and level design checklist, when creating a game, upgrading major gameplay, designing levels/encounters, or claiming premium gameplay: `threejs-gameplay-systems/references/checklists/game-design-level-design.md`
 - Endless runner checklist, when building or upgrading an endless runner: `threejs-gameplay-systems/references/checklists/endless-runner-premium-quality.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/visual-scorecard.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/implementation-blueprint.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/model-recipes.md`
 - AAA graphics: `threejs-aaa-graphics-builder/references/render-recipes.md`
+- Technical art, for premium/AAA/showcase graphics, shaders/material systems, VFX systems, generated/imported asset cleanup, LOD/instancing, or visual performance work: `threejs-aaa-graphics-builder/references/technical-art.md`
 - AAA graphics checklists, for premium/AAA/showcase claims: `threejs-aaa-graphics-builder/references/checklists/aaa-game-quality-gate.md` and `threejs-aaa-graphics-builder/references/checklists/aaa-visual-scorecard.md`
+- Technical art checklist, for premium/AAA/showcase graphics or visual performance claims: `threejs-aaa-graphics-builder/references/checklists/technical-art-quality.md`
 - UI: `threejs-game-ui-designer/references/ui-patterns.md`
 - UI checklists, when UI/HUD/menu/touch layout is in scope: `threejs-game-ui-designer/references/checklists/game-ui-quality.md`, `threejs-game-ui-designer/references/checklists/hud-readability.md`, and `threejs-game-ui-designer/references/checklists/responsive-ui-fit.md`
 - Debug/profile: `threejs-debug-profiler/references/debug-profile-checklists.md`
 - Debug/profile checklists, when debugging or profiling: `threejs-debug-profiler/references/checklists/scene-debugging.md` or `threejs-debug-profiler/references/checklists/performance-profile.md`
 - QA/release: `threejs-qa-release/references/qa-release-checklists.md`
 - QA/release checklists, for final verification: `threejs-qa-release/references/checklists/visual-verification.md`, `threejs-qa-release/references/checklists/playtest-qa.md`, and `threejs-qa-release/references/checklists/release.md`
+- Visual test harness, when premium/release-ready visual QA, generated asset visibility, UI regression protection, or screenshot baselines are warranted: `threejs-qa-release/references/visual-test-harness.md` and `threejs-qa-release/references/checklists/visual-test-harness.md`
 - 3D generator, when loaded by the external asset sourcing gate: `threejs-3d-generator/references/api-notes.md`
 - 3D generator, when loaded for a game: `threejs-3d-generator/references/threejs-integration.md`
 - 3D plus image generator, when both are loaded: `threejs-3d-generator/references/image-generator-workflows.md`
@@ -106,17 +114,22 @@ External asset sourcing:
 - Audio assets generated or skip reason:
 Required references loaded:
 - Gameplay workflows: yes/no/not-needed, path or reason:
+- Game design and level design: yes/no/not-needed, path or reason:
 - Physics engine selection: yes/no/not-needed, path or reason:
 - Gameplay/new-game checklists: yes/no/not-needed, path or reason:
+- Gameplay design/level checklist: yes/no/not-needed, path or reason:
 - Visual scorecard: yes/no/not-needed, path or reason:
 - Graphics implementation blueprint: yes/no/not-needed, path or reason:
 - Model recipes: yes/no/not-needed, path or reason:
 - Render recipes: yes/no/not-needed, path or reason:
+- Technical art: yes/no/not-needed, path or reason:
 - Graphics checklists: yes/no/not-needed, path or reason:
+- Technical art checklist: yes/no/not-needed, path or reason:
 - UI patterns: yes/no/not-needed, path or reason:
 - UI checklists: yes/no/not-needed, path or reason:
 - Debug/profile checklists: yes/no/not-needed, path or reason:
 - QA/release checklists: yes/no/not-needed, path or reason:
+- Visual test harness: yes/no/not-needed, path or reason:
 - 3D generator API notes: yes/no/not-needed, path or reason:
 - 3D generator Three.js integration: yes/no/not-needed, path or reason:
 - 3D/image generator workflows: yes/no/not-needed, path or reason:
@@ -134,14 +147,16 @@ Mark a phase `done` only after implementation plus verification. If a phase is s
 ## Phase 1: Discovery And Playable Contract
 
 - Inspect package scripts, dependencies, app structure, renderer setup, loop ownership, input, camera, UI, diagnostics, and existing screenshots.
-- Define the one-sentence loop: player verb, objective, pressure, reward, fail state, restart.
+- Define the design brief: player promise, target feeling, primary verb, objective, pressure, reward/progression, fail/retry, skill expression, and non-goals.
+- Define the core loop contract: player verb, objective, pressure, reward, fail state, restart.
+- Define the first level/encounter plan: spatial format, player start, first decision, first threat, first reward, landmarks, escalation, recovery beats, and readability.
 - Define target devices and performance budget. If absent, assume desktop plus mobile browser, WebGL/WebGL2 fallback, and capped DPR.
 - Identify the highest-risk surfaces: blank/broken canvas, no playable loop, weak controls, basic graphics, unreadable UI, or unverified release.
 
 Exit evidence:
 
 - Current scripts/dependencies known.
-- Playable loop stated.
+- Game design brief, core loop contract, and level/encounter plan stated.
 - Phase ledger initialized.
 
 For a new project, use the gameplay skill's packaged scaffold creator:
@@ -155,6 +170,8 @@ python3 <threejs-gameplay-systems-skill-dir>/scripts/create_threejs_game.py ./my
 Build or repair the playable loop before visual depth.
 
 - Add renderer, scene, camera, resize, update loop, input intents, state machine, entities, collision or physics, scoring/progression, fail/retry, HUD state, audio/VFX hooks, and diagnostics.
+- Implement from the design brief and level/encounter plan. Do not bolt mechanics onto a static scene after the fact.
+- If the level/arena/track/wave/hole/puzzle is decorative rather than decision-shaping, return to the plan before adding art.
 - If the game is physics-heavy, load the physics selection reference, choose an engine explicitly, and prefer Rapier for robust browser physics unless the task fits custom collision or a small cannon-es fallback.
 - Keep ownership boundaries clear: `core`, `game`, `entities`, `systems`, `assets`, `ui`, `tests`.
 - Tune movement, camera follow, FOV, acceleration, cooldowns, difficulty, and restart through short play loops.
@@ -168,6 +185,7 @@ Exit evidence:
 - Main control path changes state.
 - Objective or score progresses.
 - Fail/retry path exists when relevant.
+- Game design/level checklist outcome is reported for broad game builds or major gameplay changes.
 - Physics engine choice, timestep, collider strategy, and diagnostics are reported when physics is in scope.
 - New-game checklist outcome is reported for new games or first playable slices.
 
@@ -195,6 +213,7 @@ Use when screenshots look basic or the user asks for premium quality.
 
 - Score active-play screenshot across art direction, hero/player, obstacles/enemies, rewards/interactables, world/environment, materials/textures, lighting/render, VFX/motion, UI/HUD, and performance evidence.
 - Add production graphics architecture: material library, procedural textures, decals, model factories, world prop kit, VFX system, lighting/render pipeline, diagnostics.
+- Add technical art architecture: material kit, shader/VFX purpose, instancing/LOD/culling strategy, imported asset cleanup plan, DPR/shadow/post budget, and mobile tradeoffs.
 - Upgrade all visible surfaces, not only the player: hero, hazards, rewards, ground/track/arena, foreground props, background layers, interactable telegraphs, material variation, and state VFX.
 - Use `threejs-image-generator` for concept/reference images, texture references, logos, icons, decals, skies, and image-to-3D inputs when 2D source art would improve quality.
 - Use `threejs-3d-generator` for high-value 3D assets such as characters, creatures, vehicles, buildings, weapons, hero props, pickups, bosses, rigging, animation, texture, and conversion when procedural code is not enough.
@@ -210,6 +229,7 @@ Exit evidence:
 - Average score and automatic failures remaining.
 - Active desktop and mobile screenshots.
 - Renderer diagnostics: calls, triangles, geometries, textures, and material count when possible.
+- Technical art evidence: budget target/actuals, material kit, VFX readability, instancing/LOD/culling decision, imported asset cleanup when relevant.
 - Imported asset diagnostics when generated 3D was used: task IDs, file paths, file size, scale/bounds, collision proxy, animation clips, triangles/materials/textures when possible.
 - No scorecard category below 2 for premium claims.
 
@@ -262,6 +282,7 @@ node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs --url htt
 
 - Trigger main input, objective progression, fail/retry, and recent risky paths.
 - Verify HUD text fit, safe areas, touch targets, resize, and mobile input.
+- Decide whether to add or extend a visual test harness. For premium/release-ready visual QA, generated asset visibility, or UI regression risk, prefer Playwright screenshot baselines with deterministic states unless a real blocker exists. Report added/extended/skipped.
 - For release, verify production preview, base path, static assets, debug gating, bundle/large assets, and deployment assumptions.
 
 Exit evidence:
@@ -269,6 +290,7 @@ Exit evidence:
 - Commands run and pass/fail.
 - URL used.
 - Screenshots/artifact paths.
+- Visual test harness decision, states covered, commands, thresholds/masks, and flake risks when relevant.
 - Issues fixed or listed with likely owners.
 - Residual risks.
 
@@ -280,11 +302,14 @@ For premium/AAA/showcase claims, all of these must be true:
 - External asset sourcing ledger is present for premium/AAA/showcase graphics work.
 - Credential probe output plus external output evidence or blocker evidence is present for premium asset-category claims.
 - Playable loop works through real input.
+- Game design brief, core loop contract, and level/encounter plan are reported for broad game builds.
 - Active-play screenshots exist for desktop and mobile.
 - Visual scorecard has no category below 2 and average is at least 2.3.
 - Visual scorecard uses the authored rubric, not an improvised rubric.
 - HUD/menu states are readable and responsive.
 - Renderer diagnostics exist after graphics changes.
+- Technical art budget/readability evidence exists after premium graphics changes.
+- Visual test harness decision is reported for premium/release-ready visual QA.
 - Build and browser QA passed or blockers are clearly reported.
 - Physics-heavy games include engine choice, timestep, collider strategy, sensors, CCD use, and body/collider diagnostics.
 

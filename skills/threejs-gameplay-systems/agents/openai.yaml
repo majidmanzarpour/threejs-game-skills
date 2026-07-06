@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Gameplay Systems"
-  short_description: "Build playable Three.js systems"
-  default_prompt: "Create or improve this Three.js game's playable loop, architecture, mechanics, controls, camera, and feel with browser verification. First load the gameplay workflows reference, report the reference ledger, and include the gameplay checklist outcome."
+  short_description: "Design and build playable Three.js systems"
+  default_prompt: "Create or improve this Three.js game's design brief, core loop, level/encounter plan, playable loop, architecture, mechanics, controls, camera, difficulty, and feel with browser verification. First load the gameplay workflows reference and the game design/level design reference when broad gameplay is in scope. Report the reference ledger, design brief, level plan, tuning notes, and gameplay checklist outcome."

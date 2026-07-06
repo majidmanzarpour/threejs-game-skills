@@ -13,6 +13,9 @@ BASE_REQUIRED = [
     "skill-loading ledger",
     "reference ledger",
     "phase ledger",
+    "game design brief",
+    "core loop",
+    "level/encounter plan",
     "gameplay systems",
     "aaa graphics",
     "ui",
@@ -52,6 +55,16 @@ PREMIUM_ASSET_SOURCING = [
     "hero/player",
     "world/sky/background",
     "materials/textures/decals",
+]
+
+PREMIUM_TECHNICAL_ART = [
+    "technical art",
+    "render budget",
+    "vfx readability",
+]
+
+PREMIUM_VISUAL_HARNESS = [
+    "visual test harness",
 ]
 
 PREMIUM_AUDIO = [
@@ -100,6 +113,17 @@ def normalize(text: str) -> str:
     text = text.replace("reference loading ledger", "reference ledger")
     text = text.replace("asset sourcing ledger", "external asset sourcing")
     text = text.replace("external asset ledger", "external asset sourcing")
+    text = text.replace("gameplay brief", "game design brief")
+    text = text.replace("design brief", "game design brief")
+    text = text.replace("playable loop", "core loop")
+    text = text.replace("level plan", "level/encounter plan")
+    text = text.replace("encounter plan", "level/encounter plan")
+    text = text.replace("level and encounter plan", "level/encounter plan")
+    text = text.replace("technical-art", "technical art")
+    text = text.replace("technical art budget", "technical art render budget")
+    text = text.replace("render-budget", "render budget")
+    text = text.replace("visual harness", "visual test harness")
+    text = text.replace("screenshot baseline", "visual test harness")
     text = text.replace("threejs-3d-generator", "3d generator")
     text = text.replace("threejs-image-generator", "image generator")
     text = text.replace("threejs-audio-generator", "audio generator")
@@ -176,6 +200,8 @@ def main() -> int:
     if args.premium:
         missing.extend(missing_markers(text, PREMIUM_SCORECARD))
         missing.extend(missing_markers(text, PREMIUM_ASSET_SOURCING))
+        missing.extend(missing_markers(text, PREMIUM_TECHNICAL_ART))
+        missing.extend(missing_markers(text, PREMIUM_VISUAL_HARNESS))
         missing.extend(missing_markers(text, VERIFICATION_MARKERS))
         if not has_external_output_evidence(text) and not has_external_blocker(text):
             missing.append("real external asset evidence or blocker")

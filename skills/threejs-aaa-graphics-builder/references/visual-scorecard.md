@@ -59,8 +59,8 @@ Score active-play screenshots, not idle title screens or isolated showroom model
 10. Performance evidence.
    - 0: No metrics after visual changes.
    - 1: Informal "seems fine".
-   - 2: Renderer counts, build/browser QA, desktop/mobile screenshots.
-   - 3: Baseline/post metrics, bottleneck notes, budgets, and optimized asset strategy.
+   - 2: Renderer counts, build/browser QA, desktop/mobile screenshots, and technical-art budget notes.
+   - 3: Baseline/post metrics, bottleneck notes, budgets, optimized asset strategy, and VFX/readability tradeoffs.
 
 ## Thresholds
 
@@ -92,6 +92,7 @@ Any of these prevents a premium/AAA/showcase claim:
 - The game is not playable through real input.
 - No active-play screenshot was captured.
 - No renderer diagnostics were collected after major graphics work.
+- No technical-art budget or imported/generated asset diagnostics were reported for premium graphics work.
 
 ## Report Format
 

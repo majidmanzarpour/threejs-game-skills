@@ -5,7 +5,11 @@
 - `npm run build` completes.
 - The first screen is the game, not a landing page.
 - The player can interact within 5 seconds.
+- A compact game design brief exists: player promise, primary verb, objective, pressure, reward, fail/retry, and non-goals.
+- A level/encounter plan exists for the first playable space, track, arena, wave, hole, table, or puzzle.
 - There is a clear objective, score, timer, health, level target, or fail condition.
+- The core loop is proven through real input, not only described in text.
+- The first playable minute includes at least one meaningful decision and one feedback/reward event.
 - Keyboard/mouse input works on desktop.
 - Touch or pointer input works if mobile is in scope.
 - The camera frames the playable area at desktop and mobile sizes.
@@ -13,4 +17,4 @@
 - Browser console has no blocking errors.
 - A screenshot proves the canvas rendered.
 - A canvas-pixel check proves the canvas is not blank.
-- Final report names controls, verification evidence, and remaining risks.
+- Final report names design brief, level/encounter plan, controls, verification evidence, and remaining risks.
