@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  // One worker: parallel headless WebGL contexts share the software
+  // rasterizer, and the frame-time collapse makes game time drift from wall
+  // time, flaking timed gameplay phases and screenshot baselines.
+  workers: 1,
   timeout: 30_000,
   expect: {
     timeout: 5_000,

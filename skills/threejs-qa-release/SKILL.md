@@ -41,7 +41,7 @@ Use the bundled inspector when the target project does not already include one:
 node <this-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188
 ```
 
-For mobile emulation, add `--mobile`. Generated games from the packaged scaffold also include their own `scripts/inspect-threejs-canvas.mjs` and `npm run inspect:canvas`.
+For mobile emulation, add `--mobile`. Add `--state <name>` (and optionally `--seed <n>`) to drive the game's `__THREE_GAME_TEST_HOOKS__` before capture, so every named state (active-play, fail, stress) can be measured deterministically without live play — outputs are suffixed per state. Generated games from the packaged scaffold also include their own `scripts/inspect-threejs-canvas.mjs` and `npm run inspect:canvas`.
 
 The inspector JSON includes a `metrics` block (color entropy, edge density, luminance contrast, dominant-color share) and a `renderBudget` comparison against starting-point tier budgets. Cite these as the Measured Evidence in the visual scorecard (`threejs-aaa-graphics-builder/references/visual-scorecard.md`); over-budget rows need a documented tradeoff, and blank-canvas or error conditions still exit nonzero.
 

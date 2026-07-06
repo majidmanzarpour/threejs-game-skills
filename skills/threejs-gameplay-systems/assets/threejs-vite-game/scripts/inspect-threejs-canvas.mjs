@@ -17,6 +17,8 @@ function parseArgs(argv) {
     out: 'artifacts/canvas-inspection',
     mobile: false,
     wait: 750,
+    state: null,
+    seed: undefined,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -25,8 +27,14 @@ function parseArgs(argv) {
     else if (value === '--out') args.out = argv[++i];
     else if (value === '--mobile') args.mobile = true;
     else if (value === '--wait') args.wait = Number(argv[++i]);
+    else if (value === '--state') args.state = argv[++i];
+    else if (value === '--seed') args.seed = Number(argv[++i]);
     else if (value === '-h' || value === '--help') {
-      console.log('Usage: inspect-threejs-canvas.mjs [--url URL] [--out DIR] [--mobile] [--wait MS]');
+      console.log(
+        'Usage: inspect-threejs-canvas.mjs [--url URL] [--out DIR] [--mobile] [--wait MS] [--state NAME] [--seed N]\n' +
+          '  --state/--seed drive window.__THREE_GAME_TEST_HOOKS__ (setState/seed) before capture\n' +
+          '  so specific game states can be measured deterministically.',
+      );
       process.exit(0);
     } else {
       throw new Error(`Unknown argument: ${value}`);
@@ -194,23 +202,42 @@ async function main() {
 
   await page.goto(args.url, { waitUntil: 'networkidle' });
   await page.waitForSelector('canvas', { state: 'visible', timeout: 10_000 });
+
+  if (args.state || args.seed !== undefined) {
+    const applied = await page.evaluate(({ seed, state }) => {
+      const hooks = window.__THREE_GAME_TEST_HOOKS__;
+      if (!hooks) return false;
+      if (typeof seed === 'number') hooks.seed?.(seed);
+      if (state) hooks.setState?.(state);
+      return true;
+    }, { seed: args.seed, state: args.state });
+    if (!applied) {
+      console.error(
+        'warning: --state/--seed requested but __THREE_GAME_TEST_HOOKS__ is not defined; capturing the current state instead',
+      );
+    }
+  }
+
   await page.waitForTimeout(args.wait);
 
   const mode = args.mobile ? 'mobile' : 'desktop';
+  const baseName = args.state ? `${mode}-${args.state}` : mode;
   const result = await sampleCanvas(page, mode);
-  const screenshotPath = path.join(args.out, `${mode}.png`);
+  const screenshotPath = path.join(args.out, `${baseName}.png`);
   await page.screenshot({ path: screenshotPath, fullPage: true });
 
   const report = {
     url: args.url,
     mode,
+    state: args.state,
+    seed: args.seed ?? null,
     screenshotPath,
     result,
     consoleErrors,
     pageErrors,
   };
 
-  await writeFile(path.join(args.out, `${mode}.json`), `${JSON.stringify(report, null, 2)}\n`);
+  await writeFile(path.join(args.out, `${baseName}.json`), `${JSON.stringify(report, null, 2)}\n`);
   await browser.close();
 
   console.log(JSON.stringify(report, null, 2));

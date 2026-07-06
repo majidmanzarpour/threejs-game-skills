@@ -219,7 +219,7 @@ Verification:
 Use for the independent review pass required by `references/visual-scorecard.md` for premium/AAA/showcase claims. Give the reviewer ONLY the inputs below — no build history, no prior scores, no description of the work performed.
 
 Inputs:
-- Active-play screenshots (desktop and mobile): <paths>
+- The COMPLETE screenshot capture set — every captured state, desktop and mobile, never a hand-picked subset: <paths>
 - Scorecard rubric: `threejs-aaa-graphics-builder/references/visual-scorecard.md`
 - Calibration anchors: `threejs-aaa-graphics-builder/assets/scorecard-anchors/`
 - Inspector metrics JSON: <paths>

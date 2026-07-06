@@ -28,6 +28,11 @@ Adapt `INPUT_SCRIPT` to the game's controls and level layout: an endless runner 
 - Time-to-first-fail (games with fail states) — add a scripted "reckless" run that seeks hazards and assert the fail state triggers and the retry path restores play; a game that cannot be failed has no pressure, and a fail state that cannot be retried is a release blocker.
 - Console/page errors — must be empty for the full run.
 
+## Headless WebGL Caveats
+
+- Run Playwright suites with `workers: 1` for WebGL games (the scaffold config does). Parallel headless contexts share the software rasterizer; the frame-time collapse makes game time drift from wall time, flaking timed phases and screenshot baselines.
+- Never report headless FPS as performance evidence: headless Chromium renders WebGL on SwiftShader (software), which can run at ~2 fps on scenes a real GPU renders at 120. Capture FPS on a real GPU (headed browser or a `--gpu` probe) and label headless numbers as functional-only.
+
 ## Difficulty And Fairness Signals
 
 For games with fail states, run the bot at two skill levels (e.g. reaction delay 0ms vs 300ms between script steps) and compare survival time and score. If the delayed bot survives as long as the fast one, difficulty pressure is decorative; if even the fast script cannot survive the first threat, the opening is unfair. Report both runs when difficulty tuning is in scope.

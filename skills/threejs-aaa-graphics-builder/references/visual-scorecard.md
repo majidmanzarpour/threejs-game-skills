@@ -120,7 +120,7 @@ Run the canvas inspector (`npm run inspect:canvas`, or `threejs-qa-release/scrip
 
 The builder must not be the only grader. For premium/AAA/showcase claims:
 
-- If the runner supports subagents (Task tool or equivalent), spawn a reviewer with ONLY: the active-play screenshots, this scorecard file, and the inspector metrics JSON. No build context, no prior scores. The reviewer fills the scorecard independently; reconcile by taking the lower score per category unless concrete evidence overturns it. Report both score sets.
+- If the runner supports subagents (Task tool or equivalent), spawn a reviewer with ONLY: the screenshots, this scorecard file, and the inspector metrics JSON. No build context, no prior scores. The reviewer must receive the COMPLETE capture set — every captured state, desktop and mobile — never a hand-picked subset; a curated selection can hide weak states or miss content the builder knows exists (capture states with the inspector's `--state` flag so nothing is gated behind live play). The reviewer fills the scorecard independently; reconcile by taking the lower score per category unless concrete evidence overturns it. Report both score sets.
 - If subagents are unavailable, run an adversarial self-review before finalizing: for each category, write one sentence making the strongest case that the score is a 1, citing what is visible in the screenshot; only then assign the score. Include these sentences in the report.
 
 ## Report Format
