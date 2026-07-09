@@ -30,7 +30,7 @@ Install all skills for Claude Code:
 npx skills add majidmanzarpour/threejs-game-skills --skill '*' -a claude-code -g -y
 ```
 
-If your installed `skills` CLI does not support the Claude Code target, install from a cloned checkout with `./install.sh --claude`.
+If your installed `skills` CLI does not support one of these targets, install from a cloned checkout instead: `./install.sh --codex` for Codex, `./install.sh --claude` for Claude Code, or `./install.sh --all` for both.
 
 For local development from a cloned checkout:
 
@@ -56,6 +56,11 @@ Automatically use the relevant gameplay, graphics, UI, asset generation, audio, 
 and QA skills. Build a playable loop first, then iterate until it passes browser,
 mobile, visual, UI, performance, and release checks.
 ```
+
+Both runners share the same `SKILL.md` files and auto-discover the skills once installed; the prompt above works in either:
+
+- **Claude Code** reads skills from `~/.claude/skills` and routes from each `SKILL.md` description. Invoke the director with `/threejs-game-director`, or just name it in a prompt — it loads the sibling skills itself.
+- **Codex** reads skills from `~/.codex/skills`, with each skill's `agents/openai.yaml` supplying its display name and a default kickoff prompt. Name the director in your prompt and it pulls in the specialists the same way.
 
 The agent should:
 
@@ -110,13 +115,16 @@ Windows PowerShell, persistent for your user account:
 
 After setting persistent Windows variables, restart your terminal, Codex, or Claude Code so the agent process can see the new environment.
 
-The director skill includes a credential probe that sources common shell profiles before deciding a key is missing. Run it from wherever you installed the skills; for Claude Code:
+The director skill includes a credential probe that sources common shell profiles before deciding a key is missing. Run it from wherever you installed the skills:
 
 ```bash
+# Claude Code
 bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
+# Codex
+bash ~/.codex/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 ```
 
-For Codex, swap `~/.claude` for `~/.codex`. It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
+It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
 
 Provider notes:
 
