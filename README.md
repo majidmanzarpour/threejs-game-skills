@@ -2,7 +2,7 @@
 
 Self-contained Codex and Claude Code skills for building playable, polished Three.js browser games. Install the skills, then ask your agent to use `threejs-game-director`; the director routes gameplay, graphics, UI, asset generation, audio, debugging, and release verification without requiring users to choose every specialist skill manually.
 
-The package includes the runtime materials agents need: `SKILL.md` files, references, checklists, prompt templates, helper scripts, and a Vite + TypeScript + Three.js scaffold bundled inside the relevant skill folders.
+The package includes the runtime materials agents need: `SKILL.md` files, references, checklists, prompt templates, helper scripts, and a Vite + TypeScript + Three.js scaffold bundled inside the relevant skill folders. Generated games ship with deterministic test hooks, a seeded RNG, and Playwright templates for smoke tests, visual-regression baselines, and bot playtests so agents can verify their own work end to end.
 
 Created by [Majid Manzarpour](https://x.com/majidmanzarpour).
 
@@ -110,11 +110,13 @@ Windows PowerShell, persistent for your user account:
 
 After setting persistent Windows variables, restart your terminal, Codex, or Claude Code so the agent process can see the new environment.
 
-The director skill includes a credential probe that sources common shell profiles before deciding a key is missing:
+The director skill includes a credential probe that sources common shell profiles before deciding a key is missing. Run it from wherever you installed the skills; for Claude Code:
 
 ```bash
-bash ~/.agents/skills/threejs-game-director/scripts/probe_asset_credentials.sh
+bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 ```
+
+For Codex, swap `~/.claude` for `~/.codex`. It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
 
 Provider notes:
 
@@ -213,8 +215,9 @@ Premium/AAA claims should not rely on a static scene, placeholder cubes, generic
 Installed skills are self-contained. They do not depend on root docs, root scaffolds, root prompts, or root checklists.
 
 - `skills/`: the full public package. Each skill owns its required `SKILL.md`, `references/`, `scripts/`, and `assets/`.
-- `skills/threejs-gameplay-systems/assets/threejs-vite-game/`: packaged game scaffold used by the skills when starting from an empty project.
-- `skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs`: packaged browser/canvas inspection helper used by QA workflows.
+- `skills/threejs-gameplay-systems/assets/threejs-vite-game/`: packaged game scaffold used by the skills when starting from an empty project. Ships deterministic test hooks (`__THREE_GAME_TEST_HOOKS__`), a seeded RNG, and `tests/` templates for smoke tests, visual-regression baselines, and bot playtests.
+- `skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs`: packaged browser/canvas inspection helper — reports non-blank pixels, measured visual metrics (color entropy, edge density, luminance contrast), and render-budget rows; `--state`/`--seed` drive the test hooks for deterministic per-state captures.
+- `skills/threejs-aaa-graphics-builder/assets/scorecard-anchors/`: calibration reference screenshots for the visual scorecard.
 - `scripts/`: local validation helpers for maintainers.
 - `install.sh`: local installer for working on this checkout.
 
@@ -233,6 +236,7 @@ Maintainers can run packaged helpers directly when testing the skill package, bu
 ```bash
 python3 skills/threejs-gameplay-systems/scripts/create_threejs_game.py ../my-threejs-game
 node skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --mobile
+node skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --seed 12345
 ```
 
 ## License
