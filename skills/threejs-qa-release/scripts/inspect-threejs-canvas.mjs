@@ -110,6 +110,54 @@ function computePixelMetrics(png) {
   };
 }
 
+// Playwright's default headless is chromium_headless_shell, which ships no GPU
+// backend and silently falls back to SwiftShader (CPU). Every frame-time and FPS
+// number measured that way is software-rendered fiction. channel:'chromium' runs
+// the full Chromium build in new headless mode against the real GPU.
+async function launchBrowser() {
+  try {
+    return await chromium.launch({ channel: 'chromium' });
+  } catch {
+    console.error(
+      'warning: channel:"chromium" is unavailable, falling back to the bundled headless shell.\n' +
+        '  Rendering will be software (SwiftShader) and any FPS/frame-time evidence is invalid.\n' +
+        '  Fix with: npx playwright install chromium',
+    );
+    return chromium.launch();
+  }
+}
+
+// Records which GPU actually rasterized the run, so a software fallback can never
+// masquerade as performance evidence again. Reuses the game's own context when it
+// is WebGL rather than allocating a second one.
+async function readGpuInfo(page) {
+  const info = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return null;
+    let gl = null;
+    try {
+      gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    } catch {
+      gl = null;
+    }
+    if (!gl) return null;
+    const debug = gl.getExtension('WEBGL_debug_renderer_info');
+    return {
+      renderer: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+      vendor: debug ? gl.getParameter(debug.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
+    };
+  });
+
+  if (!info?.renderer) {
+    return { renderer: null, vendor: null, softwareRendered: null };
+  }
+
+  return {
+    ...info,
+    softwareRendered: /swiftshader|llvmpipe|software|basic render/i.test(info.renderer),
+  };
+}
+
 function checkRenderBudget(renderer, mode) {
   if (!renderer) return null;
   const budget = RENDER_BUDGETS[mode];
@@ -187,7 +235,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   await mkdir(args.out, { recursive: true });
 
-  const browser = await chromium.launch();
+  const browser = await launchBrowser();
   const context = await browser.newContext(args.mobile
     ? { ...devices['iPhone 13'], userAgent: undefined }
     : { viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
@@ -222,9 +270,17 @@ async function main() {
 
   const mode = args.mobile ? 'mobile' : 'desktop';
   const baseName = args.state ? `${mode}-${args.state}` : mode;
+  const gpu = await readGpuInfo(page);
   const result = await sampleCanvas(page, mode);
   const screenshotPath = path.join(args.out, `${baseName}.png`);
   await page.screenshot({ path: screenshotPath, fullPage: true });
+
+  if (gpu.softwareRendered) {
+    console.error(
+      `warning: this run rasterized on ${gpu.renderer} (software). Pixel and budget ` +
+        'checks remain valid; any FPS or frame-time reading from it does not.',
+    );
+  }
 
   const report = {
     url: args.url,
@@ -232,6 +288,7 @@ async function main() {
     state: args.state,
     seed: args.seed ?? null,
     screenshotPath,
+    gpu,
     result,
     consoleErrors,
     pageErrors,
