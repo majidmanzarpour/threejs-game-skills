@@ -1,27 +1,28 @@
 ---
 name: threejs-3d-generator
-description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games using the Tripo API. Use for text-to-3D, image-to-3D, 2D concept to 3D conversion, game-ready GLB/FBX assets, characters, creatures, buildings, props, weapons, terrain pieces, auto-rigging, animation retargeting, model texturing, LEGO/voxel/Minecraft-style stylization, low-poly/quad conversion, and browser asset pipelines. Pair with threejs-image-generator for concepts, texture references, sky/background/terrain textures, logos, icons, and GUI art before image-to-3D generation."
+description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games using Atlas Cloud or the Tripo API. Use for text-to-3D, image-to-3D, 2D concept to 3D conversion, game-ready GLB/FBX assets, characters, creatures, buildings, props, weapons, terrain pieces, auto-rigging, animation retargeting, model texturing, LEGO/voxel/Minecraft-style stylization, low-poly/quad conversion, and browser asset pipelines. Pair with threejs-image-generator for concepts, texture references, sky/background/terrain textures, logos, icons, and GUI art before image-to-3D generation."
 ---
 
 # Three.js 3D Generator
 
 ## Purpose
 
-Create production-oriented 3D assets, then prepare them for Three.js games. This is the Three.js game system's 3D-generation layer; it uses Tripo as the provider for text-to-3D, image-to-3D, texturing, rigging, retargeting, stylization, conversion, and downloadable GLB/FBX outputs.
+Create production-oriented 3D assets, then prepare them for Three.js games. This is the Three.js game system's 3D-generation layer. Atlas Cloud and Tripo are optional providers for text-to-3D and image-to-3D; Tripo additionally supports texturing, rigging, retargeting, stylization, and conversion.
 
 Resolve `<this-skill-dir>` in the commands below in this order: `~/.claude/skills/threejs-3d-generator`, `~/.codex/skills/threejs-3d-generator`, `~/.agents/skills/threejs-3d-generator`, or repo `skills/threejs-3d-generator`.
 
 ## API Key
 
-Never store API keys in skill files or client-side game code, and never paste a key value into a report. The script reads `--api-key` or `TRIPO_API_KEY`.
+Never store API keys in skill files or client-side game code, and never paste a key value into a report. The provider scripts read `--api-key`, `ATLASCLOUD_API_KEY`, or `TRIPO_API_KEY`.
 
 Step 0, before declaring the key unavailable: run this skill's own probe and paste its literal output into the report.
 
 ```bash
-python3 <this-skill-dir>/scripts/threejs_3d_asset.py probe   # prints TRIPO_API_KEY=SET|MISSING
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py probe   # prints ATLASCLOUD_API_KEY=SET|MISSING
+python3 <this-skill-dir>/scripts/threejs_3d_asset.py probe # prints TRIPO_API_KEY=SET|MISSING
 ```
 
-`TRIPO_API_KEY=MISSING` is only a valid skip/blocker reason when this output is shown. Keys defined only in a shell profile can be absent from the process env; if the plain probe prints MISSING unexpectedly, wrap it: `zsh -lc 'source ~/.zprofile 2>/dev/null || true; source ~/.zshrc 2>/dev/null || true; python3 <this-skill-dir>/scripts/threejs_3d_asset.py probe'`. When the director skill is loaded, prefer `threejs-game-director/scripts/probe_asset_credentials.sh`, which probes all three asset keys at once.
+An explicit `MISSING` line is the only valid key-based skip/blocker reason. Keys defined only in a shell profile can be absent from the process env; if a plain probe prints MISSING unexpectedly, wrap it in a login shell that sources the user's profile. When the director skill is loaded, prefer `threejs-game-director/scripts/probe_asset_credentials.sh`, which probes all asset keys at once.
 
 Generated model download URLs expire quickly, so download outputs immediately after successful tasks.
 
@@ -30,6 +31,7 @@ Generated model download URLs expire quickly, so download outputs immediately af
 Reference gate:
 
 - Load `references/api-notes.md` before provider API work, endpoint/task decisions, model-version choices, polling, postprocess, conversion, rigging, animation, or download handling.
+- Load `references/atlas-api-notes.md` before Atlas model selection, generation, polling, resume, or download handling.
 - Load `references/threejs-integration.md` before importing Tripo outputs into a browser game or advising GLB/FBX integration.
 - Load `references/image-generator-workflows.md` before pairing `threejs-image-generator` with this skill for 2D concepts, texture references, UI art, logos, decals, or image-to-3D inputs.
 
@@ -39,7 +41,33 @@ Run from the user's current project directory:
 
 ```bash
 python3 <this-skill-dir>/scripts/threejs_3d_asset.py --help
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py --help
 ```
+
+## Atlas Cloud Generation
+
+Use Atlas when the user selects it, when `ATLASCLOUD_API_KEY=SET` and `TRIPO_API_KEY=MISSING`, or when its live catalog has a better text/image-to-3D model for the task. Atlas is opt-in; do not replace a working Tripo workflow without a reason recorded in the external asset sourcing ledger.
+
+```bash
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py models
+
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py text \
+  --prompt "game-ready sci-fi hover bike, readable silhouette, PBR materials" \
+  --pbr --format GLB --wait --download --out-dir assets/models/hover-bike
+
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py image \
+  --image assets/concepts/hover-bike.png \
+  --pbr --format GLB --wait --download --out-dir assets/models/hover-bike
+```
+
+The Atlas client reads the live model catalog and selected model schema before submitting. It performs one billable generation POST, writes `job.json`, and only retries GET polling. Resume an interrupted job instead of submitting again:
+
+```bash
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py resume \
+  --job assets/models/hover-bike/job.json --wait --download
+```
+
+Load `references/atlas-api-notes.md` for the full provider contract. Use Tripo for rigging, animation, texture, conversion, and other Tripo-specific post-processing.
 
 ## Common Commands
 
