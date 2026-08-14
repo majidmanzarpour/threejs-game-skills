@@ -81,6 +81,7 @@ Never commit API keys or put them in browser-side game code. These skills use pr
 
 | Provider | Skill | Environment variable | Use cases | Key setup |
 | --- | --- | --- | --- | --- |
+| Atlas Cloud | `threejs-3d-generator` | `ATLASCLOUD_API_KEY` | Live-catalog text/image-to-3D generation with resumable polling and game-ready GLB downloads. | [Atlas Cloud API keys](https://www.atlascloud.ai/console/api-keys). |
 | Tripo API | `threejs-3d-generator` | `TRIPO_API_KEY` | Text/image/multiview to 3D, game-ready GLB/FBX hero models, vehicles, props, buildings, weapons, textures, rigging, animation, stylization, mesh conversion, post-processing. | [Tripo quick start](https://platform.tripo3d.ai/docs/quick-start) and [Tripo API overview](https://www.tripo3d.ai/api). |
 | Gemini image API | `threejs-image-generator` | `GEMINI_API_KEY` | Concept art, image-to-3D source images, texture references, decals, skies, backgrounds, icons, logos, GUI art, title/menu art. | [Gemini API key docs](https://ai.google.dev/gemini-api/docs/api-key) and [Google AI Studio keys](https://aistudio.google.com/app/apikey). |
 | ElevenLabs API | `threejs-audio-generator` | `ELEVENLABS_API_KEY` | SFX, ambience loops, UI sounds, announcer lines, dialogue TTS, voice conversion, audio cleanup, game audio manifests. | [ElevenLabs quickstart](https://elevenlabs.io/docs/eleven-api/quickstart) and [API authentication](https://elevenlabs.io/docs/api-reference/authentication). |
@@ -91,6 +92,7 @@ macOS/Linux with `zsh` or `bash`:
 
 ```bash
 export TRIPO_API_KEY="..."
+export ATLASCLOUD_API_KEY="..."
 export GEMINI_API_KEY="..."
 export ELEVENLABS_API_KEY="..."
 ```
@@ -101,6 +103,7 @@ Windows PowerShell, current terminal session only:
 
 ```powershell
 $env:TRIPO_API_KEY = "..."
+$env:ATLASCLOUD_API_KEY = "..."
 $env:GEMINI_API_KEY = "..."
 $env:ELEVENLABS_API_KEY = "..."
 ```
@@ -109,6 +112,7 @@ Windows PowerShell, persistent for your user account:
 
 ```powershell
 [Environment]::SetEnvironmentVariable("TRIPO_API_KEY", "...", "User")
+[Environment]::SetEnvironmentVariable("ATLASCLOUD_API_KEY", "...", "User")
 [Environment]::SetEnvironmentVariable("GEMINI_API_KEY", "...", "User")
 [Environment]::SetEnvironmentVariable("ELEVENLABS_API_KEY", "...", "User")
 ```
@@ -124,11 +128,12 @@ bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 bash ~/.codex/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 ```
 
-It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
+It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Atlas Cloud, Gemini, and ElevenLabs) without ever printing key values.
 
 Provider notes:
 
 - Tripo is optional but useful for high-value 3D surfaces that procedural code alone rarely makes premium: hero vehicles, bosses, weapons, buildings, creatures, props, and textured GLB/FBX assets.
+- Atlas Cloud is optional for live-catalog text/image-to-3D generation. Its client saves a resumable job before polling and never retries a billable generation POST.
 - Gemini image generation is optional but useful before Tripo image-to-3D and for high-quality texture, sky, icon, logo, decal, and GUI sources.
 - ElevenLabs is optional but useful for making games feel finished through interaction SFX, ambience, UI feedback, voice, and cleanup.
 - Google also supports `GOOGLE_API_KEY`, but these skills standardize on `GEMINI_API_KEY` for clarity.
@@ -142,7 +147,7 @@ Provider notes:
 - Use `threejs-game-ui-designer` for HUDs, menus, overlays, responsive layout, safe areas, icons, touch controls, and text fit.
 - Use `threejs-debug-profiler` for black screens, runtime errors, loading issues, resize/mobile bugs, performance, draw calls, triangles, textures, and memory.
 - Use `threejs-qa-release` for production builds, browser verification, screenshots, canvas pixels, mobile checks, release risk reports, and static-hosting readiness.
-- Use `threejs-3d-generator` for Tripo API text/image-to-3D models, texture, rigging, animation, conversion, and GLB/FBX game assets.
+- Use `threejs-3d-generator` for Atlas Cloud or Tripo text/image-to-3D models and for Tripo texture, rigging, animation, conversion, and GLB/FBX game assets.
 - Use `threejs-image-generator` for Gemini-generated concepts, image-to-3D inputs, textures, decals, skies, backgrounds, icons, logos, GUI art, and title/menu art.
 - Use `threejs-audio-generator` for ElevenLabs SFX, ambience, UI sounds, voice/TTS, voice conversion, cleanup, and Three.js audio integration.
 
