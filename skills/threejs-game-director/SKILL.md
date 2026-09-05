@@ -1,124 +1,85 @@
 ---
 name: threejs-game-director
-description: "Primary entrypoint for complete Three.js browser game creation and premium iteration. Use by default for build-a-game, upgrade, polish, premium, AAA, high-fidelity, showcase, from-scratch, endless runner, arcade, action, or release-ready requests. Orchestrates sibling skills for gameplay, AAA graphics, UI, debug/profile, and QA/release, plus 3D/image/audio generators for characters, vehicles, weapons, buildings, props, skies, textures, logos, icons, GUI art, and SFX/voice. Keeps skill-loading, reference, asset-sourcing, and phase ledgers so users never choose skills manually."
+description: "Entrypoint for building, upgrading, and finishing Three.js browser games. Routes work across the sibling threejs-* skills for gameplay, graphics, UI, 3D/image/audio asset generation, debugging, and release. Use for build-a-game, upgrade, polish, premium, AAA, high-fidelity, showcase, from-scratch, endless runner, arcade, action, and release-ready requests."
 ---
 
 # Three.js Game Director
 
-## Purpose
+Own the end-to-end game outcome: a playable loop first, then the visual and interface depth the request actually asked for, then browser evidence that it works.
 
-Own the end-to-end game outcome. Build the playable loop, route through the right phases, verify evidence, and do not call prototype-quality work premium. "Less basic" from the user means the current visual level is rejected: treat it as the premium bar.
+## Scope
 
-## Runner Capability Check
+The user's own words set the bar. "Make a small arcade game" is not a request for the full premium pipeline — build the good version of what was asked and stop. "Premium", "AAA", "polished", "high-fidelity", "showcase", "release-ready", or "less basic" *is* that request, and at that bar a first playable slice is not done. "Less basic" specifically means the current visual level was rejected; treat it as the premium bar.
 
-Before planning, note what this runner can do and adapt:
+The user's scope, art style, constraints, and prior decisions override skill defaults. A narrow edit to a premium game remains a narrow edit. Make routine implementation calls yourself and complete authorized work before seeking a decision that only affects a later step. Ask only when a missing choice materially changes the requested result; continue independent work meanwhile.
 
-1. **Invoke sibling skills directly?** Usually not — the runner invokes only this skill. Load sibling `SKILL.md` files with file-read tools instead. Never claim a skill was "invoked" when it was only loaded/read.
-2. **Read files by path?** Resolve every skill and reference path through the path ladder below. If a required file cannot be read anywhere on the ladder, record the failure in the ledger and use `references/phase-playbook.md` as the fallback procedure for that phase.
-3. **Run shell commands (node + python3)?** If yes, use the packaged scripts (scaffold creator, credential probe, canvas inspector, report audit). If not, ask the user to run each command and paste the output; never fabricate script output.
-4. **Drive a browser / run Playwright?** If yes, capture screenshots and canvas inspection yourself. If not, ask the user to run `npm run verify:visual` and `npm run inspect:canvas` and paste the results; report unverified visuals as a residual risk, never as verified.
+## Working style
 
-### Skill Path Ladder
+Say in one sentence what you're about to do before your first tool call. While working, give a brief update only when you find something important or change direction. Lead the final response with the outcome.
 
-Try in order, expanding `~` to the user's home directory when the read tool requires absolute paths:
+The lead owns shared interfaces, integration, and the final verification pass. Use available delegation tools for independent work that saves time or improves quality: asset generation alongside gameplay, or isolated UI work after the intent/state interface is defined. Normally use a lead plus up to two workers. Give each worker a task, separate file ownership, input/output contract, and acceptance criteria. Keep the immediate blocking integration work with the lead.
 
-1. `../<skill-name>/SKILL.md` relative to this skill's directory
-2. `~/.claude/skills/<skill-name>/SKILL.md`
-3. `~/.codex/skills/<skill-name>/SKILL.md`
-4. `~/.agents/skills/<skill-name>/SKILL.md`
-5. `skills/<skill-name>/SKILL.md` in the repository source
+For substantial gameplay, graphics, or animation changes, one focused independent review can catch missed defects. Supply raw captures/code and the relevant rubric; ask for concrete defects rather than endorsement of the lead's score. Resolve findings without recursive review cycles. When delegation tools are absent, work directly.
 
-Reference files resolve the same way: `<skill-dir>/references/<file>.md`. Sibling skills point back to this ladder instead of restating it.
+Report what you ran and what you saw. If you couldn't run something, say that instead.
 
-## Sibling Skill Loading
+## Sibling skills
 
-For broad work (complete, premium, AAA, polished, high-fidelity, showcase, from-scratch, upgrade, release-ready), load all five phase skills before implementation: `threejs-gameplay-systems`, `threejs-aaa-graphics-builder`, `threejs-game-ui-designer`, `threejs-debug-profiler`, `threejs-qa-release`. For narrow director-invoked work, load the directly relevant sibling plus `threejs-qa-release`. Do not skip sibling loading because this director bundles a phase playbook.
+Use the actual loaded skill directory as `<director-skill-dir>`. Resolve siblings through `../<skill>/SKILL.md` there. If absent, use the runner's discovered skill path, then a matching repo `skills/` directory or the active runner's install location (`~/.agents/skills` for Codex, `~/.claude/skills` for Claude Code, legacy `~/.codex/skills` last). Resolve references relative to the selected skill; avoid mixing installed versions.
 
-Load generator skills before deciding generated assets are unnecessary, whenever their trigger surfaces exist in premium/AAA/showcase/complete/release-ready/"less basic" work:
+| Phase | Skill |
+| --- | --- |
+| Design brief, core loop, levels, entities, input, camera, physics, feel | `threejs-gameplay-systems` |
+| Models, materials, shaders, VFX, lighting, render budget, scorecard | `threejs-aaa-graphics-builder` |
+| HUD, menus, overlays, responsive and touch UI | `threejs-game-ui-designer` |
+| Blank canvas, render/runtime bugs, mobile input, profiling | `threejs-debug-profiler` |
+| Browser QA, screenshots, canvas pixels, bot playtest, production build | `threejs-qa-release` |
+| Characters, vehicles, weapons, buildings, rigs, animation | `threejs-3d-generator` |
+| Concepts, textures, skies, logos, icons, GUI art, image-to-3D inputs | `threejs-image-generator` |
+| SFX, ambience, UI sounds, announcer and dialogue | `threejs-audio-generator` |
 
-- `threejs-3d-generator/SKILL.md` — characters, creatures, bosses, vehicles, ships, weapons, buildings, signature props, complex pickups, hero environment pieces, rigging/animation, textured imports.
-- `threejs-image-generator/SKILL.md` — concept/reference sheets, texture and material references, skies/backgrounds, logos, icons, decals, GUI/title/menu art, terrain/sky plates, image-to-3D inputs.
-- `threejs-audio-generator/SKILL.md` — SFX, ambience, UI sounds, vehicle/weapon/boss audio, announcer/dialogue, voice conversion, audio cleanup.
+For complete games and broad upgrades, read all five production skills before implementing, plus generators whose trigger surfaces exist. Read each phase's required references at phase entry. For narrow edits, load the affected specialists and references, preserving unrelated systems. Record actual loaded resources when reporting skill use; a phase label is not a skill invocation.
 
-## External Asset Sourcing Gate
+## Continuity and early quality
 
-- Never record "not-needed" for a generator before loading its `SKILL.md` when trigger surfaces exist.
-- Before claiming an API key is unavailable, run the credential probe and paste its literal `KEY=SET|MISSING` output into the report. Each generator script also has its own `probe` subcommand.
+Start broad builds with the gameplay design brief, core-loop contract, and level plan. Define art direction, camera scale, and hero/readability targets early. Launch useful asset jobs while implementing the loop, then assess a representative playable scene with the real assets before multiplying levels, waves, or enemy variants. Inspect concepts and generated model previews before their dependent generation or rigging stages.
+
+For substantial tasks maintain `artifacts/game-progress.md`: current intent and constraints, decisions, completed work, pending jobs with task IDs/checkpoint paths, remaining defects, and next actions. Re-read it after an interruption. A correction updates affected work; a status question does not replace the build objective. Preserve completed assets and mark obsolete pending outputs instead of accidentally spending again.
+
+Use available background tool sessions or submit/status/download commands to keep independent work moving. Native API async calling, steering, and reasoning configuration are host capabilities, not settings enabled by this skill.
+
+## The bar for premium work
+
+Every visible surface that exists in the design is authored, not just the hero: player, obstacles and enemies, interactables, ground and world kit, HUD and menu states, lighting and materials, feel, and target-device performance. Unrefined primitives, empty arenas, box skylines, generic stat-card HUDs, and glow-or-fog-only detail are prototype placeholders unless the user explicitly chose that style. Interpret the scorecard through the genre rather than adding unrelated content.
+
+Score the result with the 10-category scorecard in `threejs-aaa-graphics-builder/references/visual-scorecard.md`, using its anchors and the inspector's measured metrics rather than a personal rubric. Premium means no category below 2 and an average of at least 2.3.
+
+## Asset sourcing
 
 ```bash
 bash <director-skill-dir>/scripts/probe_asset_credentials.sh
 ```
 
-- For premium hero surfaces (player, enemy, boss, creature, vehicle, ship, weapon, building, signature prop), procedural-only is not an allowed final answer without real blocker evidence: a `MISSING` probe line, or an attempted generation command plus its API/network/quota error. Otherwise at least one high-value surface must show a 3D generator task ID, downloaded GLB/GLTF/FBX path, image generator output path, or documented hybrid chain.
-- For premium active gameplay, missing audio is a reported gap unless the user asked for silent/offline output or the audio key/API is blocked.
-- Fill the external asset sourcing ledger before the graphics phase. The ledger template and the allowed skip reasons live in `references/phase-playbook.md`.
+When external generation is in scope, run it before assuming anything about keys. It sources the user's shell profile, which the agent process usually does not inherit, and prints `KEY=SET|MISSING` for all three providers. Explicitly procedural or no-external-service work does not need a credential probe.
 
-## Reference Gate
+With keys set, premium hero surfaces get generated assets: player, boss, creature, vehicle, ship, weapon, signature building. Respect an explicit procedural-only style or external-generation restriction. Procedural kits handle repeated props, decals, collision proxies, and instanced volume. Premium active gameplay includes event-driven audio.
 
-References are phase-entry gates, not optional enrichment. The canonical per-phase Required References list lives in `references/phase-playbook.md`; load that file at planning time for broad work and at phase entry otherwise.
+Read `references/asset-recovery.md` when sourcing external assets or recovering a job. Missing credentials or exhausted credits permit a documented local fallback. A transient error calls for bounded recovery of the existing job; invalid parameters need correction. An uncertain paid submission must be reconciled before replacement. Continue independent work and identify any quality requirement still unmet after fallback.
 
-- Load required references at phase entry, not at the end.
-- Track every required reference in the reference ledger with yes/no/not-needed, path, and failure reason.
-- A phase cannot be marked `done` until its required references are loaded, or the final answer reports the reference as unavailable and the phase as blocked/fallback.
-- For premium/AAA/showcase claims, the final response must include the filled 10-category visual scorecard from `threejs-aaa-graphics-builder/references/visual-scorecard.md`, including measured evidence, average, and automatic failures remaining. Do not substitute a personal rubric.
-- Thorough mode is the default for broad, premium, AAA, showcase, complete, and release-ready requests. Economy mode is allowed only for narrow fixes that do not claim premium quality.
+## Verification ownership
 
-If Task/subagent/workflow tools are available, delegate each major phase to a focused worker with the phase `SKILL.md` plus its required references explicitly loaded. If unavailable, execute serially after loading the same files.
+The lead consolidates specialist results into one check set appropriate to the change. Full games need production build, real-input progression and retry, target-viewport captures, renderer diagnostics, and the premium scorecard when requested. Small edits need affected behavior/layout checks. Repeat checks only after relevant changes, failures, or unresolved concerns. For animated work include motion captures covering locomotion, transitions, and contact timing, not only stills.
 
-## Ledgers
-
-Keep four ledgers: skill-loading, reference, external asset sourcing, and phase execution. Templates live in `references/phase-playbook.md`.
-
-Compaction rule: report every row that has meaningful state (yes/no/blocked/done/skipped plus path or evidence), and collapse consecutive `not-needed` rows into a single line naming them. Never omit or compress rows that carry real state.
-
-## Phase Routing
-
-- `threejs-gameplay-systems`: design brief, core loop contract, level/encounter plan, first playable slice, architecture, mechanics, entities, input, camera, physics selection, game feel.
-- External asset sourcing: credential probe, generator skill loading, source decision per surface, task IDs/output files or blocker evidence. Must complete before the graphics phase is `done` for premium work.
-- `threejs-aaa-graphics-builder`: basic-looking screenshots, asset architecture, models, materials, technical art, shaders, VFX, lighting/render, visual scorecard.
-- `threejs-game-ui-designer`: HUDs, menus, overlays, responsive UI, icons, safe areas, UI states.
-- `threejs-debug-profiler`: blank canvas, render/runtime bugs, loading, resize, mobile input/render bugs, performance profiling.
-- `threejs-qa-release`: browser QA, screenshots, canvas pixels, responsive checks, visual test harness decision, bot playtest, production build, preview, release notes.
-- `threejs-3d-generator` / `threejs-image-generator` / `threejs-audio-generator`: external AI-generated 3D models and rigs, 2D concepts/textures/logos/GUI art, and SFX/ambience/voice.
-
-When a sibling skill file is loaded, follow its workflow for that phase. Phase entry/exit evidence, ledger templates, and the fallback procedure for unloadable siblings all live in `references/phase-playbook.md`.
-
-## Packaged Runtime Resources
-
-New projects use the gameplay skill's scaffold creator; canvas verification uses the generated game's `npm run inspect:canvas` or the QA skill's packaged inspector:
+## Getting started and checking output
 
 ```bash
 python3 <threejs-gameplay-systems-skill-dir>/scripts/create_threejs_game.py ./my-game
-node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188
+node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --run-id pass-1
+python3 <director-skill-dir>/scripts/check_evidence.py ./my-game --manifest artifacts/evidence.json
 ```
 
-## Premium Completion Rule
+Generated games carry their own `npm run inspect:canvas` and `npm run verify:visual`. Before capturing, read `references/evidence-manifest.md` and declare the expected viewport/state pairs for this pass. The checker verifies only that set and its run ID. Its result establishes artifact coverage, not aesthetic quality or gameplay correctness. When maintaining the pack itself, use `references/workflow-evaluations.md` for behavioral comparisons.
 
-Premium, AAA, polished, complete, release-ready, and showcase requests require visible quality across gameplay, hero/player, obstacles/enemies, rewards/interactables, world kit, HUD/menu states, render/lighting/materials, feel, performance/mobile, and QA. If screenshots are dominated by primitives, flat roads/arenas, generic stat cards, sparse worlds, or glow-only detail, the task is not done. The full completion gate is in `references/phase-playbook.md`.
+## Final response
 
-## Required Verification
-
-- Build/typecheck; local browser run; console/page error check.
-- Game design brief, core loop contract, and level/encounter plan for broad game creation or major gameplay changes.
-- Active desktop and mobile screenshots plus nonblank canvas pixel evidence.
-- Main input/objective/fail-or-restart path exercised.
-- Visual scorecard with measured evidence for premium/AAA claims, plus a fresh-eyes review pass per `threejs-aaa-graphics-builder/references/visual-scorecard.md`.
-- External asset sourcing ledger, credential probe output, and real external outputs or blocker evidence for premium asset-category claims.
-- Audio evidence or a reported blocker for premium active-gameplay claims.
-- Renderer diagnostics when graphics changed; technical art budget and VFX/readability evidence when premium graphics changed.
-- Visual test harness decision, and bot playtest evidence when release-ready gameplay is claimed.
-- Final ledgers with evidence and remaining blockers.
-
-## Report Audit
-
-When shell tools are available, draft the final evidence report to a markdown file and audit it before finalizing broad or premium work:
-
-```bash
-python3 <director-skill-dir>/scripts/audit_reference_report.py --premium /path/to/final-report.md
-```
-
-Use `--premium` for premium/AAA/showcase/high-fidelity/polished/complete/release-ready/"less basic" claims; add `--physics` for physics-heavy games; add `--audio` when generated or integrated audio is in scope; add `--no-design` only for debug/perf/QA-only reports with no gameplay claims. If the audit fails, fix the missing sections or state the exact blocker instead of claiming completion. If the script is unavailable, manually enforce the same sections listed in Required Verification.
-
-## Final Response
-
-Report the ledgers (compacted per the rule above), game design brief, core loop contract, level/encounter plan, files changed, run URL, controls, verification commands, screenshots/artifacts, renderer/performance notes, technical art budget, visual test harness decision, quality gates passed, skipped phases, and remaining risks. For premium/AAA/showcase claims, include the filled visual scorecard with measured evidence and automatic failures remaining. Be precise: "invoked" means a slash/tool skill invocation; "loaded" means the file was read into context; "executed phase" means the work was performed under loaded skill guidance or the phase playbook.
+Lead with what was built, whether it works, the local URL and controls, and remaining limitations. For substantial builds put the design artifacts, asset task IDs/paths, captures and motion evidence, renderer/physics metrics, tests, and scorecard in `artifacts/final-evidence.md` and link it. For narrow edits report only affected behavior and checks. Describe what ran and was observed; do not substitute a completion claim for missing evidence.

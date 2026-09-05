@@ -1,147 +1,64 @@
 # Visual Scorecard
 
-Score active-play screenshots, not idle title screens or isolated showroom models. Use desktop and mobile screenshots when mobile is in scope.
+Score active-play screenshots — not title screens, not isolated showroom models. Desktop and mobile when mobile is in scope.
 
-Scores are self-assessed against the anchors below, so they drift optimistic. Two countermeasures are mandatory for premium/AAA/showcase claims: cite Measured Evidence for the categories it supports, and run the Fresh-Eyes Review before finalizing.
+## Calibration anchors
 
-## Calibration Anchors
+Packaged in `threejs-aaa-graphics-builder/assets/scorecard-anchors/`. View them before scoring World, Hero, Materials, or Lighting:
 
-Reference screenshots for score calibration are packaged in `threejs-aaa-graphics-builder/assets/scorecard-anchors/`:
+- `scene-1.jpg` — **1**: primitive player and pickups, flat sparse arena, utility HUD.
+- `scene-2.jpg` — **2**: authored track kit, imported hero asset, designed genre HUD, intentional lighting.
+- `scene-3.jpg` — **2.5–3**: dense layered world in active play, readable hero silhouette, event VFX, cohesive HUD.
 
-- `scene-1.jpg` — score ~1: primitive player and pickups on a flat sparse arena, utility HUD.
-- `scene-2.jpg` — score ~2: authored track kit, imported hero asset, designed genre HUD, intentional lighting.
-- `scene-3.jpg` — score ~2.5-3: dense layered world in active play, readable hero silhouette, event VFX, cohesive HUD.
-
-Before scoring World/environment, Hero/player, Materials/textures, or Lighting/render, view the anchors and compare: if your screenshot reads closer to `scene-1.jpg` than `scene-3.jpg` for that surface, the category is at most a 1-2 regardless of how much code was written.
-
-## Scoring Scale
-
-- 0: Placeholder. Default primitives, sparse world, unreadable state, debug UI, or no evidence.
-- 1: Basic styled. Playable and themed, but still obvious prototype assets, flat composition, repeated silhouettes, or generic UI.
-- 2: Premium stylized. Authored silhouettes, material/detail systems, readable state, cohesive UI/world, measured performance.
-- 3: Showcase. Strong art direction, memorable hero and world, dense authored detail, excellent readability, polished VFX/rendering, and diagnostics.
+If a surface reads closer to `scene-1` than `scene-3`, it is a 1–2 no matter how much code went into it.
 
 ## Categories
 
-1. Art direction.
-   - 0: No clear theme.
-   - 1: Theme is mostly colors/fog.
-   - 2: Theme affects forms, materials, UI, world, and feedback.
-   - 3: Distinct identity visible in every surface.
-2. Hero/player.
-   - 0: Default primitive stack.
-   - 1: Basic object with glow or simple attachments.
-   - 2: Authored silhouette, decals/trim, state cues, collision proxy.
-   - 3: Memorable model with layered construction and expressive feedback.
-3. Obstacles/enemies.
-   - 0: Cubes/cones/spheres.
-   - 1: Recolored repeated silhouette.
-   - 2: Three readable variants with telegraphs and material cues.
-   - 3: Varied family with animation, anticipation, and gameplay clarity.
-4. Rewards/interactables.
-   - 0: Plain sphere/ring/token.
-   - 1: Repeated object with simple glow.
-   - 2: Two authored forms with idle/collect states and UI feedback.
-   - 3: Desirable, animated, and clearly valued during motion.
-5. World/environment.
-   - 0: Flat plane, empty arena, box skyline.
-   - 1: Themed but sparse repeated blocks.
-   - 2: Layered prop kit with foreground/midground/background and scale cues.
-   - 3: Dense authored world that supports gameplay readability.
-6. Materials/textures.
-   - 0: Flat colors.
-   - 1: Basic roughness/metalness or emissive color.
-   - 2: Shared material roles, procedural decals, trim, panel lines, wear/noise.
-   - 3: Rich cohesive material language with measured texture/resource use.
-7. Lighting/render.
-   - 0: Default lights or unreadable darkness.
-   - 1: Fog/bloom used as main style.
-   - 2: Intentional tone mapping, exposure, key/fill/rim, contact, depth.
-   - 3: Cinematic but readable composition with disciplined post-processing.
-8. VFX/motion.
-   - 0: None or random particles.
-   - 1: Generic particles/trails.
-   - 2: Event-driven VFX for boost, pickup, hit, fail, combo, shield, or spawn.
-   - 3: High-impact effects that clarify gameplay and remain performant.
-9. UI/HUD.
-   - 0: Debug text or missing UI.
-   - 1: Generic stat-card dashboard.
-   - 2: Genre-specific HUD states, meters/icons, responsive text fit.
-   - 3: Cohesive game interface with strong hierarchy and polished transitions.
-10. Performance evidence.
-   - 0: No metrics after visual changes.
-   - 1: Informal "seems fine".
-   - 2: Renderer counts, build/browser QA, desktop/mobile screenshots, and technical-art budget notes.
-   - 3: Baseline/post metrics, bottleneck notes, budgets, optimized asset strategy, and VFX/readability tradeoffs.
+Scale: **0** placeholder / no evidence · **1** basic styled · **2** premium stylized · **3** showcase.
+
+| Category | 1 | 2 | 3 |
+| --- | --- | --- | --- |
+| Art direction | theme is mostly colors and fog | theme drives forms, materials, UI, world, feedback | distinct identity in every surface |
+| Hero/player | basic object with glow or simple attachments | authored silhouette, decals/trim, state cues, collision proxy | memorable layered model with expressive feedback |
+| Obstacles/enemies | gameplay roles are hard to distinguish | readable role-specific forms, telegraphs, and material cues | expressive challenge geometry or varied family with anticipation |
+| Rewards/interactables | important interactions have generic or absent feedback | authored forms, readable interaction states, UI feedback | purpose and value stay clear during motion |
+| World/environment | themed but sparse repeated blocks | layered prop kit, foreground/midground/background, scale cues | dense authored world that aids readability |
+| Materials/textures | basic roughness/metalness or emissive color | shared material roles, procedural decals, trim, panel lines, wear | rich cohesive material language, measured resource use |
+| Lighting/render | fog and bloom used as the style | intentional tone mapping, exposure, key/fill/rim, contact, depth | cinematic but readable, disciplined post |
+| VFX/motion | generic particles and trails | event-driven VFX: boost, pickup, hit, fail, combo, shield, spawn | high-impact effects that clarify gameplay and stay cheap |
+| UI/HUD | generic stat-card dashboard | genre-specific states, meters/icons, responsive text fit | cohesive interface, strong hierarchy, polished transitions |
+| Performance evidence | informal "seems fine" | renderer counts, build/browser QA, target-viewport shots, budget notes | baseline/post metrics, bottleneck notes, asset strategy, tradeoffs |
+
+Keep all ten categories, but name their genre equivalents before scoring. In pool, Hero can mean the table/cue/ball presentation, Obstacles the rails/pockets and shot constraints, and Interactables the balls/aim/contact feedback. In a puzzle game these may be the board, constraints, and manipulable pieces. Do not invent enemies, loot, neon trim, or extra props to increase a score. Repeated identical forms can be correct for the rules; score their authorship and readability, not an arbitrary variant count. Deliberately minimal art can score well when its composition, material decisions, and feedback are demonstrably finished.
 
 ## Thresholds
 
-Premium:
+- **Premium**: every category ≥ 2, average ≥ 2.3, renderer diagnostics reported after graphics changes.
+- **Showcase**: no category below 2, at least six at 3, average ≥ 2.7, before/after performance evidence.
 
-- Every category at least 2.
-- Average at least 2.3.
-- Desktop and mobile active-play screenshots captured when mobile is in scope.
-- Renderer diagnostics reported after graphics changes.
+## Automatic failures
 
-Showcase:
+Any one of these means the work is not premium yet, whatever the individual scores say:
 
-- At least six categories score 3.
-- No category below 2.
-- Average at least 2.7.
-- Performance evidence includes before/after or budget-aware notes.
-
-## Automatic Failures
-
-Any of these prevents a premium/AAA/showcase claim:
-
-- Active screenshot is primitive-dominant.
-- Main world is mostly stretched boxes, flat planes, or a sparse arena.
-- Hero asset is mostly default primitives plus glow.
-- Obstacles or rewards are one repeated silhouette.
+- Active screenshot is dominated by unrefined placeholders or empty space that the design does not justify, rather than authored composition and readable gameplay.
+- Hero asset is an unrefined primitive placeholder plus glow. Different gameplay roles are indistinguishable without a deliberate design reason.
 - HUD is mostly rectangular stat/debug cards.
-- Fog, darkness, bloom, or particles hide missing authored geometry.
-- UI overlaps the play path, clips text, or fails mobile safe areas.
-- The game is not playable through real input.
-- No active-play screenshot was captured.
-- No renderer diagnostics were collected after major graphics work.
-- No technical-art budget or imported/generated asset diagnostics were reported for premium graphics work.
+- Fog, darkness, bloom, or particles are standing in for missing authored geometry.
+- UI overlaps the play path, clips text, or breaks safe areas on a target viewport.
+- The game is not playable through real input, or no active-play screenshot exists.
+- No renderer diagnostics after major graphics work.
 
-## Measured Evidence
+## Measured evidence
 
-Run the canvas inspector (`npm run inspect:canvas`, or `threejs-qa-release/scripts/inspect-threejs-canvas.mjs`) on desktop and mobile and cite its `metrics` and `renderBudget` blocks in the scorecard. The numbers are advisory signals, not gates, but they must be reported and low values must be explained rather than ignored:
+Run the canvas inspector (`npm run inspect:canvas`, or `threejs-qa-release/scripts/inspect-threejs-canvas.mjs`) on the target viewports and cite its `metrics` and `renderBudget` blocks. These are advisory signals; a low value needs an explanation, not a higher score. Do not add noise, clutter, or particles just to raise pixel metrics; an intentional clean composition may legitimately measure low.
 
-- `colorEntropyBits` below ~3.0 or `dominantColorShare` above ~0.6 suggests a sparse, flat scene — supporting evidence against World/environment or Materials/textures scores above 2.
-- `edgeDensity` below ~0.04 suggests primitive-dominant or empty framing — supporting evidence against World/environment and Hero/player scores above 2.
-- `luminance.contrast` below ~60 suggests fog/darkness compression — supporting evidence against Lighting/render scores above 2.
-- `renderBudget` rows over the tier budget require a documented tradeoff in the technical-art budget (see `references/technical-art.md`).
-- Renderer diagnostics (calls, triangles, geometries, textures) back the Performance evidence category.
+- `colorEntropyBits` below ~3.0, or `dominantColorShare` above ~0.6 — sparse flat scene. Evidence against World or Materials above 2.
+- `edgeDensity` below ~0.04 — primitive-dominant or empty framing. Evidence against World and Hero above 2.
+- `luminance.contrast` below ~60 — fog/darkness compression. Evidence against Lighting above 2.
+- `renderBudget` rows over the tier budget need a documented tradeoff (see `technical-art.md`).
 
-## Fresh-Eyes Review
+Score the **complete declared** capture set for the change, including desktop and mobile when both are targets. Use acknowledged `--state` captures for relevant mid-run states (late waves, fail, stress); a requested label without a working state hook is not evidence. Animated work also needs unpaused motion evidence of transitions and contact timing. A still image cannot establish animation quality.
 
-The builder must not be the only grader. For premium/AAA/showcase claims:
+## Reporting
 
-- If the runner supports subagents (Task tool or equivalent), spawn a reviewer with ONLY: the screenshots, this scorecard file, and the inspector metrics JSON. No build context, no prior scores. The reviewer must receive the COMPLETE capture set — every captured state, desktop and mobile — never a hand-picked subset; a curated selection can hide weak states or miss content the builder knows exists (capture states with the inspector's `--state` flag so nothing is gated behind live play). The reviewer fills the scorecard independently; reconcile by taking the lower score per category unless concrete evidence overturns it. Report both score sets.
-- If subagents are unavailable, run an adversarial self-review before finalizing: for each category, write one sentence making the strongest case that the score is a 1, citing what is visible in the screenshot; only then assign the score. Include these sentences in the report.
-
-## Report Format
-
-```text
-Visual scorecard:
-- Art direction: before X / after Y - evidence:
-- Hero/player: before X / after Y - evidence:
-- Obstacles/enemies: before X / after Y - evidence:
-- Rewards/interactables: before X / after Y - evidence:
-- World/environment: before X / after Y - evidence:
-- Materials/textures: before X / after Y - evidence:
-- Lighting/render: before X / after Y - evidence:
-- VFX/motion: before X / after Y - evidence:
-- UI/HUD: before X / after Y - evidence:
-- Performance evidence: before X / after Y - evidence:
-Measured evidence: colorEntropyBits / edgeDensity / luminance.contrast /
-  dominantColorShare per viewport, renderer diagnostics, render budget rows
-Fresh-eyes review: subagent scores or adversarial self-review notes
-Average:
-Automatic failures remaining:
-```
-
-If any category remains below threshold, state the exact next pass instead of declaring completion.
+Give each category a before/after number with one line of evidence, then the average and any automatic failures still standing. For a new game with no baseline, use `not captured` for before; never invent a score. If a category is below threshold, name the next pass that fixes it. A narrow fix does not require re-scoring unchanged categories or re-establishing the entire game's premium status.

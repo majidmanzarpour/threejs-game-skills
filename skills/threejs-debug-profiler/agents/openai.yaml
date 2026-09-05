@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Debug Profiler"
   short_description: "Debug and profile Three.js games"
-  default_prompt: "Load threejs-debug-profiler/SKILL.md (try ~/.codex/skills/threejs-debug-profiler/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly. Non-negotiables: load the debug/profile checklists reference first; reproduce and measure before fixing; report the reference ledger with baseline/post evidence."
+  default_prompt: "Use $threejs-debug-profiler to reproduce this issue, fix its measured cause, and verify the affected behavior."

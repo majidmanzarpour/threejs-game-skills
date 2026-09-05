@@ -1,78 +1,64 @@
 ---
 name: threejs-gameplay-systems
-description: "Build and iterate playable Three.js game systems. Combines starter scaffold creation, architecture, game design, level design, gameplay implementation, combat/encounter design, and game-feel tuning (hitstop, screenshake, easing, impact feedback). Use for first playable slices, new Vite/TypeScript/Three.js game setup, design briefs, core loops, level/arena/track/wave/hole/puzzle design, game loops, entity systems, input, collision/physics, scoring, objectives, audio hooks, camera, controls, difficulty, feedback, juice, and maintainable structure."
+description: "Build and iterate playable Three.js game systems: starter scaffold, architecture, design briefs, core loops, level and encounter design, entities, input, camera, collision and physics, scoring, objectives, and game feel. Use for first playable slices, new Vite/TypeScript/Three.js setups, level/arena/track/wave/hole/puzzle design, combat encounters, difficulty tuning, and juice."
 ---
 
 # Three.js Gameplay Systems
 
-## Purpose
+Create or evolve a playable browser game loop with clear ownership, responsive controls, deterministic update order, and a space that shapes player decisions.
 
-Create or evolve a playable browser game loop with clear ownership, responsive controls, deterministic update order, strong design intent, playable spaces, and verified player-facing behavior.
+Resolve `<this-skill-dir>` and local references from the actual loaded skill file; resolve sibling skills beside it before using runner-discovered alternatives.
 
-## Use When
+## References
 
-Starting a new game, repairing a weak prototype, adding mechanics/entities, designing architecture, defining a game design brief, planning levels/arenas/tracks/waves/holes/puzzles, tuning camera/controls, implementing rules/objectives, building encounters, or improving game feel.
+| File | Read it when |
+| --- | --- |
+| `references/game-feel.md` | tuning feel, juice, impact, hitstop, screenshake, or claiming polished gameplay |
+| `references/genre-design.md` | designing levels, arenas, tracks, waves, holes, puzzles, encounters, or difficulty curves |
+| `references/physics-engine-selection.md` | adding or changing physics, collision-heavy gameplay, vehicles, rolling balls, character controllers, sensors, moving platforms |
 
-## Workflow
-
-Load `references/gameplay-workflows.md` as the first action when the task includes first playable setup, architecture, mechanics, entities, input, camera, collision/physics, scoring, objectives, feedback, or feel tuning.
-
-Load `references/game-design-level-design.md` before broad new-game creation, major gameplay changes, level/arena/track/wave/hole/puzzle design, combat/encounter design, progression/difficulty work, or any claim that gameplay is premium, polished, complete, or less generic.
-
-Load `references/physics-engine-selection.md` before adding or changing physics, collision-heavy gameplay, vehicle movement, rolling balls, mini-golf, pool/snooker, pinball, rigid-body puzzles, character controllers, sensors, high-speed projectiles, moving platforms, or physics QA.
-
-Load `references/game-feel.md` before feel/juice/impact tuning, or before claiming gameplay is premium or polished. Track every loaded reference in a reference ledger with yes/no, path, and failure reason. Do not mark the gameplay phase complete while a required reference is skipped.
-
-Load `references/checklists/new-game-definition-of-done.md` before claiming a new game or first playable slice is complete.
-
-Load `references/checklists/game-design-level-design.md` before claiming a new game, major gameplay upgrade, level/encounter pass, premium gameplay, or polished gameplay is complete.
-
-Load `references/checklists/game-feel.md` before claiming feel/impact tuning or premium gameplay is complete.
-
-Load `references/checklists/endless-runner-premium-quality.md` for endless runner work.
-
-Load `references/prompt-templates.md` only when the user asks for reusable prompts, starter prompts, or a task template.
-
-Load `threejs-audio-generator` when implementing real SFX, ambience, UI sounds, voice/TTS, or audio cleanup beyond simple placeholder hooks. Gameplay code should emit audio events; the audio skill should generate or process the actual assets and define the runtime audio matrix.
-
-1. Inspect project structure, scripts, dependencies, current loop, input, camera, entities, state, UI, and diagnostics.
-2. Write the compact game design brief: player promise, target feeling, primary verb, objective, pressure, reward, fail/retry, skill expression, non-goals.
-3. Define the core loop contract: verb, objective, pressure, reward/progression, fail/retry.
-4. Define the level/encounter plan before implementation: start, first decision, first threat, first reward, landmarks, escalation, recovery beats, readability, and tuning knobs.
-5. Choose small architecture boundaries: `core`, `game`, `entities`, `systems`, `assets`, `ui`, `tests`.
-6. Implement mechanics in playable increments: input, state, entity, collision/physics, feedback, HUD/audio hook, diagnostics.
-7. Tune feel with `references/game-feel.md`: movement, acceleration, camera follow/FOV/shake, hitstop, impact feedback, cooldowns, difficulty, restart loop.
-8. Keep hot paths allocation-light and update order explicit.
-9. Verify with build, browser, screenshot, canvas pixels, console/page errors, and one real input path.
-
-## Packaged Scaffold
-
-Use the bundled scaffold when starting a new project or when the user asks for a starter game:
+## Start here
 
 ```bash
 python3 <this-skill-dir>/scripts/create_threejs_game.py ./my-game
 ```
 
-The script copies `assets/threejs-vite-game/`, rewrites the project name in `package.json` and `package-lock.json`, and keeps generated games self-contained with their own visual test and canvas-inspection script. Use `--force` only when the target directory may be overwritten.
+Copies `assets/threejs-vite-game/`, rewrites the project name, and gives the game its own visual test and canvas inspector. `--force` overwrites an existing directory.
 
-## Library Guidance
+## Design first
 
-- Use TypeScript, Vite, Three.js modules.
-- Physics/collision engine choice (custom collision vs Rapier vs cannon-es), timestep, and collider strategy: follow `references/physics-engine-selection.md`.
-- `lil-gui` for live-tuned constants when useful.
-- Web Audio for runtime playback and procedural feedback; `threejs-audio-generator` for generated game audio assets.
+For broad game creation or a substantial design change, write three short artifacts or update the existing ones. A narrow mechanic fix uses the existing design and preserves unrelated systems:
 
-## Common Failure Modes
+**Design brief.** Player promise (the fantasy in one sentence) · target feeling · primary verb · secondary verbs · what the player repeats every 5–30 seconds · what changes across 1–5 minutes · how they lose, learn, and restart · what is rewarded and what creates risk · what a better player does differently · how the next decision is communicated · non-goals for this slice.
 
-- Static demo instead of playable loop.
-- Static scene with mechanics bolted on after the fact, instead of a design brief plus level/encounter plan driving implementation.
-- Core loop is described but not proven through real input, pressure, reward/progression, and fail/retry.
-- Level/track/arena/map is decorative and does not shape player decisions.
-- Mechanic compiles but cannot be triggered by real input.
-- Camera/controls feel delayed or hide the next decision.
-- State changes do not drive UI/audio/VFX.
-- Architecture abstractions appear before mechanics need them.
+**Core loop contract.** `Player does [verb] to achieve [objective] while [pressure] creates risk; success gives [reward], failure causes [cost/retry].` Then prove each clause in code: the verb is mapped to real input, the objective is visible in world or HUD, pressure exists inside the first playable minute, reward changes state rather than only visuals, failure teaches what happened, and restart is fast enough to invite another attempt.
 
-## Final Response
+**Level or encounter plan.** Spatial format · what the camera can and cannot see · player start, first decision, first threat, first reward · landmarks · how challenge escalates every 20–60 seconds or per wave/hole/lap · recovery beats · how hazards are telegraphed · which pieces are modular or parameterized.
 
-Report the reference ledger, game design brief, core loop contract, level/encounter plan, gameplay checklist outcome, behavior, controls, changed files, architecture choices, tuned values, verification evidence, artifacts, and remaining edge cases.
+"Explore a cool scene" is not a design brief. A brief needs decisions, pressure, feedback, and consequence.
+
+## Build
+
+1. Inspect existing structure, scripts, dependencies, loop, input, camera, entities, state, UI, diagnostics.
+2. Keep small ownership boundaries: `core`, `game`, `entities`, `systems`, `assets`, `ui`, `tests`.
+3. Implement in playable increments — input, state, entity, collision, feedback, HUD and audio hooks, diagnostics — so something is playable at every step.
+   Establish one representative encounter at the intended camera scale with the actual hero and feedback before expanding content. Enemy, reward, and prop variety should serve the genre's decisions, not a universal asset quota.
+4. Tune feel: movement, acceleration, camera follow and FOV, hitstop, impact feedback, cooldowns, difficulty, restart.
+5. Keep hot paths allocation-light and update order explicit.
+6. Route all gameplay randomness through the scaffold's seeded RNG so the deterministic test hooks keep working.
+
+For coordinated work, define input intents, entity/asset interfaces, and events before delegating independent modules. Report changed behavior and local checks to the lead, who owns the consolidated browser pass. When a user changes requirements, update the existing brief and pending tasks instead of restarting completed work.
+
+Gameplay code emits audio events; `threejs-audio-generator` produces the actual assets and the runtime audio matrix.
+
+## Stack
+
+TypeScript, Vite, Three.js modules, `three/addons/...` for official controls, loaders, and post-processing. `lil-gui` for live-tuned constants. Web Audio for runtime playback. Physics engine choice, timestep, and collider strategy follow `references/physics-engine-selection.md` — Rapier by default when the game needs real simulation.
+
+## What goes wrong
+
+A static demo instead of a playable loop · mechanics bolted onto a scene that was built first · a core loop described but never proven through real input, pressure, reward, and fail/retry · a track or arena that decorates rather than shapes decisions · a mechanic that compiles but no input can trigger · camera and controls that lag or hide the next decision · state changes that never reach UI, audio, or VFX · abstractions built before any mechanic needed them.
+
+## Report
+
+Behavior and controls, the three design artifacts for broad builds, architecture choices and tuned values, changed files, and what you saw when you played it. Note the physics engine, timestep, and collider strategy when physics is in scope.

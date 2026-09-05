@@ -4,6 +4,7 @@ export class Pickup {
   readonly group = new THREE.Group();
   readonly radius = 0.62;
   active = true;
+  private restRotationY = 0;
 
   private readonly coreGeometry = new THREE.IcosahedronGeometry(0.42, 1);
   private readonly ringGeometry = new THREE.TorusGeometry(0.58, 0.028, 8, 32);
@@ -45,9 +46,17 @@ export class Pickup {
     this.group.visible = false;
   }
 
-  reset(): void {
+  reset(rotationY = 0): void {
     this.active = true;
     this.group.visible = true;
+    this.restRotationY = rotationY;
+    this.stabilizeVisuals();
+  }
+
+  stabilizeVisuals(): void {
+    this.group.rotation.set(0, this.restRotationY, 0);
+    this.group.children[0].rotation.set(0, 0, 0);
+    this.group.position.y = 0.78 + Math.sin(this.index) * 0.16;
   }
 
   dispose(): void {

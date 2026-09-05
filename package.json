@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check:scripts": "bash -n install.sh scripts/validate-skills.sh skills/threejs-game-director/scripts/probe_asset_credentials.sh && node --check skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs && python3 scripts/check-python-syntax.py scripts/check-python-syntax.py skills/threejs-gameplay-systems/scripts/create_threejs_game.py skills/threejs-3d-generator/scripts/threejs_3d_asset.py skills/threejs-image-generator/scripts/generate_image.py skills/threejs-audio-generator/scripts/threejs_audio_asset.py skills/threejs-game-director/scripts/audit_reference_report.py",
+    "check:scripts": "bash -n install.sh scripts/validate-skills.sh skills/threejs-game-director/scripts/probe_asset_credentials.sh && node --check skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs && python3 scripts/check-python-syntax.py scripts/check-python-syntax.py skills/threejs-gameplay-systems/scripts/create_threejs_game.py skills/threejs-3d-generator/scripts/threejs_3d_asset.py skills/threejs-image-generator/scripts/generate_image.py skills/threejs-audio-generator/scripts/threejs_audio_asset.py skills/threejs-game-director/scripts/check_evidence.py",
     "validate:skills": "scripts/validate-skills.sh skills",
+    "test:helpers": "python3 -B -m unittest discover -s scripts/tests -p 'test_*.py' && node --test scripts/tests/*.test.mjs",
     "install:codex": "./install.sh --codex",
     "install:claude": "./install.sh --claude",
     "install:all": "./install.sh --all"

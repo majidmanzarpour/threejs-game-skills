@@ -1,38 +1,37 @@
 ---
 name: threejs-debug-profiler
-description: "Debug and profile Three.js browser games. Combines scene debugging, render/runtime/loading/animation/resize/mobile input fixes, performance profiling, draw calls, triangles, textures, memory, shader/post-processing cost, bundle size, and mobile DPR/input issues."
+description: "Debug and profile Three.js browser games: blank canvases, render and runtime bugs, asset and audio loading, animation, resize, mobile input, plus performance profiling of draw calls, triangles, textures, memory, shader and post-processing cost, and bundle size."
 ---
 
 # Three.js Debug Profiler
 
-## Purpose
-
 Find root causes and optimize measured bottlenecks without breaking playability.
 
-## Debug Workflow
+Follow the changed behavior's scope. Reuse the lead's existing reproduction and evidence; verify the affected path after a fix. A passing focused check only needs broader testing when shared behavior changed or an unresolved risk warrants it. Return measurements and defects to the lead for the consolidated verification pass.
 
-Load `references/debug-profile-checklists.md` as the first action when debugging render/runtime/mobile issues, asset loading, audio loading/playback, animation, resize, input, blank canvas, physics/collision bugs, or profiling performance. Track it in a reference ledger with yes/no, path, and failure reason. Do not mark the debug/profile phase complete while this reference is skipped for debug or profiling work.
+## Reference
 
-Load `references/checklists/scene-debugging.md` for render/runtime bug diagnosis, `references/checklists/performance-profile.md` for profiling work, and `references/checklists/mobile-input.md` for mobile render/input issues. Load `references/prompt-templates.md` only when the user asks for reusable debug/profile prompts or a task template.
+`references/debug-playbook.md` — ordered triage for blank canvas, asset and audio loading, loop/animation/physics, input and mobile, the profiling sequence, and the `__THREE_GAME_DIAGNOSTICS__` shape. Read it when debugging or profiling anything non-obvious.
 
-1. Reproduce locally.
-2. Read console/page/network errors.
-3. Check canvas display size and drawing-buffer size.
-4. Check renderer/context/loop ownership.
-5. Check camera, aspect, near/far, lights, materials, fog, scene contents, transforms.
-6. Check asset paths/loaders/CORS/base path.
-7. Check animation delta units, physics/update order, fixed timestep, collider/body ownership, input listeners, pointer/touch behavior, resize, and audio context unlock/decode errors when audio is involved.
-8. Fix root cause in owning module.
-9. Verify browser screenshot, nonblank canvas, console/page errors, and broken path.
+## Debug
 
-## Performance Workflow
+1. Reproduce locally with the same command and URL the user had.
+2. Read console, page, and network errors.
+3. Check canvas display size against drawing-buffer size.
+4. Check renderer, context, and loop ownership — more than one active loop is a common cause.
+5. Check camera aspect, near/far, lights, materials, fog, scene contents, transforms.
+6. Check asset paths, loaders, CORS, and base path.
+7. Check animation delta units, physics update order and fixed timestep, collider and body ownership, input listeners, pointer and touch behavior, resize, and audio context unlock when audio is involved.
+8. Fix the root cause in the module that owns it, then retest the exact broken path.
 
-1. Reproduce in correct build mode.
-2. Record baseline: FPS/frame time, draw calls, triangles, geometries, textures, memory, bundle.
-3. Identify CPU/GPU/memory/network bottleneck.
-4. Optimize one thing at a time: instancing, shared resources, culling, LOD, DPR cap, cheaper shadows/post, texture discipline.
-5. Re-measure same scenario and verify visuals/playability.
+## Profile
 
-## Final Response
+1. Reproduce in the correct build mode — production preview when user-facing performance matters.
+2. Baseline the scenario: FPS and frame time, draw calls, triangles, geometries, textures, memory, bundle.
+3. Classify the bottleneck as CPU, GPU draw, GPU fragment, GPU vertex, memory, or network.
+4. Change one thing — instancing, shared resources, culling, LOD, DPR cap, cheaper shadows or post, texture discipline.
+5. Re-measure the same scenario and confirm visuals and playability held.
 
-Lead with root cause or bottleneck. Report the reference ledger, checklist items used, files changed, baseline/post metrics, commands, screenshots/artifacts, broken paths retested, and residual risks.
+## Report
+
+Lead with the root cause or the measured bottleneck. Then files changed, baseline and post metrics, commands, screenshots, the broken path retested, and residual risks.

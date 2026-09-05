@@ -27,15 +27,15 @@ interface ThreeGameDiagnostics {
 
 interface ThreeGameTestHooks {
   /** Re-seed the game RNG; all gameplay randomness must flow through it. */
-  seed(value: number): void;
-  /** Jump to a named state for baselines (scaffold: 'active-play' | 'complete'). */
-  setState(name: string): void;
-  /** Freeze the simulation while continuing to render the current frame. */
-  setPausedForScreenshot(paused: boolean): void;
-  /** Freeze ambient/idle animation time so screenshots are stable. */
-  setReducedMotion(enabled: boolean): void;
+  seed(value: number): void | Promise<void>;
+  /** Acknowledge after setup/assets are ready; throw for unknown states. */
+  setState(name: string): { state: string } | Promise<{ state: string }>;
+  /** Stop simulation/state transitions immediately; keep rendering. Await optional synchronization. */
+  setPausedForScreenshot(paused: boolean): void | Promise<void>;
+  /** Stabilize ambient/idle visuals without requiring an unpaused simulation tick. */
+  setReducedMotion(enabled: boolean): void | Promise<void>;
   /** Hide debug UI (lil-gui) before capturing. */
-  hideDebugUi(hidden: boolean): void;
+  hideDebugUi(hidden: boolean): void | Promise<void>;
 }
 
 interface Window {

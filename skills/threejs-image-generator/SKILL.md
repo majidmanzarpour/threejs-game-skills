@@ -1,116 +1,79 @@
 ---
 name: threejs-image-generator
-description: "Generate and edit 2D image assets for Three.js games using Google's Gemini image API. Use for concept sheets, image-to-3D inputs, texture references, sky/background plates, decals, logos, icons, GUI art, title/menu art, thumbnails, marketing stills, and source images that feed threejs-3d-generator. Also use for direct image editing when the user provides an image path."
+description: "Generate and edit 2D image assets for Three.js games with Google's Gemini image API: concept sheets, image-to-3D inputs, texture and material references, sky and background plates, decals, logos, icons, GUI art, title and menu art, and marketing stills. Also use for direct image editing when the user supplies an image path."
 ---
 
 # Three.js Image Generator
 
-## Purpose
+The 2D layer for Three.js games: concepts, textures, decals, UI art, and the source images that feed `threejs-3d-generator` for image-to-3D.
 
-Create game-useful 2D assets and references for Three.js projects. This skill is the image-generation layer for the Three.js game system: it produces concepts, textures, decals, UI art, and 2D inputs that can be handed to `threejs-3d-generator` for image-to-3D model creation.
+Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling skills beside it first, then use the runner's discovered paths. Do not mix installed versions or assume a particular home directory.
 
-Provider: Google's Gemini image API.
+## When to use
 
-Resolve `<this-skill-dir>` in the commands below in this order: `~/.claude/skills/threejs-image-generator`, `~/.codex/skills/threejs-image-generator`, `~/.agents/skills/threejs-image-generator`, or repo `skills/threejs-image-generator`.
-
-## When To Use
-
-Use this skill before procedural-only fallback when a Three.js game needs:
-
-- 2D-to-3D reference images for `threejs-3d-generator`: characters, creatures, buildings, ships, cars, weapons, props, pickups, terrain modules.
+- Image-to-3D references: characters, creatures, buildings, ships, cars, weapons, props, pickups, terrain modules.
 - Texture and material references: terrain, road, rock, sand, metal, sci-fi panels, trim sheets, decals, hazard labels, signs.
-- Environment images: skies, backdrops, city horizons, nebula plates, menu backgrounds, parallax layers.
+- Environment plates: skies, backdrops, city horizons, nebulas, menu backgrounds, parallax layers.
 - UI art: logos, faction marks, icons, item cards, ability badges, cockpit decals, GUI panels, title art.
-- Existing-image edits, style variants, cleanup, palette alignment, or concept sheet refinements.
+- Editing an existing image: style variants, cleanup, palette alignment, concept refinement.
 
-For premium/AAA/showcase graphics work, generate at least one relevant image for high-value 2D surfaces or image-to-3D inputs unless the credential probe or a real generation attempt shows a blocker.
+For premium graphics work with generation in scope, generate the high-value 2D surfaces rather than defaulting to hand-coded CSS and flat colors. Respect explicitly procedural art and external-service restrictions. Choose assets from the game's design, not a fixed quota of logos, skies, or icons.
 
-## API Key
+## API key
 
-Never store API keys in skill files or browser/game code, and never paste a key value into a report. The script reads `--api-key` or `GEMINI_API_KEY`.
-
-Step 0, before declaring the key unavailable: run this skill's own probe and paste its literal output into the report.
+The script reads `--api-key` or `GEMINI_API_KEY`. Keys never go in skill files, game code, or reports.
 
 ```bash
-uv run <this-skill-dir>/scripts/generate_image.py probe   # prints GEMINI_API_KEY=SET|MISSING
+uv run <this-skill-dir>/scripts/generate_image.py probe   # GEMINI_API_KEY=SET|MISSING
 ```
 
-`GEMINI_API_KEY=MISSING` is only a valid skip/blocker reason when this output is shown. Keys defined only in a shell profile can be absent from the process env; if the plain probe prints MISSING unexpectedly, wrap it: `zsh -lc 'source ~/.zprofile 2>/dev/null || true; source ~/.zshrc 2>/dev/null || true; uv run <this-skill-dir>/scripts/generate_image.py probe'`. When the director skill is loaded, prefer `threejs-game-director/scripts/probe_asset_credentials.sh`, which probes all three asset keys at once.
+Keys defined only in a shell profile can be absent from the process env. If the plain probe unexpectedly prints MISSING, use `threejs-game-director/scripts/probe_asset_credentials.sh`, which sources the profile and probes all three providers.
 
-## Tool Script
+## Commands
 
-Run from the user's current project directory so output lands in the game project:
-
-```bash
-uv run <this-skill-dir>/scripts/generate_image.py --prompt "your image description" --filename assets/concepts/output.png --resolution 2K
-```
-
-Edit an existing image:
+Run from the game project so output lands in it:
 
 ```bash
 uv run <this-skill-dir>/scripts/generate_image.py \
+  --prompt "your image description" --filename assets/concepts/output.png --resolution 2K
+
+uv run <this-skill-dir>/scripts/generate_image.py \
   --input-image assets/concepts/ship.png \
-  --prompt "turn this into a battle-worn red racing livery with clearer material zones" \
-  --filename assets/concepts/ship-red-livery.png \
-  --resolution 2K
+  --prompt "battle-worn red racing livery with clearer material zones" \
+  --filename assets/concepts/ship-red-livery.png --resolution 2K
 ```
 
-Resolution mapping:
+Resolution: `1K` for quick concepts, icons, and draft sheets · `2K` (the default) for production references, image-to-3D, textures, backgrounds, UI panels · `4K` for hero splash art, high-detail texture references, and large sky plates.
 
-- `1K`: quick concepts, icons, draft sheets.
-- `2K`: default production reference for image-to-3D, textures, backgrounds, UI panels. This is also the script default when `--resolution` is omitted.
-- `4K`: hero splash/title art, high-detail texture references, large sky/background plates.
-
-## Prompt Patterns
+## Prompt patterns
 
 Image-to-3D reference:
+> Create a clean 3D-generation reference image of [asset]. Centered single object, full object visible, plain light background, readable silhouette, clear material zones, game-ready [genre/style], no motion blur, no cropped parts, no text.
 
-```text
-Create a clean 3D-generation reference image of [asset]. Centered single object, full object visible, plain light background, readable silhouette, clear material zones, game-ready [genre/style], no motion blur, no cropped parts, no text.
-```
+Riggable character or creature:
+> Create a full-body [T-pose / A-pose / side-view creature] reference for 3D rigging: [details]. Symmetric stance, visible hands/feet/limbs, plain background, readable costume and anatomy layers, no weapon fused to hands.
 
-Riggable character/creature reference:
+Texture or material:
+> Create a seamless game texture reference for [surface]. Orthographic top-down, PBR-friendly albedo, clear material variation, no perspective, no baked strong shadows, [style details].
 
-```text
-Create a full-body [T-pose/A-pose/side-view creature] reference for 3D rigging: [details]. Symmetric stance, visible hands/feet/limbs, plain background, readable costume/anatomy layers, no weapon fused to hands.
-```
+Logo, icon, or UI art:
+> Create a crisp game UI [logo/icon/badge/panel] for [faction/item/ability]. Transparent-friendly silhouette, high contrast at small size, [genre styling], no tiny unreadable text.
 
-Texture/material reference:
+Sky or background:
+> Create a wide game background plate of [environment]. Layered depth, readable horizon, [time/weather/style], suitable behind a real-time Three.js scene, no foreground subject.
 
-```text
-Create a seamless game texture reference for [surface]. Orthographic/top-down, PBR-friendly albedo, clear material variation, no perspective, no baked strong shadows, [style/material details].
-```
+## Integration
 
-Logo/icon/UI art:
+Save concepts and image-to-3D sources under `assets/concepts/`; textures, decals, icons, and GUI sources under `assets/textures/`, `assets/decals/`, or `assets/ui/`. Hand image-to-3D sources to `threejs-3d-generator` by path.
 
-```text
-Create a crisp game UI [logo/icon/badge/panel] for [faction/item/ability]. Transparent-friendly silhouette, high contrast at small size, [genre styling], no tiny unreadable text.
-```
+Convert PNGs to runtime formats deliberately: PNG where alpha matters (UI, icons, decals), JPG/WebP/KTX2 for larger opaque textures where the pipeline supports it. The API is a tooling step — never called from game code.
 
-Sky/background:
+Inspect the image before spending on image-to-3D or dependent variants. Check how runtime images look in the game, not just that the file was written. Preserve useful existing images when the user changes requirements, and update the project note instead of regenerating everything.
 
-```text
-Create a wide game background plate of [environment]. Layered depth, readable horizon, [time/weather/style], suitable behind a real-time Three.js scene, no foreground subject.
-```
+## Recovery
 
-## Three.js Integration Rules
+For coordinated games use the director's `references/asset-recovery.md`. Missing credentials or exhausted credits permit an honest local alternative; a transient error does not. Distinguish invalid input and authentication from service failures. Do not blindly retry an uncertain paid generation: preserve existing files and reconcile the provider result first. This command has no Tripo-style task resume interface. Continue independent game work while only the dependent image work is blocked.
 
-- Save concepts and image-to-3D sources under `assets/concepts/`.
-- Save textures, decals, icons, and GUI source images under `assets/textures/`, `assets/decals/`, or `assets/ui/`.
-- For image-to-3D, hand the saved image path to `threejs-3d-generator` and record the chain in the external asset ledger.
-- Do not call the image API from client-side game code.
-- Convert generated PNGs into runtime formats deliberately: PNG for alpha/UI, JPG/WebP/KTX2 for larger opaque textures where the project pipeline supports it.
-- Verify how the image appears in game, not only that the file exists.
+## Report
 
-## Required Report
-
-Report:
-
-- Credential probe output or command blocker.
-- Prompt and purpose.
-- Output path.
-- Resolution.
-- Whether the image was used directly, edited further, or handed to `threejs-3d-generator`.
-- Any remaining integration work such as compression, UV assignment, alpha cleanup, or atlas packing.
-
-Do not mark a premium graphics phase complete if the needed image outputs are missing and the only justification is "procedural is enough" for high-value UI, texture, sky, decal, logo, or image-to-3D surfaces.
+Prompt and purpose, output path, resolution, whether it was used directly, edited further, or handed to `threejs-3d-generator`, and any remaining work such as compression, UV assignment, alpha cleanup, or atlas packing.

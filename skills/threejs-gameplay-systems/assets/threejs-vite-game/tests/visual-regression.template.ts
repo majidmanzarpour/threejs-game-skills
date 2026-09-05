@@ -15,25 +15,26 @@ async function prepareDeterministicScreenshot(page: Page, stateName: string) {
   await page.goto('/');
   await page.waitForFunction(() => (window.__THREE_GAME_DIAGNOSTICS__?.frame ?? 0) > 10);
 
-  const hasHooks = await page.evaluate(() => Boolean(window.__THREE_GAME_TEST_HOOKS__));
-  if (!hasHooks) {
-    throw new Error(
-      '__THREE_GAME_TEST_HOOKS__ is not defined. Implement the deterministic test hooks ' +
-        '(seed/setState/setPausedForScreenshot/setReducedMotion/hideDebugUi) before ' +
-        'enabling visual baselines — see threejs-qa-release references/visual-test-harness.md.',
-    );
-  }
-
-  await page.evaluate((name) => {
+  const acknowledgement = await page.evaluate(async (name) => {
     const hooks = window.__THREE_GAME_TEST_HOOKS__;
-    hooks?.seed(12345);
-    hooks?.setReducedMotion(true);
-    hooks?.hideDebugUi(true);
-    hooks?.setState(name);
-    hooks?.setPausedForScreenshot(true);
+    if (!hooks) throw new Error('__THREE_GAME_TEST_HOOKS__ is required for visual baselines');
+    for (const key of ['seed', 'setState', 'setPausedForScreenshot', 'setReducedMotion', 'hideDebugUi'] as const) {
+      if (typeof hooks[key] !== 'function') throw new Error(`Visual baselines require the ${key} hook`);
+    }
+    await hooks.setPausedForScreenshot(false);
+    await hooks.seed(12345);
+    const applied = await hooks.setState(name);
+    if (!applied || applied.state !== name) throw new Error(`setState must acknowledge {state: ${JSON.stringify(name)}}`);
+    // Preserve the acknowledged state while optional hooks, fonts and rendering settle.
+    await hooks.setPausedForScreenshot(true);
+    await hooks.setReducedMotion(true);
+    await hooks.hideDebugUi(true);
+    await document.fonts.ready;
+    const renderFrames = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await renderFrames();
+    return applied;
   }, stateName);
-
-  await page.waitForTimeout(150);
+  expect(acknowledgement.state, 'requested visual state must be applied').toBe(stateName);
 }
 
 // State names must match the game's setState implementation. The scaffold

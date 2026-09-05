@@ -31,6 +31,14 @@ Final:
 
 Query a task with the same API key that created it. Output download URLs usually expire after a few minutes, so download immediately.
 
+## Checkpointed Jobs
+
+The helper's optional `--checkpoint PATH` works on text, image, postprocess, and character-pipeline commands. IDs are recorded as soon as a task is accepted. `resume PATH` reuses accepted/completed stages and intact downloads; it never turns a single-task job into a character pipeline. Character jobs support `--stop-after model|rig|animations` on the initial command and each resume, so the agent can inspect the actual model before rigging and the rig before retargeting. The default remains the full chain for backward compatibility.
+
+Checkpoint writes are atomic and concurrent access is locked. A saved submission intent with no accepted ID is uncertain, even after a process crash. Reconcile it using a real recovered provider task ID and `resume PATH --task-id ID`; never edit the journal to pretend it was rejected. Remote input URLs are not stored; if an image task was never accepted, `resume PATH --image URL` can supply its source again. Local paths and completed files must stay available.
+
+Safe GET operations get up to four attempts with bounded exponential backoff and `Retry-After` handling. Task POSTs are not auto-retried. A polling timeout leaves a resumable accepted job. An expired download URL needs fresh task status (resume fetches it when downloads remain). Errors distinguish missing credentials, rejected credentials, exhausted credits, invalid inputs, transient failures, uncertain submissions, and invalid artifacts. Preserve IDs and continue independent work instead of treating all failures as procedural-fallback permission.
+
 ## Core Task Types
 
 - `text_to_model`: prompt to model.
@@ -93,7 +101,7 @@ Auto-rigging is NONDETERMINISTIC: the same model can produce a degenerate skelet
 
 - `original_model_task_id`: the RIG task ID, not the original generation task ID.
 - For v2.5 rigs, pass `model_version: v2.5-20260210`. For v1.0 rigs, OMIT model_version entirely (the CLI accepts `--model-version default`): the retarget enum rejects an explicit `v1.0-20240301` with HTTP 400 `code: 2017` "The version value is invalid", but the server default retargets v1.0 rigs correctly.
-- Exactly one of `animation` (single preset string) or `animations` (array, max length 5) is required. Batch clips into one task instead of one task per clip; it is faster and cheaper.
+- Exactly one of `animation` (single preset string) or `animations` (array, max length 5) is required. For v2.5 rigs, batching reduces task overhead, not per-animation credits; v1.0 rigs require separate tasks as described below.
 - `out_format`: `glb` (default) or `fbx`. `bake_animation`: default true, glb only. `export_with_geometry`: default true.
 - v1.0 RIGS: ONE ANIMATION PER RETARGET TASK. Batching via `animations` makes the FBX contain one armature object per clip (`Armature.001`, `.002`, …) with name-colliding bones; engines bind takes to the wrong skeleton and the body pitches sideways/prone. Submit one task per preset (10 credits each — batching saves nothing).
 - v1.0 RIGS MUST RETARGET WITH `out_format=fbx`. Root cause (verified June 2026): Tripo's animation pipeline is FBX-native (their own tutorials are FBX end-to-end and never use GLB for animation). The GLB bake of v1.0 retargets exports twist-bone transforms in the wrong space — and the limb mesh is skinned almost entirely to twist bones, so arms/legs collapse into the torso in every engine (reproduced identically in three.js and Babylon; the FBX of the same task is correct, with real clip names like `walk_normal_m_remap` instead of `NlaTrack`). Load FBX with three.js `FBXLoader`, or convert FBX→GLB offline (Blender / FBX2glTF). v2.5 creature-rig retargets export GLB correctly.

@@ -103,25 +103,6 @@ class GameAudio {
 }
 ```
 
-## Verification Checklist
+## Runtime failure modes
 
-Report pass/fail:
-
-- Files exist under `assets/audio/...`.
-- Main gameplay events trigger the expected sounds.
-- Ambience loop starts, loops, and stops cleanly.
-- Pause/restart does not stack duplicate loops.
-- Browser autoplay/user gesture unlock is handled.
-- Volume/mute controls affect groups.
-- Mobile Safari/Chrome are considered when audio context unlock is needed.
-- Console has no decode/load errors.
-
-## Final Evidence
-
-Include:
-
-- Audio matrix with generated file paths.
-- Prompt/text/input/source for every generated or processed file.
-- Duration, loop flag, output format, voice ID when applicable.
-- Runtime trigger mapping.
-- Verification notes and remaining gaps.
+Ambience loops stacking after a pause or restart · autoplay blocked because nothing unlocked the context from a user gesture · mute or volume reaching only some groups · decode/load errors swallowed silently · mobile Safari needing its own unlock path.

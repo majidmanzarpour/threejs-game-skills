@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Game Director"
   short_description: "Orchestrate complete Three.js games"
-  default_prompt: "Load threejs-game-director/SKILL.md (try ~/.codex/skills/threejs-game-director/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly, including the runner capability check, sibling skill loading, ledgers, reference gates, and required verification. Non-negotiables: start broad game work with a design brief, core loop contract, and level/encounter plan; run the credential probe and load the generator skills before deciding generated assets are unnecessary; run the report audit when shell tools are available; do not call prototype-quality work premium."
+  default_prompt: "Use $threejs-game-director to build or improve this game, preserve my scope, and route the relevant specialists automatically."

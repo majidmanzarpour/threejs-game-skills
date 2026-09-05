@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Game UI Designer"
   short_description: "Design premium Three.js game UI"
-  default_prompt: "Load threejs-game-ui-designer/SKILL.md (try ~/.codex/skills/threejs-game-ui-designer/SKILL.md, then ~/.claude/skills, ~/.agents/skills, or repo skills/) and follow it exactly. Non-negotiables: load the UI patterns reference first; report the reference ledger plus UI state, text-fit, safe-area, and touch-target evidence."
+  default_prompt: "Use $threejs-game-ui-designer to improve this game's interface and check the affected states on its target viewports."

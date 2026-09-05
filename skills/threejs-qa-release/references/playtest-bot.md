@@ -5,7 +5,7 @@ Automated playtests drive the game through scripted real input and measure wheth
 ## Prerequisites
 
 - `window.__THREE_GAME_DIAGNOSTICS__` publishing frame, score/objective, complete/fail state, and player position every update.
-- `window.__THREE_GAME_TEST_HOOKS__` with at least `seed()` and `setState()` so runs are reproducible (scaffold games ship both).
+- `window.__THREE_GAME_TEST_HOOKS__` with at least `seed()` and `setState()` so runs are reproducible (scaffold games ship both). Await both; `setState(name)` must acknowledge `{ state: name }` after applying it and throw on unknown states.
 - All gameplay randomness routed through the seeded RNG — otherwise bot metrics are noise.
 
 ## Setup
@@ -17,7 +17,7 @@ cp tests/bot-playtest.template.ts tests/bot-playtest.spec.ts
 npx playwright test tests/bot-playtest.spec.ts
 ```
 
-Adapt `INPUT_SCRIPT` to the game's controls and level layout: an endless runner bot holds forward and switches lanes on a cadence; an arena game sweeps the play space; a tower defense bot places affordable towers via test hooks and starts waves. Game-specific hooks (e.g. `forceWave()`, `buildFirstOpenPad()`) are encouraged for genres where raw keyboard input cannot express the core verb.
+Adapt `INPUT_SCRIPT` to the game's controls and level layout: an endless runner bot holds forward and switches lanes on a cadence; an arena game sweeps the play space; a tower defense bot clicks a build pad and starts waves. Game-specific hooks (e.g. `forceWave()`) can set up later states, but separately exercise actual player controls so hooks cannot hide broken input.
 
 ## Metrics And What They Mean
 

@@ -262,15 +262,24 @@ export class Game {
         this.rng = createSeededRandom(value);
       },
       setState: (name: string) => {
-        if (name === 'active-play') this.resetRun();
-        else if (name === 'complete') this.completeRun();
-        else console.warn(`Unknown test state: ${name}`);
+        if (name !== 'active-play' && name !== 'complete') throw new Error(`Unknown test state: ${name}`);
+        this.resetRun();
+        if (name === 'complete') this.completeRun();
+        this.render();
+        this.publishDiagnostics();
+        return { state: name };
       },
       setPausedForScreenshot: (paused: boolean) => {
         this.pausedForScreenshot = paused;
       },
       setReducedMotion: (enabled: boolean) => {
         this.reducedMotion = enabled;
+        if (enabled) {
+          this.player.stabilizeVisuals();
+          for (const pickup of this.pickups) pickup.stabilizeVisuals();
+        }
+        this.render();
+        this.publishDiagnostics();
       },
       hideDebugUi: (hidden: boolean) => {
         this.debugTools.setHidden(hidden);
@@ -282,11 +291,9 @@ export class Game {
     this.score = 0;
     this.elapsed = 0;
     this.complete = false;
-    this.player.group.position.set(0, this.player.group.position.y, 0);
-    this.player.velocity.set(0, 0, 0);
+    this.player.reset();
     for (const pickup of this.pickups) {
-      pickup.reset();
-      pickup.group.rotation.y = this.rng() * Math.PI * 2;
+      pickup.reset(this.rng() * Math.PI * 2);
     }
     this.cameraRig.snapTo(this.player.group.position);
     this.hud.setTarget(this.pickups.length);

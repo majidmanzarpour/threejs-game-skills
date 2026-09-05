@@ -66,6 +66,19 @@ export class Player {
     this.group.position.y = 0.06 + Math.sin(elapsed * 9) * Math.min(this.velocity.length() / 40, 0.08);
   }
 
+  reset(): void {
+    this.group.position.set(0, 0, 0);
+    this.group.rotation.set(0, 0, 0);
+    this.velocity.set(0, 0, 0);
+    this.move.set(0, 0);
+    this.targetVelocity.set(0, 0, 0);
+    this.stabilizeVisuals();
+  }
+
+  stabilizeVisuals(): void {
+    this.group.position.y = 0.06;
+  }
+
   dispose(): void {
     this.bodyGeometry.dispose();
     this.noseGeometry.dispose();

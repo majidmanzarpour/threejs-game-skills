@@ -2,7 +2,9 @@
 
 Self-contained Codex and Claude Code skills for building playable, polished Three.js browser games. Install the skills, then ask your agent to use `threejs-game-director`; the director routes gameplay, graphics, UI, asset generation, audio, debugging, and release verification without requiring users to choose every specialist skill manually.
 
-The package includes the runtime materials agents need: `SKILL.md` files, references, checklists, prompt templates, helper scripts, and a Vite + TypeScript + Three.js scaffold bundled inside the relevant skill folders. Generated games ship with deterministic test hooks, a seeded RNG, and Playwright templates for smoke tests, visual-regression baselines, and bot playtests so agents can verify their own work end to end.
+The package includes the runtime materials agents need: `SKILL.md` files, references, helper scripts, and a Vite + TypeScript + Three.js scaffold bundled inside the relevant skill folders. Generated games ship with deterministic test hooks, a seeded RNG, and Playwright templates for smoke tests, visual-regression baselines, and bot playtests so agents can verify their own work end to end.
+
+One shared pack of nine skills serves Codex and Claude Code. The director preserves your scope and art direction, uses specialist guidance automatically, delegates independent work when the runner supports it, and scales verification to the change. Full games get a complete production pass; a small HUD fix stays a small HUD fix. No particular model or paid API key is required.
 
 Created by [Majid Manzarpour](https://x.com/majidmanzarpour).
 
@@ -60,7 +62,7 @@ mobile, visual, UI, performance, and release checks.
 Both runners share the same `SKILL.md` files and auto-discover the skills once installed; the prompt above works in either:
 
 - **Claude Code** reads skills from `~/.claude/skills` and routes from each `SKILL.md` description. Invoke the director with `/threejs-game-director`, or just name it in a prompt — it loads the sibling skills itself.
-- **Codex** reads skills from `~/.codex/skills`, with each skill's `agents/openai.yaml` supplying its display name and a default kickoff prompt. Name the director in your prompt and it pulls in the specialists the same way.
+- **Codex** discovers global skills in `~/.agents/skills` through the public install above. Each skill's `agents/openai.yaml` supplies its display name and a short `$skill-name` kickoff prompt. Use `$threejs-game-director` or name it naturally. The checkout's local `--codex` installer also supports the legacy `~/.codex/skills` location; avoid installing duplicate copies in both roots.
 
 The agent should:
 
@@ -68,14 +70,18 @@ The agent should:
 - Load sibling skills for gameplay systems, AAA graphics, UI, debug/profile, QA/release, 3D generation, image generation, and audio generation when the request calls for them.
 - Use the bundled scaffold internally when starting from an empty folder.
 - Create or update the game code in your project.
-- Run builds, browser checks, screenshots, canvas-pixel checks, mobile viewport checks, and QA gates before claiming completion.
-- Report the skill-loading ledger, reference ledger, asset/audio sourcing decisions, visual scorecard, and remaining risks for premium work.
+- Establish art direction, gameplay camera scale, and a representative playable scene before expanding levels or asset families.
+- For substantial builds, preserve constraints, completed work, pending asset jobs, and next actions in a compact project note so corrections do not restart completed generation.
+- Run checks appropriate to the change: full games include production builds, real input, screenshots, canvas pixels, supported viewports, and motion evidence when animated models matter.
+- Put detailed evidence and the premium visual scorecard in a project artifact; keep the final answer focused on what works and remaining risks.
 
 Users generally should not need to run the scaffold or QA helper scripts directly. Those scripts are packaged so the skills can use them as part of the workflow.
 
+Background tools, subagents, native async execution, user-steering delivery, and reasoning settings depend on the host. Installing these skills does not enable an API feature or change your model settings. When delegation is unavailable, the agent works directly.
+
 ## Optional API Keys
 
-The core Three.js skills work without paid API keys. When keys are missing, the director should report the credential probe output, skip external generation, and fall back to procedural/local assets. Add keys only when you want the agent to generate external models, images, or audio.
+The core Three.js skills work without paid API keys. When keys are genuinely missing or credits are exhausted, the director continues with procedural/local assets and reports the affected limitation. Temporary failures trigger bounded recovery of the existing job, not an immediate downgrade or duplicate paid submission. Explicitly procedural or no-external-service requests remain procedural. Add keys only when you want the agent to generate external models, images, or audio.
 
 Never commit API keys or put them in browser-side game code. These skills use provider APIs from local agent tooling, then save generated assets into your game project.
 
@@ -121,7 +127,7 @@ The director skill includes a credential probe that sources common shell profile
 # Claude Code
 bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 # Codex
-bash ~/.codex/skills/threejs-game-director/scripts/probe_asset_credentials.sh
+bash ~/.agents/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 ```
 
 It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
@@ -186,35 +192,37 @@ ambience. If generation is blocked, report the credential probe output and fallb
 
 ## Expected Evidence
 
-For meaningful Three.js work, the skills should gather evidence before claiming success:
+For a complete game, the skills should gather evidence before claiming success. Narrow edits use the affected subset, not an unrelated full release audit:
 
 - `npm run build`
 - local browser run
 - browser console and page error check
 - Playwright screenshot
 - canvas nonblank pixel check, plus the inspector's measured metrics (color entropy, edge density, luminance contrast, render budget rows)
-- desktop and mobile viewport pass
+- supported-viewport checks (desktop and mobile by default)
 - interaction check for the main control path
 - game design brief, core loop contract, and level/encounter plan for broad game creation
 - performance snapshot when graphics, assets, shaders, or post-processing changed
 - technical art budget target-vs-actuals when premium graphics changed
 - UI text-fit, overlap, safe-area, and touch-target checks when UI changed
-- visual scorecard with measured evidence and a fresh-eyes review for premium, AAA, showcase, or less-basic claims
+- visual scorecard with measured evidence for premium, AAA, showcase, or less-basic claims
 - visual test harness decision (screenshot baselines added/extended/skipped) for release-ready visual QA
 - bot playtest metrics for release-ready gameplay claims
-- external asset/audio sourcing ledger when generated assets or audio are in scope
+- generated asset paths and task IDs, or the credential probe output, when external assets are in scope
+- short motion captures for animated models: rig deformation, clip transitions, foot sliding, and attack/contact timing
+- a current-run manifest declaring required viewport/state captures and artifact paths, with acknowledged states and a matching run ID
 
 Premium/AAA claims should not rely on a static scene, placeholder cubes, generic stat-card HUDs, or unverified screenshots. The game should have an active playable loop and a filled visual scorecard.
 
 ## Skill System
 
-- `threejs-game-director`: main entrypoint for complete game builds and orchestration — runner capability check, skill path ladder, phase playbook, ledgers, report audit.
+- `threejs-game-director`: main entrypoint for complete game builds: scope and quality bar, specialist routing, bounded delegation, continuity notes, asset recovery, current-run evidence.
 - `threejs-gameplay-systems`: playable loop, architecture, game design and level design, mechanics, entities, controls, camera, physics selection, and game feel (hitstop, screenshake, easing, impact feedback).
 - `threejs-aaa-graphics-builder`: visual scorecard with calibration anchors, technical art budgets, shader/material cookbook, asset architecture, models, materials, VFX, render polish.
 - `threejs-game-ui-designer`: HUDs, menus, overlays, responsive UI, icons, safe areas, UI states.
 - `threejs-debug-profiler`: scene/runtime/render bugs, mobile bugs, performance profiling, renderer metrics.
 - `threejs-qa-release`: browser QA, screenshots, canvas pixels with measured metrics, visual test harness, bot playtests, responsive checks, production build, release risk report.
-- `threejs-3d-generator`: Tripo API text/image-to-3D, texture, auto-rig, animation, conversion, download, and Three.js import guidance.
+- `threejs-3d-generator`: Tripo API text/image-to-3D, texture, auto-rig, animation, conversion, download, checkpoint/resume, staged inspection, and Three.js import guidance.
 - `threejs-image-generator`: Gemini image generation for concepts, textures, decals, skies, icons, GUI art, and image-to-3D inputs.
 - `threejs-audio-generator`: ElevenLabs-backed SFX, ambience, UI sounds, voice/TTS, voice conversion, cleanup, and Three.js audio integration.
 
@@ -224,8 +232,10 @@ Installed skills are self-contained. They do not depend on root docs, root scaff
 
 - `skills/`: the full public package. Each skill owns its required `SKILL.md`, `references/`, `scripts/`, and `assets/`.
 - `skills/threejs-gameplay-systems/assets/threejs-vite-game/`: packaged game scaffold used by the skills when starting from an empty project. Ships deterministic test hooks (`__THREE_GAME_TEST_HOOKS__`), a seeded RNG, and `tests/` templates for smoke tests, visual-regression baselines, and bot playtests.
-- `skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs`: packaged browser/canvas inspection helper — reports non-blank pixels, measured visual metrics (color entropy, edge density, luminance contrast), and render-budget rows; `--state`/`--seed` drive the test hooks for deterministic per-state captures.
+- `skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs`: packaged browser/canvas inspection helper: pixel metrics and render-budget rows; explicit `--state` captures require an awaited matching acknowledgment, and `--run-id` identifies the verification pass.
 - `skills/threejs-aaa-graphics-builder/assets/scorecard-anchors/`: calibration reference screenshots for the visual scorecard.
+- `skills/threejs-game-director/scripts/check_evidence.py`: `--manifest` validates a declared capture set and run ID without scanning historical reports. The legacy `--report` interface checks cited artifact files but cannot prove freshness or complete capture coverage. Neither replaces visual inspection or gameplay tests.
+- `skills/threejs-game-director/scripts/probe_asset_credentials.sh`: prints `KEY=SET|MISSING` for all three providers, sourcing the shell profile the agent process does not inherit.
 - `scripts/`: local validation helpers for maintainers.
 - `install.sh`: local installer for working on this checkout.
 
@@ -237,6 +247,7 @@ Validate this workflow repository:
 npm install
 npm run check:scripts
 npm run validate:skills
+npm run test:helpers
 ```
 
 Maintainers can run packaged helpers directly when testing the skill package, but normal users should interact through agent prompts:
@@ -244,8 +255,13 @@ Maintainers can run packaged helpers directly when testing the skill package, bu
 ```bash
 python3 skills/threejs-gameplay-systems/scripts/create_threejs_game.py ../my-threejs-game
 node skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --mobile
-node skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --seed 12345
+node skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --seed 12345 --run-id pass-1
+python3 skills/threejs-game-director/scripts/check_evidence.py ../my-threejs-game --manifest artifacts/evidence.json
 ```
+
+The [manifest reference](skills/threejs-game-director/references/evidence-manifest.md) documents capture paths and the state-hook contract. The [workflow evaluation scenarios](skills/threejs-game-director/references/workflow-evaluations.md) compare observable behavior with fixed prompts, seeds, environments, and model settings. Helper tests use mocked provider responses without spending credits; passing them is not a claim of improved visual quality.
+
+The shared orchestration policy incorporates [OpenAI's model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra) on instruction conflicts, delegation, momentum, and proportionate checks. [Native async tools](https://developers.openai.com/api/docs/guides/async-tool-calling) and [steering](https://developers.openai.com/api/docs/guides/steering) remain hosting-application capabilities, not requirements of this pack.
 
 ## License
 

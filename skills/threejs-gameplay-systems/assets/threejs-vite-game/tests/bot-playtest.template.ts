@@ -48,10 +48,17 @@ test('bot playtest: scripted input drives progress without errors', async ({ pag
 
   await page.goto('/');
   await page.waitForFunction(() => (window.__THREE_GAME_DIAGNOSTICS__?.frame ?? 0) > 10);
-  await page.evaluate(() => {
-    window.__THREE_GAME_TEST_HOOKS__?.seed(12345);
-    window.__THREE_GAME_TEST_HOOKS__?.setState('active-play');
+  const acknowledgement = await page.evaluate(async () => {
+    const hooks = window.__THREE_GAME_TEST_HOOKS__;
+    if (!hooks || typeof hooks.seed !== 'function' || typeof hooks.setState !== 'function') {
+      throw new Error('Bot playtests require seed and setState test hooks');
+    }
+    await hooks.seed(12345);
+    const applied = await hooks.setState('active-play');
+    if (!applied || applied.state !== 'active-play') throw new Error('setState must acknowledge active-play');
+    return applied;
   });
+  expect(acknowledgement.state, 'bot must start in the requested state').toBe('active-play');
 
   const sample = (): Promise<BotSnapshot | null> =>
     page.evaluate(() => {

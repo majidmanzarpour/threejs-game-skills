@@ -1,6 +1,6 @@
 # Shader And Material Cookbook
 
-Concrete material, shader, and post-processing recipes. Use with `references/technical-art.md` (budgets, when shader work is justified) and `references/render-recipes.md` (render pipeline).
+Concrete material, shader, and post-processing recipes. Use with `technical-art.md` (budgets, when shader work is justified) and `authoring-recipes.md` (render pipeline, lighting, fog, post).
 
 Targets three.js `^0.184`; imports use the `three/addons/*` alias (maps to `examples/jsm`). Every entry lists **When**, **Cost** (draw calls / fill rate / compile), and **Read** (the rule: effects clarify gameplay, never hide missing geometry).
 

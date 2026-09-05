@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Prints exactly one line per key in the form KEY=SET or KEY=MISSING.
-# The literal MISSING token is a contract: skill skip rules and
-# audit_reference_report.py blocker detection grep for it.
+# The literal SET/MISSING tokens are a contract the skills quote verbatim in
+# reports, so callers can tell a real credential blocker from an assumption.
 PROBE_SNIPPET='
   report_key() {
     if [ -n "${2:-}" ]; then

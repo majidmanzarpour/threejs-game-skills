@@ -1,60 +1,49 @@
 ---
 name: threejs-aaa-graphics-builder
-description: "Upgrade Three.js games from basic/prototype visuals to premium AAA-inspired browser graphics. Combines art-direction critique, procedural model building, technical art, mandatory external asset sourcing decisions, threejs-3d-generator assets, threejs-image-generator concept/texture workflows, scene visual polish, material/texture libraries, world prop kits, shaders, VFX readability, render budgets, LOD/instancing, render pipeline, and visual scorecard gates. For premium games with characters, vehicles, ships, weapons, buildings, signature props, skies, textures, decals, logos, icons, or GUI art, load the relevant generator skills before deciding procedural assets are enough."
+description: "Upgrade Three.js games from prototype visuals to premium browser graphics: art-direction critique, procedural model building, material and texture libraries, world prop kits, shaders, VFX, lighting and render pipeline, LOD and instancing, render budgets, and a 10-category visual scorecard. Use when screenshots still look basic or the user asks for premium, AAA, high-fidelity, showcase, or less-basic graphics."
 ---
 
 # Three.js AAA Graphics Builder
 
-## Purpose
+Own the production graphics pass: turn basic screenshots into authored, high-density, performance-aware visuals.
 
-Own the production graphics pass. Convert basic screenshots into authored, high-density, performance-aware visual experiences.
+## References
 
-## Use When
+| File | Read it when |
+| --- | --- |
+| `references/visual-scorecard.md` | scoring visuals or making any premium/AAA/showcase claim |
+| `references/authoring-recipes.md` | building hero, obstacle, reward, world-kit, or prop models; changing lighting, tone mapping, shadows, fog, post, or graphics architecture |
+| `references/technical-art.md` | render budgets, material kits, VFX systems, instancing/LOD, imported asset cleanup, anything that could affect browser performance |
+| `references/shader-cookbook.md` | custom shaders, `onBeforeCompile`, skies, or post-processing; use recipes as tested starting points and verify them against the project's Three.js version |
 
-Screenshots still look basic, models look primitive, worlds are sparse, UI/world art feels generic, or the user asks for premium, AAA, high-fidelity, showcase, or less-basic graphics.
+For a broad "still looks basic" or premium pass, read all four before implementing. A narrow graphics edit loads only its relevant references and checks; the requested style and scope override recipe defaults.
 
-## Required References
+## Core rule
 
-These references are required phase-entry gates, not optional reading:
-
-- Load `references/visual-scorecard.md` before scoring, judging completion, or making any premium/AAA/showcase claim.
-- Load `references/implementation-blueprint.md` before changing graphics architecture, materials, VFX, rendering, diagnostics, or broad visual systems.
-- Load `references/model-recipes.md` before building or upgrading hero/player, obstacle, enemy, pickup, world-kit, material, or prop models.
-- Load `references/render-recipes.md` before changing lighting, tone mapping, shadows, fog, post-processing, materials, or render composition.
-- Load `references/technical-art.md` before premium/AAA/showcase graphics work, shaders/material systems, VFX systems, generated/imported asset cleanup, LOD/instancing work, or visual changes that could affect browser performance.
-- Load `references/shader-cookbook.md` before writing any custom shader, `onBeforeCompile` injection, material recipe, sky, or post-processing chain — use its proven values and GLSL patterns instead of improvising.
-- Load `references/checklists/aaa-game-quality-gate.md` and `references/checklists/aaa-visual-scorecard.md` before declaring a game premium, AAA, showcase, complete, release-ready, or less basic.
-- Load the relevant checklist before focused work: `references/checklists/procedural-model-quality.md`, `references/checklists/material-lighting-quality.md`, `references/checklists/performance-safe-visual-detail.md`, or `references/checklists/technical-art-quality.md`.
-- Load `references/prompt-templates.md` only when the user asks for reusable prompts, a graphics-pass prompt, or a task template.
-
-For broad "still looks basic", premium, AAA, high-fidelity, showcase, or less-basic graphics work, load all five references as the first action in the phase. Track them in a reference ledger with yes/no, path, and failure reason. Do not mark the graphics phase complete while any required reference is skipped.
-
-External asset sourcing gate:
-
-- For premium/AAA/showcase/high-fidelity/less-basic graphics with a hero/player, character, creature, boss, vehicle, ship, building, weapon, signature prop, complex pickup, or hero environment piece, load `threejs-3d-generator` before deciding procedural geometry is enough.
-- For premium/AAA/showcase/high-fidelity/less-basic graphics with concept needs, texture/material references, decals, logos, faction marks, icons, GUI art, skies, backgrounds, title/menu art, or image-to-3D inputs, load `threejs-image-generator` before deciding 2D external assets are not needed.
-- Run the director credential probe before using `key unavailable` as a skip reason and paste the SET/MISSING output.
-- Create an asset sourcing ledger for each high-value surface: procedural / threejs-image-generator / threejs-3d-generator / hybrid, plus outputs or skip reason.
-- `not-needed` is valid only after the relevant skill was loaded and the ledger explains why external generation would not improve a non-hero support surface, or why the credential probe or attempted generation shows a real blocker.
-- For premium hero surfaces, procedural-only is not an allowed final answer unless there is real blocker evidence. At least one high-value surface must show a 3D generator task ID, downloaded GLB/GLTF/FBX path, image generator output path, or documented hybrid chain.
+Glow does not make primitives look AAA. Build authored forms first, then materials, then lighting, then effects — in that order.
 
 ## Workflow
 
-1. Capture or inspect active desktop/mobile screenshots.
-2. Score visuals across art direction, hero/player, obstacles, rewards, world, materials, render, VFX, UI, and performance evidence.
-3. Add missing graphics architecture: material library, procedural textures/decals, model factories, world prop kit, technical-art budget, VFX system, render pipeline, diagnostics.
-4. Run the credential probe, then fill the external asset sourcing ledger per surface: procedural Three.js factory, `threejs-image-generator` 2D reference/texture, `threejs-3d-generator` 3D generation, or a hybrid.
-5. Upgrade every weak visible surface, not only one hero object.
-6. Add lighting/render/material polish after authored forms exist.
+1. Capture or inspect active-play screenshots on the target viewports when a playable scene exists.
+2. For an existing game, score the affected views and pick the weakest surfaces. For a new game, establish art direction, camera scale, material roles, and the hero target first; do not invent a before screenshot.
+3. Add the graphics architecture the game is missing: material library, procedural textures and decals, model factories, world prop kit, VFX system, render pipeline, diagnostics.
+4. Choose a source per high-value surface: procedural Three.js, a `threejs-image-generator` reference or texture, a `threejs-3d-generator` model, or an image-to-3D hybrid chain. Run the credential probe when external generation is in scope.
+   Inspect the concept/model before dependent generation or rigging. Finish one representative playable scene with actual assets and feedback before expanding the content kit.
+5. Upgrade every weak visible surface, not only the hero: hazards, rewards, ground and track, foreground props, background layers, telegraphs, material variation, state VFX.
+6. Add lighting, tone mapping, and render polish once authored forms exist.
 7. Add event-driven VFX tied to gameplay state.
-8. Re-score screenshots against the calibration anchors, citing the inspector's measured metrics. Continue until every premium category is at least 2/3 or report exact blockers.
-9. Run the fresh-eyes review per `references/visual-scorecard.md` before finalizing premium/AAA/showcase claims.
-10. Verify renderer diagnostics against the render budget table, technical-art budget, desktop/mobile screenshots, console/page errors, canvas pixels, imported asset budgets, and playability.
+8. Re-score against the calibration anchors, citing the inspector's measured metrics. Keep going until every premium category is at least 2, or name the exact blocker.
 
-## Core Rule
+## Asset sourcing
 
-Do not make primitives look AAA by adding glow. First build authored forms, then materials, then lighting, then effects.
+When external generation is in scope, run `threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about keys. No probe or paid submission is needed for explicitly procedural art.
 
-## Final Response
+With keys set, generated assets belong on the hero surfaces — player, character, creature, boss, vehicle, ship, building, weapon, signature prop, hero environment piece — and on high-value 2D: skies, backgrounds, texture and trim references, decals, faction marks, icons, GUI and title art, image-to-3D inputs. Respect explicit procedural-only art or external-generation restrictions. Procedural Three.js handles repeated props, kits, collision proxies, VFX geometry, and instanced volume.
 
-Report the reference ledger, credential probe output, external asset sourcing ledger, technical art brief, score before/after, production surfaces upgraded, files changed, screenshots/artifacts, renderer diagnostics, imported asset diagnostics when relevant, VFX readability and render-budget tradeoffs, and remaining blockers. For premium/AAA/showcase claims, include the filled visual scorecard exactly as defined in `references/visual-scorecard.md`, including average and automatic failures remaining.
+Use the director's `references/asset-recovery.md`: recover transient failures and accepted tasks before fallback. Missing keys, exhausted credits, or exhausted bounded recovery permit a local replacement with the remaining quality gap reported. A single timeout is not evidence that generation is unavailable.
+
+For animated assets inspect motion as well as silhouettes: locomotion, blend transitions, foot contacts, hit timing, and secondary motion in real gameplay. A focused independent critique may identify defects after a substantial pass; the lead remains responsible for the final score and integration.
+
+## Report
+
+Score before and after with one line of evidence per category, the surfaces you upgraded, files changed, screenshots, renderer diagnostics against the budget table, generated asset paths and task IDs, and what is still weak. Include imported-asset diagnostics (scale, bounds, collision proxy, clips) when generated 3D was used.

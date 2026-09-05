@@ -1,61 +1,55 @@
 ---
 name: threejs-qa-release
-description: "Verify and release Three.js browser games. Combines playtest QA, automated bot playtests, mobile/responsive checks, production builds, preview verification, static-hosting base paths, debug gating, bundle review, screenshots, visual test harness decisions, packaged canvas-pixel inspection with measured metrics, console checks, and release risk reports."
+description: "Verify and release Three.js browser games: playtest QA, automated bot playtests, mobile and responsive checks, production builds, static-hosting base paths, debug gating, bundle review, screenshots, visual regression baselines, canvas-pixel inspection with measured metrics, and release risk reports."
 ---
 
 # Three.js QA Release
 
-## Purpose
+Prove the game works the way a player will meet it, then prepare a shippable build with its known risks.
 
-Prove the game works as a player encounters it, then prepare a shippable browser build with known risks.
+Resolve `<this-skill-dir>` and local references from the actual loaded skill file; resolve sibling skills beside it before using runner-discovered alternatives. Run the inspector from the game project with its npm dependencies installed.
 
-## QA Workflow
+## References
 
-Load `references/qa-release-checklists.md` as the first action before broad QA, mobile verification, bug reporting, production preview, static-hosting checks, or release preparation. Track it in a reference ledger with yes/no, path, and failure reason. Do not mark QA/release complete while this reference is skipped for QA or release work.
+| File | Read it when |
+| --- | --- |
+| `references/release-checks.md` | mobile verification, production release, performance evidence, or release-failure traps |
+| `references/visual-test-harness.md` | screenshot baselines, visual regression, UI or generated-asset regression protection |
+| `references/playtest-bot.md` | release-ready gameplay claims, difficulty and fairness checks, or a loop never driven by scripted input |
 
-Load `references/checklists/visual-verification.md` for screenshot/canvas verification, `references/checklists/playtest-qa.md` for player-loop QA, and `references/checklists/release.md` for production release checks. Load `references/prompt-templates.md` only when the user asks for reusable QA/release prompts or a task template.
+## QA pass
 
-Load `references/visual-test-harness.md` and `references/checklists/visual-test-harness.md` when the game warrants screenshot baselines, visual regression testing, release-ready visual evidence, UI/generated-asset regression protection, or premium visual QA. If a harness is not warranted, report the skip reason.
+For a complete game use the full pass below. For narrow edits select checks covering the affected behavior, states, and target viewports. Reuse valid specialist evidence from the same code revision; the lead owns one consolidated pass. Repeat only after relevant changes, failures, or unresolved concerns. An explicit desktop-only scope does not require adding mobile gameplay.
 
-Load `references/playtest-bot.md` and `references/checklists/bot-playtest.md` for release-ready gameplay claims, difficulty/fairness verification, or when the playable loop has never been driven by scripted input. Report the bot playtest decision as added/extended/skipped with reason.
+1. Install dependencies, run build and typecheck, start the dev or preview server.
+2. Open the browser target and capture console, page, and network errors.
+3. Confirm non-blank, visually varied canvas pixels.
+4. Capture active play on each target viewport (desktop and mobile by default), not just the title screen.
+5. Exercise the main input, objective progression, fail and retry, and whatever changed most recently.
+6. Check HUD text fit, safe areas, touch targets, and responsive layout.
+7. When audio changed: user-gesture unlock, SFX triggers, ambience loop start and stop, pause and restart cleanup, mute and volume, decode errors.
+8. Decide on a visual test harness. For premium, release-ready, UI-heavy, or generated-asset work a harness is usually worth it; say so either way.
+9. Run the bot playtest (`tests/bot-playtest.template.ts` in scaffold games) for release-ready gameplay claims and report its metrics JSON.
+10. When animation changed, capture a short unpaused sequence and inspect locomotion, clip transitions, feet, rig deformation, and attack/contact timing using `references/visual-test-harness.md`.
 
-1. Install dependencies if needed.
-2. Run build/typecheck.
-3. Start dev or preview server.
-4. Open browser target.
-5. Capture console/page/network errors.
-6. Verify nonblank canvas pixels.
-7. Capture desktop and mobile screenshots.
-8. Trigger main input, objective progression, fail/retry, and recent risky paths.
-9. Check HUD text fit, safe areas, touch targets, responsive layout.
-10. Decide whether to add or extend a visual test harness. For premium/release UI or generated-asset work, prefer a harness unless determinism is a real blocker.
-10b. Decide whether to run the bot playtest (`tests/bot-playtest.template.ts` in scaffold games). For release-ready gameplay claims, run it and report the metrics JSON.
-11. If audio changed, verify user-gesture unlock, SFX triggers, ambience loop start/stop, pause/restart cleanup, mute/volume behavior, and decode/load errors.
-12. Record artifacts and issues.
+Screenshots alone do not cover gameplay changes.
 
-## Packaged Canvas Inspector
-
-Use the bundled inspector when the target project does not already include one:
+## Canvas inspector
 
 ```bash
-node <this-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188
+node <this-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --run-id pass-1
 ```
 
-For mobile emulation, add `--mobile`. Add `--state <name>` (and optionally `--seed <n>`) to drive the game's `__THREE_GAME_TEST_HOOKS__` before capture, so every named state (active-play, fail, stress) can be measured deterministically without live play — outputs are suffixed per state. Generated games from the packaged scaffold also include their own `scripts/inspect-threejs-canvas.mjs` and `npm run inspect:canvas`.
+`--mobile` selects mobile emulation. `--state <name>` (with optional `--seed <n>`) awaits the game's test hooks before capture. The state hook must acknowledge `{ state: name }`, and `setPausedForScreenshot` must stop simulation immediately while rendering continues. Capture freezes the acknowledged state before settling; the complete preparation phase has a timeout. Missing hooks, no-op results, unknown states, and mismatched acknowledgements fail. Reports retain `state` and add `requestedState`, `appliedState`, and `runId`. Scaffold games have their own copy plus `npm run inspect:canvas`.
 
-The inspector JSON includes a `metrics` block (color entropy, edge density, luminance contrast, dominant-color share) and a `renderBudget` comparison against starting-point tier budgets. Cite these as the Measured Evidence in the visual scorecard (`threejs-aaa-graphics-builder/references/visual-scorecard.md`); over-budget rows need a documented tradeoff, and blank-canvas or error conditions still exit nonzero.
+Use a fresh `--run-id` for each verification pass and a separate `--out` directory. Declare expected viewport/state pairs before capture in the director's `references/evidence-manifest.md` format, then run its checker with `--manifest`. Include all requested states; do not remove a failing slot to make the manifest pass. Omitting `--state` performs only a current-view canvas check.
 
-## Release Workflow
+The JSON carries a `metrics` block (color entropy, edge density, luminance contrast, dominant-color share) and a `renderBudget` comparison against tier budgets. These are the Measured Evidence for the visual scorecard in `threejs-aaa-graphics-builder/references/visual-scorecard.md`; over-budget rows need a documented tradeoff, and blank-canvas or error conditions exit non-zero.
 
-1. Inspect package scripts, Vite config, base path, public/assets.
-2. Gate debug UI/logging/test helpers.
-3. Run production build and preview/static server.
-4. Verify built output desktop/mobile.
-5. Review bundle and large assets.
-6. Document deploy command, host assumptions, and residual risks.
+## Release pass
 
-## Final Response
+Inspect package scripts, Vite config, base path, and public assets → gate debug UI, logging, and test helpers → run the production build and preview it on a static server → check the built output on target viewports → review bundle and large assets → document the deploy command, host assumptions, and residual risks.
 
-Lead with pass/fail. Include the reference ledger, QA matrix/checklist result, commands, URL, controls, screenshots/artifacts, issues found/fixed, deployment notes, and risks.
-When visual baselines are in scope, include the harness decision, states covered, update/compare commands, artifact paths, thresholds/masks, and flake risks.
-When the bot playtest ran, include its metrics JSON (frames, score progression, distance, softlock windows, seed) and the added/extended/skipped decision.
+## Report
+
+Lead with the result and unresolved defects. Put the detailed commands, manifest, captures, motion evidence, controls exercised, issues fixed, and deployment notes in the project's evidence report. Include the harness decision and bot metrics when in scope. Return the artifact path to the lead; passing pixels and acknowledged state hooks do not establish aesthetic quality or successful gameplay by themselves.
