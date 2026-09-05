@@ -1,5 +1,7 @@
 # Tripo API Notes
 
+These details support accurate user-executed Tripo CLI/API handoffs and diagnosis of artifacts the user supplies. The agent must not submit, retry, or top up Tripo tasks. Prefer the official `tripo` CLI commands in `SKILL.md`; use the packaged Python helper only when the user explicitly chooses that advanced API path and configures `TRIPO_API_KEY` locally.
+
 These notes summarize the official Tripo OpenAPI docs used by this skill.
 
 ## Base API

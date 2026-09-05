@@ -12,7 +12,6 @@ PROBE_SNIPPET='
       printf "%s=MISSING\n" "$1"
     fi
   }
-  report_key TRIPO_API_KEY "${TRIPO_API_KEY:-}"
   report_key GEMINI_API_KEY "${GEMINI_API_KEY:-}"
   report_key ELEVENLABS_API_KEY "${ELEVENLABS_API_KEY:-}"
 '

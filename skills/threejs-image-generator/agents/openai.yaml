@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js Image Generator"
   short_description: "Generate concepts, textures, and UI art for Three.js games"
-  default_prompt: "Use $threejs-image-generator to create and inspect image assets that fit this game's art direction and runtime use."
+  default_prompt: "Use $threejs-image-generator to create and inspect image assets that fit this game's art direction and runtime use. Prefer Codex's built-in imagegen workflow when available."

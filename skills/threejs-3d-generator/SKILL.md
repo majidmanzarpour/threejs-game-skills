@@ -1,11 +1,11 @@
 ---
 name: threejs-3d-generator
-description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games via the Tripo API. Use for text-to-3D, image-to-3D, game-ready GLB/FBX, characters, creatures, buildings, props, weapons, terrain, auto-rigging, animation retargeting, model texturing, voxel/LEGO stylization, and low-poly conversion. Pair with threejs-image-generator for concept and texture references first."
+description: "Prepare user-executed Tripo generation workflows, then inspect and integrate downloaded 3D assets into Three.js games. Use for text/image-to-3D handoffs, GLB/FBX assets, characters, creatures, buildings, props, weapons, terrain, texturing, rigging, animation, stylization, and low-poly conversion. Pair with threejs-image-generator for concept and texture references first."
 ---
 
 # Three.js 3D Generator
 
-Production 3D assets for browser games, prepared for Three.js. Provider: Tripo.
+Production 3D assets for browser games, prepared for Three.js. Provider: Tripo, with generation and paid processing executed by the user.
 
 Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling skills beside it first, then use the runner's discovered paths. Do not mix installed versions or assume a particular home directory.
 
@@ -17,19 +17,36 @@ Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling sk
 | `references/threejs-integration.md` | importing outputs into a browser game, GLB/FBX loading, root motion, animation wiring |
 | `references/image-generator-workflows.md` | pairing `threejs-image-generator` for concepts, textures, UI art, or image-to-3D inputs |
 
-## API key
+## User-executed boundary
 
-The script reads `--api-key` or `TRIPO_API_KEY`. Keys never go in skill files, game code, or reports.
+Do not submit, retry, top up, or otherwise spend Tripo credits from the agent workflow. Prepare a concrete handoff and let the user run it in Tripo Studio or the official `tripo` CLI. This keeps purchases and provider-side choices visible to the person paying for them and works with Studio credits that are separate from API credits.
 
-```bash
-python3 <this-skill-dir>/scripts/threejs_3d_asset.py probe   # TRIPO_API_KEY=SET|MISSING
-```
+Before handing off, provide:
 
-Keys defined only in a shell profile can be absent from the process env. If the plain probe unexpectedly prints MISSING, use `threejs-game-director/scripts/probe_asset_credentials.sh`, which sources the profile and probes all three providers at once.
+- The final prompt and any local reference-image paths.
+- The intended scenario (`game-mobile`, `game-pc`, or `anim`), format, face budget, texture needs, and target project directory.
+- One copy-paste CLI command when CLI execution fits, plus equivalent Studio settings when the user's credits live in Studio.
+- Acceptance checks for silhouette, pose, materials, scale, topology, and animation needs.
+
+The user should never paste an API key into chat. Browser login, provider billing, and credit balances remain user-owned. Once the downloaded files exist in the project, inspect and integrate them without requiring another provider action.
 
 Download URLs expire quickly — download immediately after a task succeeds.
 
-## Commands
+## User handoff commands
+
+Prefer the official Tripo CLI for a user who has API credits:
+
+```bash
+tripo make "game-ready sci-fi hover bike, sleek armored panels, strong readable silhouette, layered hard-surface detail, PBR materials, clean topology, centered pivot, front facing, no text" \
+  --for game-pc --name hover-bike -o assets/models/hover-bike
+
+tripo make assets/concepts/hover-bike-front.png \
+  --for game-pc --name hover-bike -o assets/models/hover-bike
+```
+
+For Studio credits, give the same prompt and settings as a short checklist. Ask the user to download GLB when available and place it at the named project path. Do not redirect a Studio-credit owner to an API top-up as though the balances were shared.
+
+The packaged Python helper remains available for advanced API workflows the user explicitly chooses to run. It reads `TRIPO_API_KEY` from the user's local environment; never ask the user to paste that key into chat:
 
 ```bash
 python3 <this-skill-dir>/scripts/threejs_3d_asset.py --help
@@ -87,11 +104,11 @@ python3 <this-skill-dir>/scripts/threejs_3d_asset.py character-pipeline \
 
 `--checkpoint PATH` is optional on `text`, `image`, `postprocess`, and `character-pipeline`. It records accepted task IDs immediately, stage status, and downloaded file fingerprints; no API keys or signed output URLs go in the checkpoint. Use a separate checkpoint per job. Existing checkpoints must be resumed, not overwritten, and concurrent use is locked.
 
-For background single-task generation omit `--wait`, retain the printed task ID/checkpoint, and run `resume CHECKPOINT` later. Single-task resume waits/downloads that task only; it does not add rigging. Character resume reuses completed stages and continues through animations unless `--stop-after model|rig|animations` limits this invocation. Credentials still come from the current environment. The checkpoint records absolute local paths, so keep its referenced files in place.
+For a user-executed background single-task generation, omit `--wait`, retain the printed task ID/checkpoint, and run `resume CHECKPOINT` later. Single-task resume waits/downloads that task only; it does not add rigging. Character resume reuses completed stages and continues through animations unless `--stop-after model|rig|animations` limits this invocation. Credentials still come from the user's current environment. The checkpoint records absolute local paths, so keep its referenced files in place.
 
 The helper retries safe status/download reads with bounded backoff, never paid task submissions. Missing credentials, exhausted credits, invalid input, transient errors, and uncertain submissions are reported distinctly. On interruption, resume the existing job rather than starting over. If a POST may have succeeded but no task ID was received, find it in provider history and use `resume CHECKPOINT --task-id RECOVERED_ID`; do not invent an ID or submit a replacement blindly. Without a recoverable ID, report the uncertainty before any potentially duplicate charge.
 
-For coordinated games follow the director's `references/asset-recovery.md`; continue independent implementation while generation runs. Explicitly procedural or no-external-service requests override generated-asset defaults. Record pending jobs and user corrections in the project note, preserving completed assets instead of repeating generation.
+For coordinated games follow the director's `references/asset-recovery.md`; continue independent implementation while the user runs generation. Explicitly procedural or no-external-service requests override generated-asset defaults. Record pending jobs and user corrections in the project note, preserving completed assets instead of asking the user to repeat generation.
 
 ## Rigging and animation
 
@@ -117,4 +134,4 @@ Improve the user's prompt with material, silhouette, camera readability, scale, 
 
 Inspect unpaused in-game motion after integration: clip transitions, deformation, root motion, foot sliding, and attack/contact timing. Use the QA motion pass for animated work; a successful download or skeleton check is not proof of good animation.
 
-Report task IDs, checkpoint/output paths, model version, texture and geometry settings, animations, conversion settings, Three.js import notes, observed motion, and anything that failed. Put detailed evidence in the project artifact for the lead's consolidated report.
+Report the user handoff prompt/settings/command, downloaded output paths, task IDs or checkpoints the user supplies, texture and geometry settings, animations, conversion settings, Three.js import notes, observed motion, and anything that failed. Put detailed evidence in the project artifact for the lead's consolidated report.

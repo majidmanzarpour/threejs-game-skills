@@ -81,14 +81,15 @@ Background tools, subagents, native async execution, user-steering delivery, and
 
 ## Optional API Keys
 
-The core Three.js skills work without paid API keys. When keys are genuinely missing or credits are exhausted, the director continues with procedural/local assets and reports the affected limitation. Temporary failures trigger bounded recovery of the existing job, not an immediate downgrade or duplicate paid submission. Explicitly procedural or no-external-service requests remain procedural. Add keys only when you want the agent to generate external models, images, or audio.
+The core Three.js skills work without paid API keys. Codex can use its built-in imagegen workflow through the active Codex subscription, with no project API key. Tripo generation is user-executed: the agent prepares a prompt, settings, target path, and a CLI command or Studio checklist, then integrates the downloaded artifact. When other keys are genuinely missing or credits are exhausted, the director continues with procedural/local assets and reports the affected limitation. Temporary failures trigger bounded recovery of the existing job, not an immediate downgrade or duplicate paid submission. Explicitly procedural or no-external-service requests remain procedural. Add keys only when you want agent-executed ElevenLabs or the Gemini fallback.
 
-Never commit API keys or put them in browser-side game code. These skills use provider APIs from local agent tooling, then save generated assets into your game project.
+Never commit API keys or put them in browser-side game code. Agent-executed providers use local tooling, while Tripo credentials stay within the user's Studio or CLI session. Save generated assets into the game project before integrating them.
 
 | Provider | Skill | Environment variable | Use cases | Key setup |
 | --- | --- | --- | --- | --- |
-| Tripo API | `threejs-3d-generator` | `TRIPO_API_KEY` | Text/image/multiview to 3D, game-ready GLB/FBX hero models, vehicles, props, buildings, weapons, textures, rigging, animation, stylization, mesh conversion, post-processing. | [Tripo quick start](https://platform.tripo3d.ai/docs/quick-start) and [Tripo API overview](https://www.tripo3d.ai/api). |
-| Gemini image API | `threejs-image-generator` | `GEMINI_API_KEY` | Concept art, image-to-3D source images, texture references, decals, skies, backgrounds, icons, logos, GUI art, title/menu art. | [Gemini API key docs](https://ai.google.dev/gemini-api/docs/api-key) and [Google AI Studio keys](https://aistudio.google.com/app/apikey). |
+| Tripo Studio or CLI | `threejs-3d-generator` | User login/profile; never shared with the agent | User-executed text/image-to-3D, game-ready GLB/FBX hero models, vehicles, props, buildings, weapons, textures, rigging, animation, stylization, mesh conversion, and post-processing. | [Tripo CLI](https://developers.tripo3d.ai/en/docs/cli) and [Tripo API overview](https://www.tripo3d.ai/api). Studio and API credits are separate. |
+| Codex imagegen / GPT Image 2 | `threejs-image-generator` + built-in `imagegen` | None for the built-in path | Concept art, image-to-3D source images, texture references, decals, skies, backgrounds, icons, logos, GUI art, title/menu art. | Included with the active Codex image-generation capability; the installed `imagegen` skill supplies current model and output rules. |
+| Gemini image API fallback | `threejs-image-generator` | `GEMINI_API_KEY` | The same raster assets on runners without native image generation. | [Gemini API key docs](https://ai.google.dev/gemini-api/docs/api-key) and [Google AI Studio keys](https://aistudio.google.com/app/apikey). |
 | ElevenLabs API | `threejs-audio-generator` | `ELEVENLABS_API_KEY` | SFX, ambience loops, UI sounds, announcer lines, dialogue TTS, voice conversion, audio cleanup, game audio manifests. | [ElevenLabs quickstart](https://elevenlabs.io/docs/eleven-api/quickstart) and [API authentication](https://elevenlabs.io/docs/api-reference/authentication). |
 
 Set keys in your shell profile, then restart your terminal.
@@ -96,7 +97,6 @@ Set keys in your shell profile, then restart your terminal.
 macOS/Linux with `zsh` or `bash`:
 
 ```bash
-export TRIPO_API_KEY="..."
 export GEMINI_API_KEY="..."
 export ELEVENLABS_API_KEY="..."
 ```
@@ -106,7 +106,6 @@ For `zsh`, put those lines in `~/.zshrc` or `~/.zprofile`. For `bash`, put them 
 Windows PowerShell, current terminal session only:
 
 ```powershell
-$env:TRIPO_API_KEY = "..."
 $env:GEMINI_API_KEY = "..."
 $env:ELEVENLABS_API_KEY = "..."
 ```
@@ -114,7 +113,6 @@ $env:ELEVENLABS_API_KEY = "..."
 Windows PowerShell, persistent for your user account:
 
 ```powershell
-[Environment]::SetEnvironmentVariable("TRIPO_API_KEY", "...", "User")
 [Environment]::SetEnvironmentVariable("GEMINI_API_KEY", "...", "User")
 [Environment]::SetEnvironmentVariable("ELEVENLABS_API_KEY", "...", "User")
 ```
@@ -130,12 +128,12 @@ bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 bash ~/.agents/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 ```
 
-It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
+It prints `GEMINI_API_KEY=SET|MISSING` and `ELEVENLABS_API_KEY=SET|MISSING` without ever printing key values. Codex imagegen uses the active Codex subscription, and Tripo is user-executed, so neither is part of this agent credential probe.
 
 Provider notes:
 
-- Tripo is optional but useful for high-value 3D surfaces that procedural code alone rarely makes premium: hero vehicles, bosses, weapons, buildings, creatures, props, and textured GLB/FBX assets.
-- Gemini image generation is optional but useful before Tripo image-to-3D and for high-quality texture, sky, icon, logo, decal, and GUI sources.
+- Tripo is optional but useful for high-value 3D surfaces that procedural code alone rarely makes premium: hero vehicles, bosses, weapons, buildings, creatures, props, and textured GLB/FBX assets. The agent prepares the handoff; the user runs Tripo and supplies the downloaded artifact.
+- Codex's built-in imagegen path is preferred when available. The packaged Gemini helper keeps image generation usable on runners without a native image tool.
 - ElevenLabs is optional but useful for making games feel finished through interaction SFX, ambience, UI feedback, voice, and cleanup.
 - Google also supports `GOOGLE_API_KEY`, but these skills standardize on `GEMINI_API_KEY` for clarity.
 - Use provider-side key restrictions and quotas where available. ElevenLabs documents endpoint scopes, credit quotas, and secret-key handling; Google recommends environment variables and is migrating Gemini users toward auth keys.
@@ -148,8 +146,8 @@ Provider notes:
 - Use `threejs-game-ui-designer` for HUDs, menus, overlays, responsive layout, safe areas, icons, touch controls, and text fit.
 - Use `threejs-debug-profiler` for black screens, runtime errors, loading issues, resize/mobile bugs, performance, draw calls, triangles, textures, and memory.
 - Use `threejs-qa-release` for production builds, browser verification, screenshots, canvas pixels, mobile checks, release risk reports, and static-hosting readiness.
-- Use `threejs-3d-generator` for Tripo API text/image-to-3D models, texture, rigging, animation, conversion, and GLB/FBX game assets.
-- Use `threejs-image-generator` for Gemini-generated concepts, image-to-3D inputs, textures, decals, skies, backgrounds, icons, logos, GUI art, and title/menu art.
+- Use `threejs-3d-generator` to prepare user-executed Tripo Studio/CLI handoffs, then inspect and integrate downloaded GLB/FBX assets.
+- Use `threejs-image-generator` for Codex imagegen or Gemini-fallback concepts, image-to-3D inputs, textures, decals, skies, backgrounds, icons, logos, GUI art, and title/menu art.
 - Use `threejs-audio-generator` for ElevenLabs SFX, ambience, UI sounds, voice/TTS, voice conversion, cleanup, and Three.js audio integration.
 
 For most user-facing game requests, start with `threejs-game-director` and let it pull in the specialists.
@@ -186,8 +184,9 @@ For asset-heavy games:
 ```text
 Use threejs-game-director to build a premium space dogfight game. Use threejs-image-generator
 for concepts, skies, decals, icons, and GUI art; use threejs-3d-generator for hero ships
-and weapons when credentials are available; use threejs-audio-generator for SFX and
-ambience. If generation is blocked, report the credential probe output and fallback plan.
+and weapons through a user-executed Tripo handoff; use threejs-audio-generator for SFX and
+ambience. For Tripo, give me the exact user-run command or Studio checklist and target path;
+for other blocked generation, report the credential probe output and fallback plan.
 ```
 
 ## Expected Evidence
@@ -208,7 +207,7 @@ For a complete game, the skills should gather evidence before claiming success. 
 - visual scorecard with measured evidence for premium, AAA, showcase, or less-basic claims
 - visual test harness decision (screenshot baselines added/extended/skipped) for release-ready visual QA
 - bot playtest metrics for release-ready gameplay claims
-- generated asset paths and task IDs, or the credential probe output, when external assets are in scope
+- generated asset paths and task IDs, a pending user-executed Tripo handoff, or the relevant credential probe output when external assets are in scope
 - short motion captures for animated models: rig deformation, clip transitions, foot sliding, and attack/contact timing
 - a current-run manifest declaring required viewport/state captures and artifact paths, with acknowledged states and a matching run ID
 
@@ -222,8 +221,8 @@ Premium/AAA claims should not rely on a static scene, placeholder cubes, generic
 - `threejs-game-ui-designer`: HUDs, menus, overlays, responsive UI, icons, safe areas, UI states.
 - `threejs-debug-profiler`: scene/runtime/render bugs, mobile bugs, performance profiling, renderer metrics.
 - `threejs-qa-release`: browser QA, screenshots, canvas pixels with measured metrics, visual test harness, bot playtests, responsive checks, production build, release risk report.
-- `threejs-3d-generator`: Tripo API text/image-to-3D, texture, auto-rig, animation, conversion, download, checkpoint/resume, staged inspection, and Three.js import guidance.
-- `threejs-image-generator`: Gemini image generation for concepts, textures, decals, skies, icons, GUI art, and image-to-3D inputs.
+- `threejs-3d-generator`: user-executed Tripo Studio/CLI handoffs for text/image-to-3D, texture, auto-rig, animation, conversion, and download, followed by staged inspection and Three.js integration.
+- `threejs-image-generator`: runner-aware raster generation for concepts, textures, decals, skies, icons, GUI art, and image-to-3D inputs; Codex imagegen first, packaged Gemini fallback elsewhere.
 - `threejs-audio-generator`: ElevenLabs-backed SFX, ambience, UI sounds, voice/TTS, voice conversion, cleanup, and Three.js audio integration.
 
 ## Packaged Resources
@@ -235,7 +234,7 @@ Installed skills are self-contained. They do not depend on root docs, root scaff
 - `skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs`: packaged browser/canvas inspection helper: pixel metrics and render-budget rows; explicit `--state` captures require an awaited matching acknowledgment, and `--run-id` identifies the verification pass.
 - `skills/threejs-aaa-graphics-builder/assets/scorecard-anchors/`: calibration reference screenshots for the visual scorecard.
 - `skills/threejs-game-director/scripts/check_evidence.py`: `--manifest` validates a declared capture set and run ID without scanning historical reports. The legacy `--report` interface checks cited artifact files but cannot prove freshness or complete capture coverage. Neither replaces visual inspection or gameplay tests.
-- `skills/threejs-game-director/scripts/probe_asset_credentials.sh`: prints `KEY=SET|MISSING` for all three providers, sourcing the shell profile the agent process does not inherit.
+- `skills/threejs-game-director/scripts/probe_asset_credentials.sh`: prints `KEY=SET|MISSING` for the agent-executed Gemini fallback and ElevenLabs provider, sourcing the shell profile the agent process does not inherit.
 - `scripts/`: local validation helpers for maintainers.
 - `install.sh`: local installer for working on this checkout.
 

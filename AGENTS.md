@@ -2,7 +2,7 @@
 
 This repo contains agent workflow assets for Three.js browser-game development. For broad requests to build, upgrade, polish, or finish a Three.js game, start from `skills/threejs-game-director/SKILL.md` — it routes work across the specialist skills (gameplay, AAA graphics, UI, debug/profile, QA/release, 3D/image/audio generation). The user should not have to name every specialist skill.
 
-The same nine skills serve Codex and Claude Code. The user's requested scope, art style, constraints, and prior decisions take precedence over skill defaults. Use the runner's available tools; skills do not enable native async APIs or change model settings.
+The same nine skills serve Codex and Claude Code. The user's requested scope, art style, constraints, and prior decisions take precedence over skill defaults. Use the runner's available tools; skills do not enable native async APIs or change model settings. For raster generation, Codex should prefer its built-in `imagegen` skill and tool; runners without native image generation may use the packaged Gemini fallback.
 
 ## Coordination
 
@@ -24,7 +24,7 @@ The full bar lives in `skills/threejs-game-director/SKILL.md`. In short:
 - A playable loop comes first — a static scene is not done. Broad game creation starts from a design brief, core loop contract, and level plan.
 - The user's own words set the scope. A small arcade game is not a request for the premium pipeline; "premium", "AAA", "polished", "release-ready", or "less basic" is, and at that bar a first playable slice is not finished.
 - Premium claims use the 10-category scorecard in `skills/threejs-aaa-graphics-builder/references/visual-scorecard.md` with its anchors and the inspector's measured metrics: no category below 2, average at least 2.3.
-- With keys set, premium hero surfaces get generated assets unless the user explicitly chose procedural art or restricted external generation. Run `skills/threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about keys. Classify failures and recover accepted tasks before falling back; follow `skills/threejs-game-director/references/asset-recovery.md`.
+- When generation can materially improve a premium hero surface, use a native image tool or prepare the relevant provider handoff unless the user explicitly chose procedural art or restricted external generation. Tripo generation and paid processing are user-executed: provide the exact prompt, settings, target path, and CLI command or Studio checklist, then integrate the downloaded files. Run `skills/threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about other keyed providers; Codex's built-in imagegen path needs no project credential. Classify failures and recover accepted tasks before falling back; follow `skills/threejs-game-director/references/asset-recovery.md`.
 - Establish the art direction, camera scale, and representative playable scene before expanding content. Asset counts come from the genre and design brief.
 - Generic stat-card HUDs, cube obstacles, and skyline boxes are prototype placeholders unless the user asked for that style.
 - Mobile input and resize belong in the first implementation path, not a final afterthought.

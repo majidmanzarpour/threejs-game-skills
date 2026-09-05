@@ -27,7 +27,7 @@ Glow does not make primitives look AAA. Build authored forms first, then materia
 1. Capture or inspect active-play screenshots on the target viewports when a playable scene exists.
 2. For an existing game, score the affected views and pick the weakest surfaces. For a new game, establish art direction, camera scale, material roles, and the hero target first; do not invent a before screenshot.
 3. Add the graphics architecture the game is missing: material library, procedural textures and decals, model factories, world prop kit, VFX system, render pipeline, diagnostics.
-4. Choose a source per high-value surface: procedural Three.js, a `threejs-image-generator` reference or texture, a `threejs-3d-generator` model, or an image-to-3D hybrid chain. Run the credential probe when external generation is in scope.
+4. Choose a source per high-value surface: procedural Three.js, a `threejs-image-generator` reference or texture, a user-generated `threejs-3d-generator` model, or an image-to-3D hybrid chain. Use Codex's built-in imagegen path when available. For Tripo, prepare the prompt, settings, destination, acceptance checks, and user-run command or Studio checklist.
    Inspect the concept/model before dependent generation or rigging. Finish one representative playable scene with actual assets and feedback before expanding the content kit.
 5. Upgrade every weak visible surface, not only the hero: hazards, rewards, ground and track, foreground props, background layers, telegraphs, material variation, state VFX.
 6. Add lighting, tone mapping, and render polish once authored forms exist.
@@ -36,9 +36,9 @@ Glow does not make primitives look AAA. Build authored forms first, then materia
 
 ## Asset sourcing
 
-When external generation is in scope, run `threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about keys. No probe or paid submission is needed for explicitly procedural art.
+When keyed agent-executed generation is in scope, run `threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about keys. Codex's built-in imagegen path needs no project credential or probe. Tripo generation is user-executed and does not depend on the agent process inheriting a Tripo key. No probe or paid submission is needed for explicitly procedural art.
 
-With keys set, generated assets belong on the hero surfaces — player, character, creature, boss, vehicle, ship, building, weapon, signature prop, hero environment piece — and on high-value 2D: skies, backgrounds, texture and trim references, decals, faction marks, icons, GUI and title art, image-to-3D inputs. Respect explicit procedural-only art or external-generation restrictions. Procedural Three.js handles repeated props, kits, collision proxies, VFX geometry, and instanced volume.
+Generated assets belong on the hero surfaces — player, character, creature, boss, vehicle, ship, building, weapon, signature prop, hero environment piece — and on high-value 2D: skies, backgrounds, texture and trim references, decals, faction marks, icons, GUI and title art, image-to-3D inputs. Use native image tools directly when available; make Tripo a concrete user-executed handoff. Respect explicit procedural-only art or external-generation restrictions. Procedural Three.js handles repeated props, kits, collision proxies, VFX geometry, and instanced volume.
 
 Use the director's `references/asset-recovery.md`: recover transient failures and accepted tasks before fallback. Missing keys, exhausted credits, or exhausted bounded recovery permit a local replacement with the remaining quality gap reported. A single timeout is not evidence that generation is unavailable.
 

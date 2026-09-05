@@ -1,6 +1,6 @@
 ---
 name: threejs-image-generator
-description: "Generate and edit 2D image assets for Three.js games with Google's Gemini image API: concept sheets, image-to-3D inputs, texture and material references, sky and background plates, decals, logos, icons, GUI art, title and menu art, and marketing stills. Also use for direct image editing when the user supplies an image path."
+description: "Generate and edit raster assets for Three.js games: concept sheets, image-to-3D inputs, texture references, skies, decals, logos, icons, GUI art, title art, and marketing stills. Prefer Codex's built-in imagegen workflow when available; use the packaged Gemini helper on runners without native image generation."
 ---
 
 # Three.js Image Generator
@@ -19,17 +19,25 @@ Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling sk
 
 For premium graphics work with generation in scope, generate the high-value 2D surfaces rather than defaulting to hand-coded CSS and flat colors. Respect explicitly procedural art and external-service restrictions. Choose assets from the game's design, not a fixed quota of logos, skies, or icons.
 
-## API key
+## Choose the runner-native path
 
-The script reads `--api-key` or `GEMINI_API_KEY`. Keys never go in skill files, game code, or reports.
+On Codex, load the built-in `imagegen` skill and use its built-in image-generation tool by default. It uses the active Codex subscription and needs no project API key. Follow the loaded skill's current model, edit, transparency, reference-image, and output-path rules; when its explicit CLI fallback is requested, use its GPT Image 2 workflow rather than creating a project-local OpenAI script.
+
+On a runner without native image generation, use the packaged Gemini helper below. Do not replace an available native tool merely because `GEMINI_API_KEY` is missing. When neither path is available, return a prompt-ready asset brief with reference inputs and the intended project path so a capable parent or lead can generate it.
+
+For either path, save the selected final asset in the game project before wiring it into code. Inspect it before spending on image-to-3D or generating dependent variants.
+
+## Gemini fallback key
+
+The fallback script reads `--api-key` or `GEMINI_API_KEY`. Keys never go in skill files, game code, or reports.
 
 ```bash
 uv run <this-skill-dir>/scripts/generate_image.py probe   # GEMINI_API_KEY=SET|MISSING
 ```
 
-Keys defined only in a shell profile can be absent from the process env. If the plain probe unexpectedly prints MISSING, use `threejs-game-director/scripts/probe_asset_credentials.sh`, which sources the profile and probes all three providers.
+Keys defined only in a shell profile can be absent from the process env. If the plain probe unexpectedly prints MISSING, use `threejs-game-director/scripts/probe_asset_credentials.sh`, which sources the profile and probes the keyed providers. This probe is unnecessary for Codex's built-in imagegen path.
 
-## Commands
+## Gemini fallback commands
 
 Run from the game project so output lands in it:
 
@@ -43,7 +51,7 @@ uv run <this-skill-dir>/scripts/generate_image.py \
   --filename assets/concepts/ship-red-livery.png --resolution 2K
 ```
 
-Resolution: `1K` for quick concepts, icons, and draft sheets · `2K` (the default) for production references, image-to-3D, textures, backgrounds, UI panels · `4K` for hero splash art, high-detail texture references, and large sky plates.
+These resolution names apply only to the Gemini fallback: `1K` for quick concepts, icons, and draft sheets · `2K` (the default) for production references, image-to-3D, textures, backgrounds, UI panels · `4K` for hero splash art, high-detail texture references, and large sky plates. On Codex, follow the built-in `imagegen` skill's current size and quality guidance.
 
 ## Prompt patterns
 
@@ -66,14 +74,14 @@ Sky or background:
 
 Save concepts and image-to-3D sources under `assets/concepts/`; textures, decals, icons, and GUI sources under `assets/textures/`, `assets/decals/`, or `assets/ui/`. Hand image-to-3D sources to `threejs-3d-generator` by path.
 
-Convert PNGs to runtime formats deliberately: PNG where alpha matters (UI, icons, decals), JPG/WebP/KTX2 for larger opaque textures where the pipeline supports it. The API is a tooling step — never called from game code.
+Convert PNGs to runtime formats deliberately: PNG where alpha matters (UI, icons, decals), JPG/WebP/KTX2 for larger opaque textures where the pipeline supports it. Image generation is a tooling step — never called from game code.
 
 Inspect the image before spending on image-to-3D or dependent variants. Check how runtime images look in the game, not just that the file was written. Preserve useful existing images when the user changes requirements, and update the project note instead of regenerating everything.
 
 ## Recovery
 
-For coordinated games use the director's `references/asset-recovery.md`. Missing credentials or exhausted credits permit an honest local alternative; a transient error does not. Distinguish invalid input and authentication from service failures. Do not blindly retry an uncertain paid generation: preserve existing files and reconcile the provider result first. This command has no Tripo-style task resume interface. Continue independent game work while only the dependent image work is blocked.
+For coordinated games use the director's `references/asset-recovery.md`. Missing credentials or exhausted credits permit an honest local alternative; a transient error does not. Distinguish invalid input and authentication from service failures. Do not blindly retry an uncertain paid generation: preserve existing files and reconcile the provider result first. Codex imagegen and the Gemini fallback have no Tripo-style task resume interface. Continue independent game work while only the dependent image work is blocked.
 
 ## Report
 
-Prompt and purpose, output path, resolution, whether it was used directly, edited further, or handed to `threejs-3d-generator`, and any remaining work such as compression, UV assignment, alpha cleanup, or atlas packing.
+Prompt and purpose, provider path (Codex imagegen or Gemini fallback), output path, requested size and quality, whether it was used directly, edited further, or handed to `threejs-3d-generator`, and any remaining work such as compression, UV assignment, alpha cleanup, or atlas packing.

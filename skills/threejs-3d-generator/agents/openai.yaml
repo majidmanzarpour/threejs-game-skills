@@ -1,4 +1,4 @@
 interface:
   display_name: "Three.js 3D Generator"
-  short_description: "Generate, texture, rig, animate, and convert Three.js game assets"
-  default_prompt: "Use $threejs-3d-generator to create game-ready 3D assets, inspect each dependent stage, and preserve resumable jobs."
+  short_description: "Prepare Tripo handoffs and integrate Three.js game assets"
+  default_prompt: "Use $threejs-3d-generator to prepare a user-executed Tripo handoff, then inspect and integrate the downloaded game-ready 3D assets."

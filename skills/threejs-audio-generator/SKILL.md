@@ -27,7 +27,7 @@ The script reads `--api-key` or `ELEVENLABS_API_KEY`. Keys never go in skill fil
 python3 <this-skill-dir>/scripts/threejs_audio_asset.py probe   # ELEVENLABS_API_KEY=SET|MISSING
 ```
 
-Keys defined only in a shell profile can be absent from the process env; `threejs-game-director/scripts/probe_asset_credentials.sh` sources the profile and probes all three providers.
+Keys defined only in a shell profile can be absent from the process env; `threejs-game-director/scripts/probe_asset_credentials.sh` sources the profile and probes the agent-executed keyed providers.
 
 Add `--validate` to call `GET /user` and confirm the key actually works (prints `VALID_USER=...`) when a key is present but generation fails. A valid key can still be blocked by credit or plan limits, which surface as an `HTTP 4xx` from a real generation attempt — report that as a plan blocker rather than a missing key.
 

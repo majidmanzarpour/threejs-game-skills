@@ -46,7 +46,7 @@ Start broad builds with the gameplay design brief, core-loop contract, and level
 
 For substantial tasks maintain `artifacts/game-progress.md`: current intent and constraints, decisions, completed work, pending jobs with task IDs/checkpoint paths, remaining defects, and next actions. Re-read it after an interruption. A correction updates affected work; a status question does not replace the build objective. Preserve completed assets and mark obsolete pending outputs instead of accidentally spending again.
 
-Use available background tool sessions or submit/status/download commands to keep independent work moving. Native API async calling, steering, and reasoning configuration are host capabilities, not settings enabled by this skill.
+Use available background tool sessions to keep independent local work moving. Tripo generation is a user-executed boundary: prepare the prompt, settings, destination, and copy-paste command, then continue work that does not depend on the asset until the user supplies it. Native API async calling, steering, and reasoning configuration are host capabilities, not settings enabled by this skill.
 
 ## The bar for premium work
 
@@ -60,9 +60,9 @@ Score the result with the 10-category scorecard in `threejs-aaa-graphics-builder
 bash <director-skill-dir>/scripts/probe_asset_credentials.sh
 ```
 
-When external generation is in scope, run it before assuming anything about keys. It sources the user's shell profile, which the agent process usually does not inherit, and prints `KEY=SET|MISSING` for all three providers. Explicitly procedural or no-external-service work does not need a credential probe.
+When keyed agent-executed generation is in scope, run it before assuming anything about keys. It sources the user's shell profile, which the agent process usually does not inherit, and prints `KEY=SET|MISSING` for the packaged providers. Codex's built-in imagegen path uses the active Codex subscription and needs no project key or credential probe. Tripo generation remains user-executed, so its missing process key is not a reason to downgrade the planned asset. Explicitly procedural or no-external-service work does not need a credential probe.
 
-With keys set, premium hero surfaces get generated assets: player, boss, creature, vehicle, ship, weapon, signature building. Respect an explicit procedural-only style or external-generation restriction. Procedural kits handle repeated props, decals, collision proxies, and instanced volume. Premium active gameplay includes event-driven audio.
+Premium hero surfaces should use generated assets when the design benefits. The `threejs-image-generator` skill chooses Codex imagegen first on Codex and its Gemini helper on runners without native image generation. For Tripo, prepare the exact user handoff described by `threejs-3d-generator`; never submit or retry a paid Tripo task on the user's behalf. Respect an explicit procedural-only style or external-generation restriction. Procedural kits handle repeated props, decals, collision proxies, and instanced volume. Premium active gameplay includes event-driven audio.
 
 Read `references/asset-recovery.md` when sourcing external assets or recovering a job. Missing credentials or exhausted credits permit a documented local fallback. A transient error calls for bounded recovery of the existing job; invalid parameters need correction. An uncertain paid submission must be reconciled before replacement. Continue independent work and identify any quality requirement still unmet after fallback.
 
