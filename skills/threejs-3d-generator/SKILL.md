@@ -1,13 +1,13 @@
 ---
 name: threejs-3d-generator
-description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games via the Tripo API. Use for text-to-3D, image-to-3D, game-ready GLB/FBX, characters, creatures, buildings, props, weapons, terrain, auto-rigging, animation retargeting, model texturing, voxel/LEGO stylization, and low-poly conversion. Pair with threejs-image-generator for concept and texture references first."
+description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games using Atlas Cloud or the Tripo API. Use for text-to-3D, image-to-3D, 2D concept to 3D conversion, game-ready GLB/FBX assets, characters, creatures, buildings, props, weapons, terrain pieces, auto-rigging, animation retargeting, model texturing, LEGO/voxel/Minecraft-style stylization, low-poly/quad conversion, and browser asset pipelines. Pair with threejs-image-generator for concepts, texture references, sky/background/terrain textures, logos, icons, and GUI art before image-to-3D generation."
 ---
 
 # Three.js 3D Generator
 
 Production 3D assets for browser games, prepared for Three.js. Provider: Tripo.
 
-Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling skills beside it first, then use the runner's discovered paths. Do not mix installed versions or assume a particular home directory.
+Create production-oriented 3D assets, then prepare them for Three.js games. This is the Three.js game system's 3D-generation layer. Atlas Cloud and Tripo are optional providers for text-to-3D and image-to-3D; Tripo additionally supports texturing, rigging, retargeting, stylization, and conversion.
 
 ## References
 
@@ -16,26 +16,62 @@ Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling sk
 | `references/api-notes.md` | endpoint and task decisions, model versions, polling, postprocess, conversion, rigging, animation, downloads |
 | `references/threejs-integration.md` | importing outputs into a browser game, GLB/FBX loading, root motion, animation wiring |
 | `references/image-generator-workflows.md` | pairing `threejs-image-generator` for concepts, textures, UI art, or image-to-3D inputs |
+| `references/atlas-api-notes.md` | Atlas model selection, generation, polling, resume, downloads |
 
 ## API key
 
 The script reads `--api-key` or `TRIPO_API_KEY`. Keys never go in skill files, game code, or reports.
 
 ```bash
-python3 <this-skill-dir>/scripts/threejs_3d_asset.py probe   # TRIPO_API_KEY=SET|MISSING
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py probe   # prints ATLASCLOUD_API_KEY=SET|MISSING
+python3 <this-skill-dir>/scripts/threejs_3d_asset.py probe # prints TRIPO_API_KEY=SET|MISSING
 ```
 
-Keys defined only in a shell profile can be absent from the process env. If the plain probe unexpectedly prints MISSING, use `threejs-game-director/scripts/probe_asset_credentials.sh`, which sources the profile and probes all three providers at once.
+An explicit `MISSING` line is the only valid key-based skip/blocker reason. Keys defined only in a shell profile can be absent from the process env; if a plain probe prints MISSING unexpectedly, wrap it in a login shell that sources the user's profile. When the director skill is loaded, prefer `threejs-game-director/scripts/probe_asset_credentials.sh`, which probes all asset keys at once.
 
 Download URLs expire quickly — download immediately after a task succeeds.
 
 ## Commands
 
+Track required references in a reference ledger with yes/no, path, and failure reason. Do not mark an asset pipeline complete while a required reference is skipped.
+
+Run from the user's current project directory:
+
 ```bash
 python3 <this-skill-dir>/scripts/threejs_3d_asset.py --help
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py --help
 ```
 
 Text to 3D, the default for a premium hero model:
+
+### Atlas Cloud generation
+
+Use Atlas when the user selects it, when `ATLASCLOUD_API_KEY=SET` and `TRIPO_API_KEY=MISSING`, or when its live catalog has a better text/image-to-3D model for the task. Atlas is opt-in; do not replace a working Tripo workflow without a reason recorded in the external asset sourcing ledger.
+
+```bash
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py models
+
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py text \
+  --prompt "game-ready sci-fi hover bike, readable silhouette, PBR materials" \
+  --pbr --format GLB --wait --download --out-dir assets/models/hover-bike
+
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py image \
+  --image assets/concepts/hover-bike.png \
+  --pbr --format GLB --wait --download --out-dir assets/models/hover-bike
+```
+
+The Atlas client reads the live model catalog and selected model schema before submitting. It performs one billable generation POST, writes `job.json`, and only retries GET polling. Resume an interrupted job instead of submitting again:
+
+```bash
+python3 <this-skill-dir>/scripts/atlas_3d_asset.py resume \
+  --job assets/models/hover-bike/job.json --wait --download
+```
+
+Load `references/atlas-api-notes.md` for the full provider contract. Use Tripo for rigging, animation, texture, conversion, and other Tripo-specific post-processing.
+
+### Tripo commands
+
+Recommended premium game hero model:
 
 ```bash
 python3 <this-skill-dir>/scripts/threejs_3d_asset.py text \
