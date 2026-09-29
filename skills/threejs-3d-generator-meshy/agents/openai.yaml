@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js 3D Generator (Meshy)"
+  short_description: "Generate, texture, rig, and animate Three.js game assets with Meshy"
+  default_prompt: "Use $threejs-3d-generator-meshy to create game-ready 3D assets, inspect each dependent stage, and preserve resumable jobs."

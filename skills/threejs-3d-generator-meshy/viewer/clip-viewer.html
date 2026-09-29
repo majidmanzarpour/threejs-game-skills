@@ -1,0 +1,337 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Meshy clip viewer</title>
+<style>
+  :root{--ground:#0e1116;--panel:#161b22;--line:#26303c;--ink:#d8e0ea;--dim:#8b99aa;--faint:#5f6c7c;--jade:#4fd1a5;--amber:#e0a34a}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--ground);color:var(--ink);font:13px/1.5 system-ui,sans-serif;overflow:hidden}
+  #app{display:grid;grid-template-columns:290px minmax(0,1fr);gap:1px;background:var(--line);height:100%}
+  #rail,#stage{background:var(--ground)}
+  #rail{padding:18px 16px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+  h1{font-size:14px;letter-spacing:.06em;text-transform:uppercase;margin:0}
+  .eyebrow{font:10px/1 ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--line);padding:8px 10px;text-align:left;cursor:pointer;width:100%}
+  button[aria-pressed="true"]{border-left-color:var(--jade)}
+  button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+  .col{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+  .dur{float:right;font:11px ui-monospace,monospace;color:var(--dim)}
+  #stage{position:relative}
+  canvas{display:block;width:100%;height:100%}
+  #hud{position:absolute;right:14px;top:12px;background:#0e1116cc;border:1px solid var(--line);padding:9px 12px;font:11px/1.7 ui-monospace,monospace;color:var(--dim);white-space:pre}
+  #hud b{color:var(--ink);font-weight:500}
+  #err{position:absolute;left:0;right:0;top:0;padding:10px 14px;background:#3a1d1d;color:#ffd7d2;font:12px ui-monospace,monospace;display:none}
+</style>
+<div id="app">
+  <aside id="rail">
+    <div><span class="eyebrow">Meshy</span><h1>Clip viewer</h1></div>
+    <div><span class="eyebrow">Clips</span><div class="col" id="clips"></div></div>
+    <div><span class="eyebrow">Playback</span><div class="col">
+      <button id="play" aria-pressed="true">Playing</button>
+    </div></div>
+    <div><span class="eyebrow">Import fixes</span><div class="col">
+      <button id="fix-root" aria-pressed="true">Strip horizontal root motion</button>
+      <button id="fix-scale" aria-pressed="true">Drop constant scale tracks</button>
+    </div></div>
+    <div><span class="eyebrow">Rig</span><div class="col" id="facts" style="font:11px/1.8 ui-monospace,monospace;color:var(--dim)"></div></div>
+  </aside>
+  <main id="stage"><div id="hud"></div><div id="err"></div></main>
+</div>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
+
+const qs = new URLSearchParams(location.search);
+const rigUrl = qs.get('rig');
+const clipUrls = (qs.get('clips') || '').split(',').filter(Boolean);
+const headless = qs.get('headless') === '1';
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e1116);
+scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x1a2028, 1.8));
+const key = new THREE.DirectionalLight(0xfff2e0, 2.1);
+key.position.set(2.6, 5.2, 3.4);
+scene.add(key);
+scene.add(new THREE.GridHelper(12, 24, 0x334455, 0x1d242e));
+
+const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+const loader = new GLTFLoader();
+const clock = new THREE.Clock();
+const report = { errors: [], clips: [], rig: null };
+window.__report = report;
+window.__ready = false;
+
+let mixer = null, root = null, current = 0;
+let playing = !headless && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+let fixRoot = true, fixScale = true;
+const clips = [];
+
+function guardEmissive(target) {
+  // A Meshy rig material carries emissiveFactor 1,1,1 driven by its texture. If that
+  // texture fails to decode the model renders as a pure white silhouette, so fall back
+  // to a lit grey instead of glowing white.
+  target.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const mat of [].concat(o.material)) {
+      if (mat.emissive && mat.emissive.getHex() > 0x111111 && !mat.emissiveMap) {
+        mat.emissive.setHex(0x000000);
+        if (!mat.map) mat.color.setHex(0x8e9aa8);
+        mat.needsUpdate = true;
+      }
+    }
+  });
+}
+
+function applyFixes(clip) {
+  const out = clip.clone();
+  const stats = { scaleDropped: 0, rootStripped: false };
+  out.tracks = out.tracks.filter((track) => {
+    const [bone, prop] = track.name.split('.');
+    if (prop === 'scale' && fixScale) {
+      const v = track.values;
+      let spread = 0;
+      for (let i = 0; i < v.length; i += 3) {
+        spread = Math.max(spread, Math.abs(v[i] - v[0]), Math.abs(v[i + 1] - v[1]), Math.abs(v[i + 2] - v[2]));
+      }
+      if (spread < 0.05) { stats.scaleDropped++; return false; }
+    }
+    if (prop === 'position' && fixRoot && /Hips|Root|Armature/i.test(bone)) {
+      const v = track.values.slice();
+      for (let i = 0; i < v.length; i += 3) { v[i] = v[0]; v[i + 2] = v[2]; }
+      track.values = v;
+      stats.rootStripped = true;
+    }
+    return true;
+  });
+  return { clip: out, stats };
+}
+
+function measure(entry) {
+  const probes = ['Head', 'Hips', 'LeftFoot', 'LeftHand'].map((want) => {
+    let node = null;
+    root.traverse((o) => { if (!node && o.name.split(':').pop() === want) node = o; });
+    return { want, node };
+  });
+  mixer.stopAllAction();
+  entry.action.reset().play();
+  const world = new THREE.Vector3();
+  const traces = {};
+  for (const p of probes) if (p.node) traces[p.want] = [];
+  const dur = entry.action.getClip().duration;
+  for (let i = 0; i < 16; i++) {
+    mixer.setTime((dur * i) / 15);
+    root.updateMatrixWorld(true);
+    for (const p of probes) {
+      if (!p.node) continue;
+      p.node.getWorldPosition(world);
+      traces[p.want].push(world.clone());
+    }
+  }
+  const travel = (name) => {
+    const pts = traces[name] || [];
+    let d = 0;
+    for (let i = 1; i < pts.length; i++) d += pts[i].distanceTo(pts[i - 1]);
+    return +d.toFixed(3);
+  };
+  entry.measured = {
+    headY: traces.Head ? +traces.Head[0].y.toFixed(3) : null,
+    hipsTravel: travel('Hips'),
+    footTravel: travel('LeftFoot'),
+    handTravel: travel('LeftHand'),
+  };
+  mixer.setTime(0);
+}
+
+function paintHud(entry) {
+  const m = entry.measured;
+  document.getElementById('hud').innerHTML = '';
+  const lines = [
+    ['clip', entry.name],
+    ['duration', `${entry.duration.toFixed(2)}s`],
+    ['tracks', `${entry.tracks} / ${entry.rawTracks} raw`],
+    ['unresolved', String(entry.unresolved)],
+    ['hips travel', `${m.hipsTravel} m`],
+    ['foot travel', `${m.footTravel} m`],
+    ['head height', `${m.headY} m`],
+  ];
+  if (entry.rescale) lines.push(['hips scale', `${entry.rescale} (clip resizes rig)`]);
+  for (const [k, v] of lines) {
+    const row = document.createElement('div');
+    row.textContent = `${k.padEnd(13)} `;
+    const b = document.createElement('b');
+    b.textContent = v;
+    row.appendChild(b);
+    document.getElementById('hud').appendChild(row);
+  }
+}
+
+function select(index) {
+  current = index;
+  const entry = clips[index];
+  mixer.stopAllAction();
+  entry.action.reset().play();
+  measure(entry);
+  entry.action.reset().play();
+  document.querySelectorAll('#clips button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === index)));
+  paintHud(entry);
+}
+
+function rebuild() {
+  mixer.stopAllAction();
+  mixer = new THREE.AnimationMixer(root);
+  for (const entry of clips) {
+    const { clip, stats } = applyFixes(entry.raw);
+    entry.action = mixer.clipAction(clip);
+    entry.stats = stats;
+    entry.tracks = clip.tracks.length;
+  }
+  select(current);
+}
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+async function boot() {
+  const rig = await loader.loadAsync(rigUrl);
+  root = rig.scene;
+  scene.add(root);
+  guardEmissive(root);
+
+  let bones = 0, triangles = 0;
+  root.traverse((o) => {
+    if (o.isBone) bones++;
+    if (o.isMesh) {
+      const g = o.geometry;
+      triangles += (g.index ? g.index.count : g.attributes.position.count) / 3;
+    }
+  });
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  report.rig = { bones, triangles: Math.round(triangles), heightMeters: +size.y.toFixed(3) };
+
+  camera.position.set(center.x + size.y * 1.4, center.y + size.y * 0.4, center.z + size.y * 2.5);
+  controls.target.set(center.x, center.y * 0.92, center.z);
+  controls.update();
+
+  const names = new Set();
+  root.traverse((o) => names.add(o.name));
+  mixer = new THREE.AnimationMixer(root);
+
+  for (const url of clipUrls) {
+    const gltf = await loader.loadAsync(url);
+    for (const raw of gltf.animations) {
+      const targets = [...new Set(raw.tracks.map((t) => t.name.split('.')[0]))];
+      let rescale = 0;
+      for (const track of raw.tracks) {
+        if (!track.name.endsWith('.scale')) continue;
+        const v = track.values;
+        let spread = 0;
+        for (let i = 0; i < v.length; i += 3) {
+          spread = Math.max(spread, Math.abs(v[i] - v[0]), Math.abs(v[i + 1] - v[1]), Math.abs(v[i + 2] - v[2]));
+        }
+        if (spread < 0.05 && Math.abs(v[0] - 1) > 0.05) rescale = Math.round(v[0] * 1000) / 1000;
+      }
+      clips.push({
+        file: url.split('/').pop(),
+        name: raw.name,
+        raw,
+        duration: raw.duration,
+        rawTracks: raw.tracks.length,
+        bonesTargeted: targets.length,
+        unresolved: targets.filter((n) => !names.has(n)).length,
+        rescale,
+      });
+    }
+  }
+
+  const list = document.getElementById('clips');
+  clips.forEach((entry, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(i === 0));
+    b.textContent = entry.name || entry.file;
+    const d = document.createElement('span');
+    d.className = 'dur';
+    d.textContent = `${entry.duration.toFixed(2)}s`;
+    b.appendChild(d);
+    b.onclick = () => select(i);
+    list.appendChild(b);
+  });
+
+  const facts = document.getElementById('facts');
+  for (const [k, v] of [['bones', report.rig.bones], ['triangles', report.rig.triangles.toLocaleString()], ['height', `${report.rig.heightMeters} m`]]) {
+    const row = document.createElement('div');
+    row.textContent = `${k}: ${v}`;
+    facts.appendChild(row);
+  }
+
+  rebuild();
+  report.clips.push(...clips.map(({ raw, action, ...rest }) => rest));
+  resize();
+  window.__ready = true;
+}
+
+document.getElementById('play').onclick = (e) => {
+  playing = !playing;
+  e.currentTarget.setAttribute('aria-pressed', String(playing));
+  e.currentTarget.firstChild.textContent = playing ? 'Playing' : 'Paused';
+};
+document.getElementById('fix-root').onclick = (e) => {
+  fixRoot = !fixRoot;
+  e.currentTarget.setAttribute('aria-pressed', String(fixRoot));
+  rebuild();
+};
+document.getElementById('fix-scale').onclick = (e) => {
+  fixScale = !fixScale;
+  e.currentTarget.setAttribute('aria-pressed', String(fixScale));
+  rebuild();
+};
+
+window.__pose = (index, t) => {
+  playing = false;
+  select(index);
+  mixer.stopAllAction();
+  clips[index].action.reset().play();
+  mixer.setTime(t);
+  root.updateMatrixWorld(true);
+  renderer.render(scene, camera);
+  return true;
+};
+
+addEventListener('resize', resize);
+resize();
+
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = clock.getDelta();
+  if (mixer && playing) mixer.update(dt);
+  controls.update();
+  renderer.render(scene, camera);
+}
+loop();
+
+boot().catch((e) => {
+  report.errors.push(String(e && e.message || e));
+  const err = document.getElementById('err');
+  err.style.display = 'block';
+  err.textContent = 'load failed: ' + report.errors[0];
+  window.__ready = true;
+});
+</script>

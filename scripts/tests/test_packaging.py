@@ -14,13 +14,14 @@ SKILLS = ROOT / "skills"
 NAMES = {
     "threejs-game-director", "threejs-gameplay-systems", "threejs-aaa-graphics-builder",
     "threejs-game-ui-designer", "threejs-debug-profiler", "threejs-qa-release",
-    "threejs-3d-generator", "threejs-image-generator", "threejs-audio-generator",
+    "threejs-3d-generator", "threejs-3d-generator-meshy", "threejs-image-generator",
+    "threejs-audio-generator",
 }
 NOISE = {".DS_Store", "__pycache__", "node_modules", "dist", "artifacts", "test-results"}
 
 
 class PackagingTests(unittest.TestCase):
-    def test_nine_skill_package_and_required_resources(self):
+    def test_ten_skill_package_and_required_resources(self):
         self.assertEqual(NAMES, {entry.parent.name for entry in SKILLS.glob("*/SKILL.md")})
         for relative in (
             "threejs-gameplay-systems/assets/threejs-vite-game/package.json",
@@ -29,6 +30,8 @@ class PackagingTests(unittest.TestCase):
             "threejs-game-director/references/asset-recovery.md",
             "threejs-game-director/references/evidence-manifest.md",
             "threejs-game-director/references/workflow-evaluations.md",
+            "threejs-3d-generator-meshy/references/animations.csv",
+            "threejs-3d-generator-meshy/viewer/clip-viewer.html",
         ):
             with self.subTest(path=relative):
                 self.assertTrue((SKILLS / relative).is_file())
@@ -60,6 +63,7 @@ class PackagingTests(unittest.TestCase):
             for name, executable, relative in (
                 ("threejs-game-director", sys.executable, "scripts/check_evidence.py"),
                 ("threejs-3d-generator", sys.executable, "scripts/threejs_3d_asset.py"),
+                ("threejs-3d-generator-meshy", sys.executable, "scripts/meshy_3d_asset.py"),
                 ("threejs-qa-release", "node", "scripts/inspect-threejs-canvas.mjs"),
             ):
                 with self.subTest(skill=name):

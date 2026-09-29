@@ -34,7 +34,7 @@ Use the actual loaded skill directory as `<director-skill-dir>`. Resolve sibling
 | HUD, menus, overlays, responsive and touch UI | `threejs-game-ui-designer` |
 | Blank canvas, render/runtime bugs, mobile input, profiling | `threejs-debug-profiler` |
 | Browser QA, screenshots, canvas pixels, bot playtest, production build | `threejs-qa-release` |
-| Characters, vehicles, weapons, buildings, rigs, animation | `threejs-3d-generator` |
+| Characters, vehicles, weapons, buildings, rigs, animation | `threejs-3d-generator` (Tripo) or `threejs-3d-generator-meshy` (Meshy) |
 | Concepts, textures, skies, logos, icons, GUI art, image-to-3D inputs | `threejs-image-generator` |
 | SFX, music, ambience, UI sounds, announcer and dialogue | `threejs-audio-generator` |
 
@@ -60,7 +60,7 @@ Score the result with the 10-category scorecard in `threejs-aaa-graphics-builder
 bash <director-skill-dir>/scripts/probe_asset_credentials.sh
 ```
 
-When external generation is in scope, run it before assuming anything about keys. It sources the user's shell profile, which the agent process usually does not inherit, and prints `KEY=SET|MISSING` for all three providers. Explicitly procedural or no-external-service work does not need a credential probe.
+When external generation is in scope, run it before assuming anything about keys. It sources the user's shell profile, which the agent process usually does not inherit, and prints `KEY=SET|MISSING` for every provider. Explicitly procedural or no-external-service work does not need a credential probe.
 
 With keys set, premium hero surfaces get generated assets: player, boss, creature, vehicle, ship, weapon, signature building. Respect an explicit procedural-only style or external-generation restriction. Procedural kits handle repeated props, decals, collision proxies, and instanced volume. Premium active gameplay includes event-driven audio.
 

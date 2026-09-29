@@ -6,7 +6,7 @@ Use this policy before treating a provider error as permission to downgrade art.
 
 1. Probe credentials without printing their values. A missing process variable is not proof that the user's configured key is missing; use the packaged credential probe. Do not change shell profiles or expose keys in commands, checkpoints, browser code, or reports.
 2. Submit only the high-value assets the current design needs. Record provider, task ID, local checkpoint, purpose, and intended runtime path in `artifacts/game-progress.md` immediately. Keep independent gameplay and UI work moving while jobs run.
-3. Inspect the concept before submitting image-to-3D. For animated models use the 3D generator's checkpoint and `--stop-after model`, inspect its downloaded preview/model, then resume through rig validation and animation. Inspection is work for the agent, not a routine request for user approval.
+3. Inspect the concept before submitting image-to-3D. For animated models use the chosen 3D generator's checkpoint and `--stop-after model`, inspect its downloaded preview/model, then resume through rig validation and animation. Inspection is work for the agent, not a routine request for user approval.
 4. Test silhouette, scale, materials, and motion in a representative playable scene before producing a large asset family. Preserve useful accepted work when requirements change; mark obsolete jobs and do not automatically regenerate them.
 
 The probe runs in a child shell; `KEY=SET` does not export the key into later tool calls. If the provider helper still reports missing credentials, launch it in the same profile-loaded shell instead of downgrading the asset or copying the key into an argument. For example, on zsh:
@@ -33,7 +33,7 @@ Use the corresponding bash profiles for bash; on Windows ensure the agent proces
 | Submission outcome uncertain (connection lost or ambiguous server response) | Reconcile the accepted task ID/checkpoint or provider task history before any new paid request. If no ID can be recovered, disclose uncertainty and obtain authorization before a potentially duplicate charge. |
 | Task succeeded but output is malformed or visually unsuitable | Preserve the output and diagnose the failed stage. A missing rig GLB or failed skeleton validation is a failure, not a successful rig. Retry only that stage within the chosen attempt/budget limit. |
 
-The Tripo helper implements checkpointed tasks and safe-operation retry behavior. Use `resume`, `status`, or `download` for an existing task, not a second `text`/`image` submission. Gemini and ElevenLabs generation commands do not share Tripo's task/checkpoint API: retain existing files and reconcile uncertain requests through the actual provider instead of inventing a resume command.
+Both 3D helpers, Tripo's `threejs_3d_asset.py` and Meshy's `meshy_3d_asset.py`, implement checkpointed tasks and safe-operation retry behavior. Use `resume`, `status`, or `download` for an existing task, not a second `text`/`image` submission. Gemini and ElevenLabs generation commands do not share that task/checkpoint API: retain existing files and reconcile uncertain requests through the actual provider instead of inventing a resume command.
 
 ## Progress and Fallback
 

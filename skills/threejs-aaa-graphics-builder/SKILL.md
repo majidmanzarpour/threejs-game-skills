@@ -27,7 +27,7 @@ Glow does not make primitives look AAA. Build authored forms first, then materia
 1. Capture or inspect active-play screenshots on the target viewports when a playable scene exists.
 2. For an existing game, score the affected views and pick the weakest surfaces. For a new game, establish art direction, camera scale, material roles, and the hero target first; do not invent a before screenshot.
 3. Add the graphics architecture the game is missing: material library, procedural textures and decals, model factories, world prop kit, VFX system, render pipeline, diagnostics.
-4. Choose a source per high-value surface: procedural Three.js, a `threejs-image-generator` reference or texture, a `threejs-3d-generator` model, or an image-to-3D hybrid chain. Run the credential probe when external generation is in scope.
+4. Choose a source per high-value surface: procedural Three.js, a `threejs-image-generator` reference or texture, a `threejs-3d-generator` or `threejs-3d-generator-meshy` model, or an image-to-3D hybrid chain. Run the credential probe when external generation is in scope.
    Inspect the concept/model before dependent generation or rigging. Finish one representative playable scene with actual assets and feedback before expanding the content kit.
 5. Upgrade every weak visible surface, not only the hero: hazards, rewards, ground and track, foreground props, background layers, telegraphs, material variation, state VFX.
 6. Add lighting, tone mapping, and render polish once authored forms exist.
