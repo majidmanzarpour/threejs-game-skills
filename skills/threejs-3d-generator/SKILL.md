@@ -117,4 +117,4 @@ Improve the user's prompt with material, silhouette, camera readability, scale, 
 
 Inspect unpaused in-game motion after integration: clip transitions, deformation, root motion, foot sliding, and attack/contact timing. Use the QA motion pass for animated work; a successful download or skeleton check is not proof of good animation.
 
-Report task IDs, checkpoint/output paths, model version, texture and geometry settings, animations, conversion settings, Three.js import notes, observed motion, and anything that failed. Put detailed evidence in the project artifact for the lead's consolidated report.
+Report task IDs, checkpoint/output paths, model version, texture and geometry settings, animations, conversion settings, Three.js import notes, renderer diagnostics before and after import, active-play screenshots, observed motion, and anything that failed. Put detailed evidence in the project artifact for the lead's consolidated report.

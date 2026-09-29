@@ -16,25 +16,9 @@ Generate clean reference images before image-to-3D for:
 
 For the actual prompt wording (image-to-3D reference, riggable character/creature, texture/material, logo/icon/UI, sky/background), use the templates in `threejs-image-generator`'s SKILL.md under "Prompt Patterns" — that skill is the canonical source. The notes here cover only how those references pair into the 3D pipeline.
 
-## Texture And Material References
+## 2D-Only Assets
 
-Use `threejs-image-generator` for:
-
-- Terrain albedo references: rock, sand, mud, snow, moss, cracked asphalt.
-- Sci-fi trim sheets, panel lines, decals, hazard stripes, window bands.
-- Metal, leather, fabric, glass, ceramic, wood, painted plastic, worn armor.
-- Sky, clouds, nebula, city haze, horizon plates, menu backgrounds.
-- Faction marks, logos, numbers, signs, pickup icons, hazard labels.
-
-## UI And Logo Use Cases
-
-Use `threejs-image-generator` directly, not 3D generation, for:
-
-- Logos and faction marks.
-- HUD icons, item icons, ability icons, pickup symbols.
-- Menu backgrounds and loading illustrations.
-- Button/icon textures, decals, title art, achievement badges.
-- 2D sky/backdrop cards when a 3D model is unnecessary.
+Textures, trim sheets, decals, logos, icons, menu art, and backdrop cards go straight to `threejs-image-generator` (its `SKILL.md` lists the cases). Use 3D generation only for objects that need real geometry.
 
 ## 3D Generator Handoff
 
@@ -52,4 +36,3 @@ After generating a 2D reference:
 - Crowded scene images for single-object 3D generation.
 - Cropped limbs, hidden backs, extreme perspective, motion blur, or heavy depth of field.
 - Tiny UI/logo text in 3D model textures unless text fidelity is noncritical.
-- Using 3D generation for pure 2D UI assets.

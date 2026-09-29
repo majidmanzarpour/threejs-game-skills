@@ -23,7 +23,7 @@ Resolve `<this-skill-dir>` and local references from the actual loaded skill fil
 python3 <this-skill-dir>/scripts/create_threejs_game.py ./my-game
 ```
 
-Copies `assets/threejs-vite-game/`, rewrites the project name, and gives the game its own visual test and canvas inspector. `--force` overwrites an existing directory.
+Copies `assets/threejs-vite-game/`, rewrites the project name, and gives the game its own visual test and canvas inspector. `--force` copies into a non-empty directory, overwriting files that collide with the scaffold and leaving everything else in place.
 
 ## Design first
 

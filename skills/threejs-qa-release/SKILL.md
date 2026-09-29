@@ -37,14 +37,12 @@ Screenshots alone do not cover gameplay changes.
 ## Canvas inspector
 
 ```bash
-node <this-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --run-id pass-1
+node <this-skill-dir>/scripts/inspect-threejs-canvas.mjs --manifest artifacts/evidence.json --url http://127.0.0.1:5188 --seed 42
 ```
 
-`--mobile` selects mobile emulation. `--state <name>` (with optional `--seed <n>`) awaits the game's test hooks before capture. The state hook must acknowledge `{ state: name }`, and `setPausedForScreenshot` must stop simulation immediately while rendering continues. Capture freezes the acknowledged state before settling; the complete preparation phase has a timeout. Missing hooks, no-op results, unknown states, and mismatched acknowledgements fail. Reports retain `state` and add `requestedState`, `appliedState`, and `runId`. Scaffold games have their own copy plus `npm run inspect:canvas`.
+Declare the pass's viewport/state pairs in `artifacts/evidence.json` first, with a fresh run ID; the format and the test-hook contract are in the director's `references/evidence-manifest.md`. One command captures every declared pair in a single browser and prints one line per capture: PASS/FAIL, GPU, pixel metrics, over-budget rows, error counts, and the report and screenshot paths. Open a report file only when its line needs more detail. Include all requested states; do not remove a failing slot to make the manifest pass. For a one-off check, `--state <name> [--mobile]` captures a single view, and omitting `--state` checks only the current view. Scaffold games have their own copy as `npm run inspect:canvas`.
 
-Use a fresh `--run-id` for each verification pass and a separate `--out` directory. Declare expected viewport/state pairs before capture in the director's `references/evidence-manifest.md` format, then run its checker with `--manifest`. Include all requested states; do not remove a failing slot to make the manifest pass. Omitting `--state` performs only a current-view canvas check.
-
-The JSON carries a `metrics` block (color entropy, edge density, luminance contrast, dominant-color share) and a `renderBudget` comparison against tier budgets. These are the Measured Evidence for the visual scorecard in `threejs-aaa-graphics-builder/references/visual-scorecard.md`; over-budget rows need a documented tradeoff, and blank-canvas or error conditions exit non-zero.
+The metrics are the Measured Evidence for the visual scorecard in `threejs-aaa-graphics-builder/references/visual-scorecard.md`. Over-budget rows need a documented tradeoff, and blank-canvas or error conditions exit non-zero.
 
 ## Release pass
 

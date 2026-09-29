@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import sys
@@ -140,12 +141,22 @@ def check_artifacts(paths: list[str], roots: list[Path], *, allow_cwd: bool = Tr
     return confirmed, failures
 
 
+PRUNED_DIRS = {"node_modules", ".git", "dist", ".vite", "test-results", "playwright-report"}
+
+
+def _project_json_files(project: Path):
+    """Walk the project without descending into dependency or build output trees."""
+    for root, dirs, files in os.walk(project):
+        dirs[:] = [name for name in dirs if name not in PRUNED_DIRS]
+        for name in files:
+            if name.endswith(".json") and name != "package-lock.json":
+                yield Path(root) / name
+
+
 def find_inspector_reports(project: Path) -> list[Path]:
     """JSON files written by inspect-threejs-canvas.mjs, wherever they landed."""
     found: list[Path] = []
-    for path in project.rglob("*.json"):
-        if "node_modules" in path.parts or path.name == "package-lock.json":
-            continue
+    for path in _project_json_files(project):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError, UnicodeDecodeError):

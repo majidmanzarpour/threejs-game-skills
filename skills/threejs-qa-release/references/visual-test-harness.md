@@ -31,9 +31,9 @@ window.__THREE_GAME_TEST_HOOKS__ = {
 };
 ```
 
-The example's helpers are project-owned implementations, not placeholders to copy as no-ops. `setState` returns `{ state: name }` synchronously or through a Promise only after applying the requested state. Unknown states throw. Await `seed()` and `setState()`, and assert the acknowledgment. Named captures also require `setPausedForScreenshot` to stop simulation/state transitions immediately while rendering continues. The inspector fails explicit state captures when this contract is missing or broken.
+The example's helpers are project-owned implementations, not placeholders to copy as no-ops. The acknowledgement and pause rules are in the director's `references/evidence-manifest.md`; baselines use the same contract.
 
-Before a baseline: unpause a previously frozen scene, seed randomness, apply and await the state, then immediately freeze simulation so it cannot advance to a different state during capture setup. Stabilize particles and noise, disable camera shake / hitstop / time-dependent post, hide debug overlays and FPS meters, and wait for fonts and rendered frames. These visual hooks must apply their changes while paused, without needing a gameplay tick. The entire preparation phase is bounded, including hooks, fonts, and frames. Use fixed viewport profiles and mask dynamic UI only where the masked area is not part of the acceptance criteria.
+Before a baseline, follow the inspector's order: unpause, seed, apply and await the state, freeze immediately, then stabilize particles and noise, disable camera shake, hitstop and time-dependent post, hide debug overlays, and wait for fonts and rendered frames. These visual hooks must work while paused, without a gameplay tick. Use fixed viewport profiles and mask dynamic UI only where the masked area is not part of the acceptance criteria.
 
 ## Playwright
 
@@ -46,7 +46,7 @@ npx playwright test tests/visual-regression.spec.ts
 
 Thresholds: low `maxDiffPixelRatio` for stable UI and menu states, slightly higher for WebGL antialiasing and post-processing variation, never so high that a real layout or asset failure slips through.
 
-Run WebGL suites with `workers: 1` and the full `chromium` channel — see `playtest-bot.md`, both matter more than they look.
+The scaffold config runs WebGL suites on one worker with the GPU-backed `chromium` channel for both desktop and mobile; keep both if you change it (see `playtest-bot.md`).
 
 ## Asset visibility
 

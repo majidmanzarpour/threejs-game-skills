@@ -2,7 +2,7 @@
 
 This repo contains agent workflow assets for Three.js browser-game development. For broad requests to build, upgrade, polish, or finish a Three.js game, start from `skills/threejs-game-director/SKILL.md` — it routes work across the specialist skills (gameplay, AAA graphics, UI, debug/profile, QA/release, 3D/image/audio generation). The user should not have to name every specialist skill.
 
-The same ten skills serve Codex and Claude Code. The user's requested scope, art style, constraints, and prior decisions take precedence over skill defaults. Use the runner's available tools; skills do not enable native async APIs or change model settings.
+The same nine skills serve Codex and Claude Code. The user's requested scope, art style, constraints, and prior decisions take precedence over skill defaults. Use the runner's available tools.
 
 ## Coordination
 
@@ -27,7 +27,7 @@ The full bar lives in `skills/threejs-game-director/SKILL.md`. In short:
 - With keys set, premium hero surfaces get generated assets unless the user explicitly chose procedural art or restricted external generation. Run `skills/threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about keys. Classify failures and recover accepted tasks before falling back; follow `skills/threejs-game-director/references/asset-recovery.md`.
 - Establish the art direction, camera scale, and representative playable scene before expanding content. Asset counts come from the genre and design brief.
 - Generic stat-card HUDs, cube obstacles, and skyline boxes are prototype placeholders unless the user asked for that style.
-- Mobile input and resize belong in the first implementation path, not a final afterthought.
+- Resize, and mobile input when mobile is a target, belong in the first implementation path, not a final afterthought.
 
 ## Evidence
 

@@ -1,23 +1,23 @@
 ---
 name: threejs-audio-generator
-description: "Generate, convert, clean, and integrate audio for Three.js browser games with ElevenLabs: sound effects, looping ambience, UI sounds, impact/weapon/vehicle audio, creature and boss stingers, announcer and dialogue TTS, voice conversion from a scratch performance, voice cleanup, audio manifests, and Web Audio integration."
+description: "Generate, convert, clean, and integrate audio for Three.js browser games with ElevenLabs: sound effects, looping ambience, music tracks and loops (menu, gameplay, boss, victory/defeat stingers), UI sounds, impact/weapon/vehicle audio, creature and boss stingers, announcer and dialogue TTS, voice conversion from a scratch performance, voice cleanup, audio manifests, and Web Audio integration."
 ---
 
 # Three.js Audio Generator
 
-Game-ready audio for Three.js projects: generation, voice work, cleanup, and runtime integration. Provider: ElevenLabs.
+Game-ready audio for Three.js projects: SFX, music, voice work, cleanup, and runtime integration. Provider: ElevenLabs.
 
 Resolve `<this-skill-dir>` from the actual loaded skill file. Resolve sibling skills beside it first, then use the runner's discovered paths. Do not mix installed versions or assume a particular home directory.
 
 ## Reference
 
-`references/audio-workflows.md` — the audio matrix, prompt patterns, generation and voice strategy, Web Audio manager shape, and runtime failure modes. Read it before planning a game's audio, generating a batch, wiring runtime playback, or converting voices.
+`references/audio-workflows.md` — the audio matrix, prompt patterns, generation, music, and voice strategy, Web Audio manager shape, and runtime failure modes. Read it before planning a game's audio, generating a batch, wiring runtime playback, or converting voices.
 
 ## When to use
 
-SFX (jumps, hits, weapons, explosions, pickups, collisions, UI clicks) · ambience (wind, rain, city bed, engine hum, room tone, arena beds) · voice (announcer barks, boss lines, tutorial prompts, menu narration) · voice conversion from a scratch performance when timing and acting matter · cleanup and isolation before conversion or final use · Web Audio integration with loading, looping, manifests, volume groups, pause/resume, and gesture unlock.
+SFX (jumps, hits, weapons, explosions, pickups, collisions, UI clicks) · music (menu and gameplay loops, boss themes, intensity layers, win/lose stingers) · ambience (wind, rain, city bed, engine hum, room tone, arena beds) · voice (announcer barks, boss lines, tutorial prompts, menu narration) · voice conversion from a scratch performance when timing and acting matter · cleanup and isolation before conversion or final use · Web Audio integration with loading, looping, manifests, volume groups, pause/resume, and gesture unlock.
 
-Audio is not cosmetic for a premium game. Build an audio matrix from the events the game actually has; do not add dialogue, weapons, or ambience layers just to fill categories. Respect explicit silent, procedural-audio, accessibility, and external-service constraints. A narrow sound fix does not need a new soundtrack.
+Audio is not cosmetic for a premium game. Build an audio matrix from the events the game actually has; do not add dialogue, weapons, music, or ambience layers just to fill categories. Respect explicit silent, procedural-audio, accessibility, and external-service constraints. A narrow sound fix does not need a new soundtrack.
 
 ## API key
 
@@ -44,6 +44,10 @@ python3 <this-skill-dir>/scripts/threejs_audio_asset.py sfx \
   --prompt "seamless cyber resort ambience, distant surf, soft neon transformer hum, gentle crowd bed" \
   --duration 12 --loop --prompt-influence 0.45 --out assets/audio/ambience/cyber-resort-loop.mp3
 
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py music \
+  --prompt "driving synthwave race loop, 128 BPM, punchy analog bass, bright arpeggios, steady energy with no intro or fade-out, designed to loop" \
+  --duration 60 --instrumental --out assets/audio/music/race-loop.mp3
+
 python3 <this-skill-dir>/scripts/threejs_audio_asset.py tts \
   --text "Perfect shot." --voice-id JBFqnCBsd6RMkjVDRZzb --out assets/audio/voice/perfect-shot.mp3
 
@@ -60,6 +64,7 @@ python3 <this-skill-dir>/scripts/threejs_audio_asset.py voice-change \
 - SFX: `mp3_44100_128`, 0.5–2.5s, prompt influence 0.55–0.8.
 - UI: 0.15–0.8s, high prompt influence, transients kept clear.
 - Ambience: 8–30s with `--loop`, prompt influence 0.3–0.55.
+- Music: `music --prompt` (`--duration` 3–600s, `--instrumental`) or `--plan FILE` with a `composition_plan` JSON for sectioned tracks (`--seed` works only with plans). The API has no loop flag; lengths, looping, and layering are in the reference's Music Strategy.
 - Voice: TTS for clean generated lines; `voice-change` when timing and acting from a scratch performance matter. Isolate noisy speech first.
 - Runtime: generate into the game project and load through Web Audio. Follow the project's asset/version-control policy; do not commit or publish unless asked. No API keys in browser code.
 
@@ -71,4 +76,4 @@ Listen to a representative effect or line before generating a batch. Test it thr
 
 ## Report
 
-Generated and processed file paths, the prompts, text, source files, voice IDs, durations, loop flags and formats behind them, the runtime trigger mapping and audio groups, and any remaining gaps or plan limits.
+Generated and processed file paths, the prompts, composition plans, text, source files, voice IDs, durations, loop flags and loop points and formats behind them, the runtime trigger mapping and audio groups, and any remaining gaps or plan limits.

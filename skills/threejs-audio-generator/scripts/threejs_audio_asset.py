@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate and process Three.js game audio assets with ElevenLabs."""
+"""Generate and process Three.js game audio assets (SFX, music, voice) with ElevenLabs."""
 
 from __future__ import annotations
 
@@ -67,7 +67,9 @@ def request_bytes(
         raise AudioGeneratorError(f"Network error: {exc.reason}") from exc
 
 
-def post_json_audio(args: argparse.Namespace, path: str, payload: dict[str, Any], out: Path) -> None:
+def post_json_audio(
+    args: argparse.Namespace, path: str, payload: dict[str, Any], out: Path, timeout: int = 300
+) -> None:
     body = json.dumps(payload).encode("utf-8")
     data = request_bytes(
         "POST",
@@ -76,6 +78,7 @@ def post_json_audio(args: argparse.Namespace, path: str, payload: dict[str, Any]
         body=body,
         headers={"Content-Type": "application/json", "Accept": "audio/mpeg"},
         query={"output_format": args.output_format},
+        timeout=timeout,
     )
     write_file(out, data)
 
@@ -170,6 +173,38 @@ def cmd_sfx(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_music(args: argparse.Namespace) -> int:
+    if bool(args.prompt) == bool(args.plan):
+        raise AudioGeneratorError("Pass exactly one of --prompt or --plan.")
+    payload: dict[str, Any] = {}
+    if args.model_id:
+        payload["model_id"] = args.model_id
+    if args.prompt:
+        if args.seed is not None:
+            raise AudioGeneratorError("--seed only applies with --plan; the API rejects it with --prompt.")
+        payload["prompt"] = args.prompt
+        if args.duration is not None:
+            if not 3 <= args.duration <= 600:
+                raise AudioGeneratorError("--duration must be between 3 and 600 seconds.")
+            payload["music_length_ms"] = int(args.duration * 1000)
+        if args.instrumental:
+            payload["force_instrumental"] = True
+    else:
+        if args.duration is not None or args.instrumental:
+            raise AudioGeneratorError("--duration and --instrumental only apply with --prompt; set section lengths in the plan.")
+        plan_path = Path(args.plan)
+        if not plan_path.exists():
+            raise AudioGeneratorError(f"Composition plan not found: {plan_path}")
+        try:
+            payload["composition_plan"] = json.loads(plan_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise AudioGeneratorError(f"Composition plan is not valid JSON: {exc}") from exc
+        if args.seed is not None:
+            payload["seed"] = args.seed
+    post_json_audio(args, "/music", payload, Path(args.out), timeout=900)
+    return 0
+
+
 def cmd_tts(args: argparse.Namespace) -> int:
     payload: dict[str, Any] = {
         "text": args.text,
@@ -254,6 +289,18 @@ def build_parser() -> argparse.ArgumentParser:
     sfx.add_argument("--loop", action="store_true")
     sfx.add_argument("--model-id", default="eleven_text_to_sound_v2")
     sfx.set_defaults(func=cmd_sfx)
+
+    music = sub.add_parser("music", help="Compose a music track from a prompt or a composition plan.")
+    add_common(music)
+    add_output_format(music)
+    music.add_argument("--prompt", help="Style, instrumentation, tempo, mood, and game use.")
+    music.add_argument("--plan", help="Path to a composition_plan JSON file (instead of --prompt).")
+    music.add_argument("--out", required=True)
+    music.add_argument("--duration", type=float, help="Length in seconds, 3-600 (prompt mode only).")
+    music.add_argument("--instrumental", action="store_true", help="Guarantee no vocals (prompt mode only).")
+    music.add_argument("--seed", type=int, help="Seed for reproducible output (plan mode only).")
+    music.add_argument("--model-id", help="Music model, e.g. music_v1; defaults to the API default.")
+    music.set_defaults(func=cmd_music)
 
     tts = sub.add_parser("tts", help="Generate a spoken line from text.")
     add_common(tts)

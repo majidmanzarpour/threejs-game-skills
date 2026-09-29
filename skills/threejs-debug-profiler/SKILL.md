@@ -15,22 +15,11 @@ Follow the changed behavior's scope. Reuse the lead's existing reproduction and 
 
 ## Debug
 
-1. Reproduce locally with the same command and URL the user had.
-2. Read console, page, and network errors.
-3. Check canvas display size against drawing-buffer size.
-4. Check renderer, context, and loop ownership — more than one active loop is a common cause.
-5. Check camera aspect, near/far, lights, materials, fog, scene contents, transforms.
-6. Check asset paths, loaders, CORS, and base path.
-7. Check animation delta units, physics update order and fixed timestep, collider and body ownership, input listeners, pointer and touch behavior, resize, and audio context unlock when audio is involved.
-8. Fix the root cause in the module that owns it, then retest the exact broken path.
+Reproduce first, with the same command and URL the user had, and read the console, page, and network errors. Find the module that owns the failure (renderer, loop, camera, scene, assets, audio, input, physics, UI, or base path), fix the root cause there, and retest the exact broken path. The playbook's triage order covers the common causes, such as more than one active loop, a canvas whose display size doesn't match its drawing buffer, and wrong delta units.
 
 ## Profile
 
-1. Reproduce in the correct build mode — production preview when user-facing performance matters.
-2. Baseline the scenario: FPS and frame time, draw calls, triangles, geometries, textures, memory, bundle.
-3. Classify the bottleneck as CPU, GPU draw, GPU fragment, GPU vertex, memory, or network.
-4. Change one thing — instancing, shared resources, culling, LOD, DPR cap, cheaper shadows or post, texture discipline.
-5. Re-measure the same scenario and confirm visuals and playability held.
+Profile the production preview when user-facing performance matters. Baseline one fixed scenario, classify the bottleneck (CPU, GPU draw, fragment, vertex, memory, or network), change one thing, and re-measure the same scenario, confirming visuals and playability held. The playbook lists the metrics to baseline and the optimizations in order of payoff.
 
 ## Report
 

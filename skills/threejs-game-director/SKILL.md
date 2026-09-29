@@ -1,6 +1,6 @@
 ---
 name: threejs-game-director
-description: "Entrypoint for building, upgrading, and finishing Three.js browser games. Routes work across the sibling threejs-* skills for gameplay, graphics, UI, 3D/image/audio asset generation, debugging, and release. Use for build-a-game, upgrade, polish, premium, AAA, high-fidelity, showcase, from-scratch, endless runner, arcade, action, and release-ready requests."
+description: "Entrypoint for building, upgrading, and finishing Three.js browser games. Routes work across the sibling threejs-* skills for gameplay, graphics, UI, 3D/image/audio asset generation, debugging, and release. Use for any request to build, upgrade, polish, or ship a Three.js game as a whole, at any scope from a small arcade prototype to a premium release."
 ---
 
 # Three.js Game Director
@@ -11,11 +11,11 @@ Own the end-to-end game outcome: a playable loop first, then the visual and inte
 
 The user's own words set the bar. "Make a small arcade game" is not a request for the full premium pipeline — build the good version of what was asked and stop. "Premium", "AAA", "polished", "high-fidelity", "showcase", "release-ready", or "less basic" *is* that request, and at that bar a first playable slice is not done. "Less basic" specifically means the current visual level was rejected; treat it as the premium bar.
 
-The user's scope, art style, constraints, and prior decisions override skill defaults. A narrow edit to a premium game remains a narrow edit. Make routine implementation calls yourself and complete authorized work before seeking a decision that only affects a later step. Ask only when a missing choice materially changes the requested result; continue independent work meanwhile.
+The user's scope, art style, constraints, and prior decisions override skill defaults. A narrow edit to a premium game remains a narrow edit. Make routine implementation calls yourself and complete authorized work before seeking a decision that only affects a later step. Ask only when a missing choice materially changes the requested result; continue independent work meanwhile. Until the requested bar is met, don't end a turn with a summary that announces the next step, an offer to continue, or a list of decisions that don't block the work; take the next step instead. End the turn when the work is done, or when only the user can unblock it.
 
 ## Working style
 
-Say in one sentence what you're about to do before your first tool call. While working, give a brief update only when you find something important or change direction. Lead the final response with the outcome.
+Say in one sentence what you're about to do before your first tool call. While working, give a short update when you finish a phase, find something important, or change direction. Lead the final response with the outcome.
 
 The lead owns shared interfaces, integration, and the final verification pass. Use available delegation tools for independent work that saves time or improves quality: asset generation alongside gameplay, or isolated UI work after the intent/state interface is defined. Normally use a lead plus up to two workers. Give each worker a task, separate file ownership, input/output contract, and acceptance criteria. Keep the immediate blocking integration work with the lead.
 
@@ -36,7 +36,7 @@ Use the actual loaded skill directory as `<director-skill-dir>`. Resolve sibling
 | Browser QA, screenshots, canvas pixels, bot playtest, production build | `threejs-qa-release` |
 | Characters, vehicles, weapons, buildings, rigs, animation | `threejs-3d-generator` (Tripo) or `threejs-3d-generator-meshy` (Meshy) |
 | Concepts, textures, skies, logos, icons, GUI art, image-to-3D inputs | `threejs-image-generator` |
-| SFX, ambience, UI sounds, announcer and dialogue | `threejs-audio-generator` |
+| SFX, music, ambience, UI sounds, announcer and dialogue | `threejs-audio-generator` |
 
 For complete games and broad upgrades, read all five production skills before implementing, plus generators whose trigger surfaces exist. Read each phase's required references at phase entry. For narrow edits, load the affected specialists and references, preserving unrelated systems. Record actual loaded resources when reporting skill use; a phase label is not a skill invocation.
 
@@ -46,7 +46,7 @@ Start broad builds with the gameplay design brief, core-loop contract, and level
 
 For substantial tasks maintain `artifacts/game-progress.md`: current intent and constraints, decisions, completed work, pending jobs with task IDs/checkpoint paths, remaining defects, and next actions. Re-read it after an interruption. A correction updates affected work; a status question does not replace the build objective. Preserve completed assets and mark obsolete pending outputs instead of accidentally spending again.
 
-Use available background tool sessions or submit/status/download commands to keep independent work moving. Native API async calling, steering, and reasoning configuration are host capabilities, not settings enabled by this skill.
+Use available background tool sessions or submit/status/download commands to keep independent work moving.
 
 ## The bar for premium work
 
@@ -64,7 +64,7 @@ When external generation is in scope, run it before assuming anything about keys
 
 With keys set, premium hero surfaces get generated assets: player, boss, creature, vehicle, ship, weapon, signature building. Respect an explicit procedural-only style or external-generation restriction. Procedural kits handle repeated props, decals, collision proxies, and instanced volume. Premium active gameplay includes event-driven audio.
 
-Read `references/asset-recovery.md` when sourcing external assets or recovering a job. Missing credentials or exhausted credits permit a documented local fallback. A transient error calls for bounded recovery of the existing job; invalid parameters need correction. An uncertain paid submission must be reconciled before replacement. Continue independent work and identify any quality requirement still unmet after fallback.
+Read `references/asset-recovery.md` when sourcing external assets or recovering a job; it classifies each failure and says when a local fallback is allowed. Continue independent work meanwhile.
 
 ## Verification ownership
 
@@ -74,7 +74,7 @@ The lead consolidates specialist results into one check set appropriate to the c
 
 ```bash
 python3 <threejs-gameplay-systems-skill-dir>/scripts/create_threejs_game.py ./my-game
-node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs --url http://127.0.0.1:5188 --state active-play --run-id pass-1
+node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs --manifest artifacts/evidence.json --url http://127.0.0.1:5188
 python3 <director-skill-dir>/scripts/check_evidence.py ./my-game --manifest artifacts/evidence.json
 ```
 

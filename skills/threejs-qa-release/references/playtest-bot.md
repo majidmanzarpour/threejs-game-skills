@@ -5,7 +5,7 @@ Automated playtests drive the game through scripted real input and measure wheth
 ## Prerequisites
 
 - `window.__THREE_GAME_DIAGNOSTICS__` publishing frame, score/objective, complete/fail state, and player position every update.
-- `window.__THREE_GAME_TEST_HOOKS__` with at least `seed()` and `setState()` so runs are reproducible (scaffold games ship both). Await both; `setState(name)` must acknowledge `{ state: name }` after applying it and throw on unknown states.
+- `window.__THREE_GAME_TEST_HOOKS__` with at least `seed()` and `setState()` so runs are reproducible (scaffold games ship both; the contract is in the director's `references/evidence-manifest.md`).
 - All gameplay randomness routed through the seeded RNG — otherwise bot metrics are noise.
 
 ## Setup
@@ -30,10 +30,10 @@ Adapt `INPUT_SCRIPT` to the game's controls and level layout: an endless runner 
 
 ## Headless WebGL Caveats
 
-- Always launch Chromium with `channel: 'chromium'` (the scaffold config and `inspect-threejs-canvas.mjs` do). Playwright's default headless is `chromium_headless_shell`, which ships no GPU backend and silently falls back to SwiftShader (CPU). This is a launch-config bug, not a headless limitation: on the same 1024x1024 scene the shell reports `ANGLE (Google, ... SwiftShader driver)` and renders at 32 fps, while `channel: 'chromium'` reports `ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Pro)` and renders at 127 fps — ~4x, from one line of config.
-- Verify the GPU before reporting any FPS; never assume it. `inspect-threejs-canvas.mjs` records a `gpu` block (`renderer`, `vendor`, `softwareRendered`) in its JSON report — check it. If `softwareRendered` is true, the run fell back to CPU and its FPS/frame-time numbers are not performance evidence; pixel, budget, and functional checks are still valid. Fix the fallback with `npx playwright install chromium` rather than caveating the number.
-- Run Playwright suites with `workers: 1` for WebGL games (the scaffold config does). Parallel contexts still contend for the GPU, and the frame-time collapse makes game time drift from wall time, flaking timed phases and screenshot baselines.
-- Headless FPS on a verified real GPU is still not a phone. Treat it as a desktop-GPU signal and validate mobile targets on real hardware.
+- Launch Chromium with `channel: 'chromium'` (the scaffold config and the inspector do). Playwright's default headless shell has no GPU backend and silently renders on SwiftShader (CPU), about 4x slower, so its FPS numbers mean nothing.
+- Check the report's `gpu` block before citing FPS or frame time. If `softwareRendered` is true, those numbers are not performance evidence; pixel, budget, and functional checks still hold. Fix it with `npx playwright install --no-shell chromium` rather than caveating the number.
+- Run WebGL suites with `workers: 1` (the scaffold config does). Parallel contexts contend for the GPU, so game time drifts from wall time and timed phases and baselines flake.
+- Headless FPS on a real GPU is a desktop signal, not a phone. Validate mobile performance on real hardware.
 
 ## Difficulty And Fairness Signals
 

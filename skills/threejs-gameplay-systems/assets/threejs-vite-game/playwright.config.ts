@@ -18,7 +18,9 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://127.0.0.1:5188',
-    reuseExistingServer: false,
+    // Reuse a dev server that is already running for the canvas inspector;
+    // CI always starts a fresh one.
+    reuseExistingServer: !process.env.CI,
     timeout: 20_000,
   },
   projects: [
@@ -35,9 +37,15 @@ export default defineConfig({
       },
     },
     {
-      name: 'mobile-safari',
+      // iPhone viewport, DPR and touch on the same GPU-backed Chromium as the
+      // inspector. devices['iPhone 13'] alone selects WebKit, which needs its
+      // own browser download and renders headless without the GPU. Confirm
+      // Safari-specific behavior on a real device.
+      name: 'mobile-chrome',
       use: {
         ...devices['iPhone 13'],
+        defaultBrowserType: 'chromium',
+        channel: 'chromium',
       },
     },
   ],

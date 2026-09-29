@@ -38,7 +38,7 @@ Stable dimensions from CSS variables, `clamp`, grid tracks, fixed icon slots, an
 
 ## Style and cohesion
 
-Match the genre: arcade racers need speed and status readability, fighters need health/round/impact hierarchy, exploration needs inventory and objective clarity. A limited status palette over neutral surfaces. Connect UI motifs to world decals, faction marks, vehicle panels, pickups, and hazards. One-note purple/blue gradient UI needs a reason from the game world.
+Match the genre: arcade racers need speed and status readability, fighters need health/round/impact hierarchy, exploration needs inventory and objective clarity. A limited status palette over neutral surfaces. Connect UI motifs to world decals, faction marks, vehicle panels, pickups, and hazards. One-note purple/blue gradient UI needs a reason from the game world. Unless the art direction calls for them, also avoid these web-page defaults, which read as generic in a game: cream or off-white panels, italic accent words in titles, numbered "01/02/03" section labels, monospace text labels (tabular numerals for changing values are still right), and pill-shaped buttons. After the first pass, check which default styles crept in and replace them with motifs from the world.
 
 ## Generated 2D assets
 

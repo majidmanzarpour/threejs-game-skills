@@ -79,13 +79,6 @@ Inspect before shipping:
 - Animation clip names, durations, root motion, and in-place behavior.
 - Mobile memory/performance impact.
 
-## Game Asset Strategy
-
-- Use `threejs-3d-generator` for hero assets, characters, creatures, bosses, buildings, weapons, signature props, and complex pickups.
-- Use procedural Three.js kits for high-volume repeated detail such as bolts, windows, track plates, rails, debris, markers, and background silhouettes.
-- Use `threejs-image-generator` for concept art, texture references, decals, logos, UI icons, and backdrop images.
-- Combine: image-generator concept -> 3D-generator model -> Three.js import -> procedural set dressing -> visual scorecard.
-
 ## Performance Discipline
 
 - Use `face_limit`, `smart_low_poly`, conversion, or low-poly postprocess for browser/mobile budgets.
@@ -103,15 +96,3 @@ Inspect before shipping:
 - Too expensive: lower `face_limit`, use `smart_low_poly`, reduce texture quality/size, or convert with a face limit.
 - Materials too dark/bright: check color space, tone mapping, environment, and light exposure.
 - Collision too complex: build primitive proxies in Three.js and keep Tripo mesh visual-only.
-
-## Final Evidence
-
-Report:
-
-- 3D generator task IDs.
-- Downloaded asset paths.
-- Model version and generation options.
-- Post-process tasks: texture, rig, animation, conversion.
-- Three.js import files changed.
-- Renderer diagnostics before/after import.
-- Screenshot evidence in active gameplay.

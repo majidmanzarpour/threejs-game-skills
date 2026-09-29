@@ -36,11 +36,7 @@ Glow does not make primitives look AAA. Build authored forms first, then materia
 
 ## Asset sourcing
 
-When external generation is in scope, run `threejs-game-director/scripts/probe_asset_credentials.sh` before assuming anything about keys. No probe or paid submission is needed for explicitly procedural art.
-
-With keys set, generated assets belong on the hero surfaces — player, character, creature, boss, vehicle, ship, building, weapon, signature prop, hero environment piece — and on high-value 2D: skies, backgrounds, texture and trim references, decals, faction marks, icons, GUI and title art, image-to-3D inputs. Respect explicit procedural-only art or external-generation restrictions. Procedural Three.js handles repeated props, kits, collision proxies, VFX geometry, and instanced volume.
-
-Use the director's `references/asset-recovery.md`: recover transient failures and accepted tasks before fallback. Missing keys, exhausted credits, or exhausted bounded recovery permit a local replacement with the remaining quality gap reported. A single timeout is not evidence that generation is unavailable.
+When external generation is in scope, run `threejs-game-director/scripts/probe_asset_credentials.sh` first; explicitly procedural art needs no probe. With keys set, generate the hero surfaces (player, character, creature, boss, vehicle, ship, building, weapon, signature prop, hero environment piece) and high-value 2D (skies, backgrounds, texture and trim references, decals, faction marks, icons, GUI and title art, image-to-3D inputs), unless the user restricted art to procedural or ruled out external services. Procedural Three.js handles repeated props, kits, collision proxies, VFX geometry, and instanced volume. Handle failures with the director's `references/asset-recovery.md`; a single timeout is not evidence that generation is unavailable.
 
 For animated assets inspect motion as well as silhouettes: locomotion, blend transitions, foot contacts, hit timing, and secondary motion in real gameplay. A focused independent critique may identify defects after a substantial pass; the lead remains responsible for the final score and integration.
 

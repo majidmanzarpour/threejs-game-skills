@@ -11,6 +11,9 @@ import {
   inspectPage,
   parseArgs,
   prepareCapture,
+  readManifestCaptures,
+  settleWait,
+  summarize,
 } from '../../skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs';
 
 const inspectorUrl = new URL('../../skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs', import.meta.url);
@@ -475,4 +478,69 @@ test('failed seed-only capture retains the legacy null run ID and no state', asy
   assert.equal(report.seed, 0);
   assert.equal(report.result.ok, false);
   assert.equal(report.screenshotPath, null);
+});
+
+test('settle wait defaults to zero for frozen named states and 750ms for current-view captures', () => {
+  assert.equal(parseArgs([]).wait, null);
+  assert.equal(settleWait(null, 'active-play'), 0);
+  assert.equal(settleWait(null, null), 750);
+  assert.equal(settleWait(40, 'active-play'), 40);
+});
+
+test('manifest mode rejects single-capture flags and reads declared captures', () => {
+  for (const flag of [['--state', 'boss'], ['--mobile'], ['--run-id', 'x'], ['--out', 'dir']]) {
+    assert.throws(() => parseArgs(['--manifest', 'artifacts/evidence.json', ...flag]), /--manifest declares each capture/);
+  }
+  const captures = readManifestCaptures({
+    version: 1,
+    runId: 'pass-1',
+    captures: [
+      { mode: 'desktop', state: 'active-play', report: 'artifacts/pass-1/desktop-active-play.json' },
+      { mode: 'mobile', state: null, report: 'artifacts/pass-1/mobile.json' },
+    ],
+  });
+  assert.deepEqual(captures[0], { mobile: false, state: 'active-play', runId: 'pass-1',
+    reportPath: 'artifacts/pass-1/desktop-active-play.json', screenshotPath: 'artifacts/pass-1/desktop-active-play.png' });
+  assert.equal(captures[1].mobile, true);
+  assert.equal(captures[1].state, null);
+});
+
+test('manifest captures are validated before any browser work', () => {
+  const base = { version: 1, runId: 'pass-1' };
+  assert.throws(() => readManifestCaptures({ ...base, captures: [] }), /nonempty captures/);
+  assert.throws(() => readManifestCaptures({ ...base, runId: '../x', captures: [{}] }), /safe/);
+  assert.throws(() => readManifestCaptures({ ...base, captures: [{ mode: 'tablet', state: null, report: 'a.json' }] }), /desktop or mobile/);
+  assert.throws(() => readManifestCaptures({ ...base, captures: [{ mode: 'desktop', report: 'a.json' }] }), /requires state/);
+  assert.throws(() => readManifestCaptures({ ...base, captures: [{ mode: 'desktop', state: '../boss', report: 'a.json' }] }), /safe/);
+  assert.throws(() => readManifestCaptures({ ...base, captures: [{ mode: 'desktop', state: null, report: 'a.png' }] }), /\.json path/);
+});
+
+test('browser errors are counted in full but stored deduplicated and capped', async () => {
+  const listeners = {};
+  const page = { ...mockPage({ setState() {}, setPausedForScreenshot() {} }), on(event, fn) { listeners[event] = fn; } };
+  const pending = inspectPage(page, parseArgs(['--state', 'boss']));
+  for (let i = 0; i < 50; i += 1) listeners.console({ type: () => 'error', text: () => (i < 30 ? `error ${i}` : 'error 0') });
+  listeners.console({ type: () => 'error', text: () => 'x'.repeat(2000) });
+  listeners.pageerror(new Error('boom'));
+  const report = await pending;
+  assert.equal(report.consoleErrorCount, 51);
+  assert.equal(report.consoleErrors.length, 20);
+  assert.equal(report.pageErrorCount, 1);
+  assert.deepEqual(report.pageErrors, ['boom']);
+});
+
+test('summary is one line with status, metrics, budget and file paths', () => {
+  const report = {
+    mode: 'mobile', requestedState: 'active-play', runId: 'pass-1', screenshotPath: 'artifacts/p/mobile-active-play.png',
+    gpu: { renderer: 'ANGLE (Apple)', softwareRendered: false }, consoleErrors: [], pageErrors: [],
+    consoleErrorCount: 0, pageErrorCount: 0,
+    result: { ok: true, metrics: { colorEntropyBits: 4.2, edgeDensity: 0.081, luminance: { contrast: 131 }, dominantColorShare: 0.2 },
+      renderBudget: { rows: [{ metric: 'calls', actual: 180, limit: 150, ok: false }, { metric: 'triangles', actual: 1, limit: 2, ok: true }] } },
+  };
+  const line = summarize(report, 'artifacts/p/mobile-active-play.json');
+  assert.doesNotMatch(line, /\n/);
+  assert.match(line, /^PASS mobile active-play run=pass-1 gpu=hardware entropy=4.2 edges=0.081 contrast=131 dominant=0.2 over-budget=calls:180>150/);
+  assert.match(line, /report=artifacts\/p\/mobile-active-play.json png=artifacts\/p\/mobile-active-play.png$/);
+  const failed = summarize({ ...report, consoleErrorCount: 3, consoleErrors: ['bad texture'], result: { ok: false, reason: 'capture-failed', error: 'hook timeout' } }, 'r.json');
+  assert.match(failed, /^FAIL mobile active-play .*reason=capture-failed error="hook timeout".*consoleErrors=3 first="bad texture"/);
 });

@@ -36,17 +36,15 @@ From the project with its server running:
 
 ```bash
 node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs \
-  --url http://127.0.0.1:5188 --out artifacts/pass-1 \
-  --state active-play --seed 42 --run-id pass-1
-node <threejs-qa-release-skill-dir>/scripts/inspect-threejs-canvas.mjs \
-  --url http://127.0.0.1:5188 --out artifacts/pass-1 --mobile \
-  --state active-play --seed 42 --run-id pass-1
+  --manifest artifacts/evidence.json --url http://127.0.0.1:5188 --seed 42
 python3 <director-skill-dir>/scripts/check_evidence.py . --manifest artifacts/evidence.json
 ```
 
-Explicit `--state` calls and awaits `setState(name)`. The hook must finish scene setup and return `{ state: name }`. Named captures also require `setPausedForScreenshot(paused)`, which immediately stops simulation/state transitions while rendering continues. The inspector freezes immediately after setup, then awaits visual stabilization and rendered frames within a bounded preparation timeout. Missing hooks, unknown states, timeouts, or mismatched acknowledgments fail. Explicit `--seed` likewise requires a working seed hook. Implement hooks for real project states instead of faking acknowledgments. The inspector records `state`, `requestedState`, `appliedState`, and `runId` alongside existing diagnostics, pixel metrics, and screenshot paths.
+The inspector writes each report to its declared path, with the screenshot beside it (same name, `.png`), and prints one summary line per capture. Screenshots are saved at CSS pixel size, so a mobile capture is 390 px wide rather than device resolution.
 
-Run the standalone inspector from the game directory. It resolves Playwright and PNG dependencies from its own installation or that project's npm packages; if missing, install `@playwright/test` and `pngjs` in the game and the matching Playwright Chromium browser. No npm dependencies need to live inside globally installed skills.
+A named state calls and awaits `setState(name)`. The hook must finish scene setup and return `{ state: name }`. Named captures also require `setPausedForScreenshot(paused)`, which immediately stops simulation/state transitions while rendering continues. The inspector freezes immediately after setup, then awaits visual stabilization and rendered frames within a bounded preparation timeout. Missing hooks, unknown states, timeouts, or mismatched acknowledgments fail. Explicit `--seed` likewise requires a working seed hook. Implement hooks for real project states instead of faking acknowledgments. The inspector records `state`, `requestedState`, `appliedState`, and `runId` alongside existing diagnostics, pixel metrics, and screenshot paths.
+
+Run the standalone inspector from the game directory. It resolves Playwright and PNG dependencies from its own installation or that project's npm packages; if missing, install `@playwright/test` and `pngjs` in the game, then `npx playwright install --no-shell chromium`. No npm dependencies need to live inside globally installed skills.
 
 The checker reads only declared reports and verifies run ID, viewport, state fields, successful nonblank inspection, absence of recorded browser errors, and nontrivial artifact files. Historical reports elsewhere are ignored. Motion clips belong in `artifacts`, but their animation quality still needs visual inspection. Builds, input tests, audio, collision, and performance require their own observations; this file checker cannot prove those ran.
 
@@ -54,4 +52,4 @@ The checker reads only declared reports and verifies run ID, viewport, state fie
 
 Put detailed findings in `artifacts/final-evidence.md` and keep the user-facing close-out concise. Markdown artifact links may be absolute or project-relative; use angle brackets for paths with spaces or parentheses, such as `[motion](<artifacts/pass-1/hero motion.webm>)`.
 
-`check_evidence.py <project> --report <report.md>` remains a basic path/build-presence check. Without `--manifest` it discovers inspector reports across the project, including historical ones, and cannot establish freshness or required capture coverage. Combine `--report` with `--manifest` for linked-file checks scoped to a declared capture set. `--skip-inspector` is legacy file-only use and cannot be combined with `--manifest`.
+Without `--manifest`, `check_evidence.py --report <report.md>` only checks that cited files exist and cannot prove freshness or capture coverage; add `--manifest` to scope it to the declared set.
