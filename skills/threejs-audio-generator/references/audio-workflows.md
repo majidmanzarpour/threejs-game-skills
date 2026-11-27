@@ -47,11 +47,13 @@ Avoid prompts that are only mood words (`epic`, `AAA`, `cool`). Name the gamepla
 
 ## Music Strategy
 
+Default to **`music_v2_5`** (or `music_v2`; **`music_v1` retires January 31, 2027** and is still the server fallback if `model_id` is omitted, so always pass it explicitly). On eligible subscription tiers, `--output-format mp3_48000_192` upgrades music fidelity over `mp3_44100_128`.
+
 Music prompts name genre, tempo (BPM), key instrumentation, energy curve, and the game moment: `tense orchestral boss theme, 140 BPM, low brass ostinato, taiko hits, relentless energy, no intro, loopable, instrumental`. Use `--instrumental` unless the user wants vocals, since vocals compete with SFX and dialogue.
 
-- Gameplay and menu loops: 30–90s. Ask for constant energy with no intro, outro, or fade so the ends meet; the API has no loop flag.
+- Gameplay and menu loops: 30–90s. In prompt mode, ask for constant energy with no intro, outro, or fade so the ends meet.
 - Stingers (victory, defeat, level-up, boss reveal): 3–8s, not looped.
-- Sectioned tracks (intro → loop → outro, calm → combat): write a `composition_plan` JSON with global styles and sections, and pass it with `--plan`. Plans also accept `--seed` for reproducible regeneration.
+- Sectioned tracks & seamless loops (`--plan`): `music_v2` and `music_v2_5` support chunk-based `composition_plan` JSONs (up to 30 ordered chunks/sections with `duration_ms`, `positive_styles`, `negative_styles`, and optional audio-reference + "glue" chunks to bridge loop seams cleanly; section durations are strictly enforced by default). Plans also accept `--seed` for reproducible regeneration.
 - Intensity layers (explore → combat): generate matching variants from the same prompt with one changed energy term, then crossfade them from game state.
 - Keep the music group below SFX in the mix; duck it under dialogue, and during hitstop or big impacts.
 
@@ -59,9 +61,9 @@ Listen to the loop seam in game before generating variants. If it clicks or jump
 
 ## Voice Strategy
 
-Use TTS when the line can be generated from text and exact acting is less important.
+Use TTS (`eleven_v4` default, or `eleven_v4_turbo` / `eleven_v3` / `eleven_flash_v2_5` / `eleven_multilingual_v2`) when the line can be generated from text and exact acting is less important. With `eleven_v4` and `eleven_v3`, direct performance inline with audio tags (`[whispers]`, `[laughs]`, `[shouts]`, `[sighs]`) rather than using `--style` (the `style` slider is unsupported on `eleven_v4*`). Run `threejs_audio_asset.py models` (`GET /v1/models`) to verify available model IDs on your plan.
 
-Use voice-change when:
+Use voice-change (`eleven_multilingual_sts_v2`, omitting deprecated `--optimize-streaming-latency`) when:
 
 - The user or agent can record a scratch performance.
 - Timing, breaths, laughter, anger, fear, or delivery need to be preserved.

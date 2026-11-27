@@ -61,12 +61,12 @@ python3 <this-skill-dir>/scripts/threejs_audio_asset.py voice-change \
 
 ## Defaults
 
-- SFX: `mp3_44100_128`, 0.5–2.5s, prompt influence 0.55–0.8.
-- UI: 0.15–0.8s, high prompt influence, transients kept clear.
-- Ambience: 8–30s with `--loop`, prompt influence 0.3–0.55.
-- Music: `music --prompt` (`--duration` 3–600s, `--instrumental`) or `--plan FILE` with a `composition_plan` JSON for sectioned tracks (`--seed` works only with plans). The API has no loop flag; lengths, looping, and layering are in the reference's Music Strategy.
-- Voice: TTS for clean generated lines; `voice-change` when timing and acting from a scratch performance matter. Isolate noisy speech first.
-- Runtime: generate into the game project and load through Web Audio. For multi-phase spells/abilities authored with `threejs-aaa-vfx-builder`, align discrete SFX cues (anticipation, release, impact, tail) to VFX timeline beats rather than fixed `setTimeout` guesses. Follow the project's asset/version-control policy; do not commit or publish unless asked. No API keys in browser code.
+- **SFX (`eleven_text_to_sound_v3`):** `mp3_44100_128`, `0.1–30s` (typically `0.5–2.5s`), prompt influence `0.55–0.8`. (`eleven_text_to_sound_v2` retires March 1, 2027.)
+- **UI:** `0.15–0.8s`, high prompt influence, transients kept clear.
+- **Ambience:** `8–30s` with `--loop`, prompt influence `0.3–0.55`.
+- **Music (`music_v2_5`):** explicit `music_v2_5` default (or `music_v2`; `music_v1` retires January 31, 2027). Supports `--prompt` (`--duration 3–600s`, `--instrumental`) or `--plan FILE` with chunk/section `composition_plan` JSON (`--seed` applies to plan mode). Higher-tier plans can request `--output-format mp3_48000_192`. See `references/audio-workflows.md` → Music Strategy for chunk-based seamless loops.
+- **Voice (`eleven_v4`):** expressive flagship across 90+ languages with inline audio tags (`[whispers]`, `[laughs]`, `[shouts]`) — do not pass `--style` with `eleven_v4`/`eleven_v4_turbo` (use inline tags, or `--model-id eleven_multilingual_v2` if you need the legacy style slider). Use `voice-change` (`eleven_multilingual_sts_v2`; omit deprecated `--optimize-streaming-latency`) when scratch acting timing matters, and `isolate` noisy speech first. Run `models` (`GET /v1/models`) to inspect plan-available IDs.
+- **Runtime:** generate into the game project and load through Web Audio. For multi-phase spells/abilities authored with `threejs-aaa-vfx-builder`, align discrete SFX cues (anticipation, release, impact, tail) to VFX timeline beats rather than fixed `setTimeout` guesses. Follow the project's asset/version-control policy; do not commit or publish unless asked. No API keys in browser code.
 
 ## Recovery and Coordination
 

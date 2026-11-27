@@ -95,7 +95,7 @@ Never commit API keys or put them in browser-side game code. These skills use pr
 
 | Provider | Skill | Environment variable | Use cases | Key setup |
 | --- | --- | --- | --- | --- |
-| Tripo API | `threejs-3d-generator` | `TRIPO_API_KEY` | Text/image/multiview to 3D, game-ready GLB/FBX hero models, vehicles, props, buildings, weapons, textures, rigging, animation, stylization, mesh conversion, post-processing. | [Tripo quick start](https://platform.tripo3d.ai/docs/quick-start) and [Tripo API overview](https://www.tripo3d.ai/api). |
+| Tripo API | `threejs-3d-generator` | `TRIPO_API_KEY` | Tripo v3 text/image/multiview to 3D (`v3.1`, `P2`), game-ready GLB/FBX hero models, vehicles, props, buildings, weapons, retexturing (`v3.5`), rigging (`v3.0`/`v2.5`), animation retargeting, decimation, mesh conversion. | [Tripo quick start](https://platform.tripo3d.ai/docs/quick-start) and [Tripo API overview](https://www.tripo3d.ai/api). |
 | Gemini image API | `threejs-image-generator` | `GEMINI_API_KEY` | Concept art, image-to-3D source images, texture references, decals, skies, backgrounds, icons, logos, GUI art, title/menu art. | [Gemini API key docs](https://ai.google.dev/gemini-api/docs/api-key) and [Google AI Studio keys](https://aistudio.google.com/app/apikey). |
 | ElevenLabs API | `threejs-audio-generator` | `ELEVENLABS_API_KEY` | SFX, music tracks and loops, ambience loops, UI sounds, announcer lines, dialogue TTS, voice conversion, audio cleanup, game audio manifests. | [ElevenLabs quickstart](https://elevenlabs.io/docs/eleven-api/quickstart) and [API authentication](https://elevenlabs.io/docs/api-reference/authentication). |
 

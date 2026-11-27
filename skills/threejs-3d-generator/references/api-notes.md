@@ -1,35 +1,24 @@
-# Tripo API Notes
+# Tripo OpenAPI v3 Notes
 
-These notes summarize the official Tripo OpenAPI docs used by this skill.
+These notes summarize the official Tripo OpenAPI **v3** docs used by this skill (Tripo retired the legacy v2 `/v2/openapi/task` endpoint in late 2026).
 
-## Base API
+## Base API (v3)
 
-- Base URL: `https://api.tripo3d.ai/v2/openapi`
-- Auth: `Authorization: Bearer <TRIPO_API_KEY>`
-- Task create: `POST /task`
-- Task query: `GET /task/:task_id`
-- Direct image upload: `POST /upload/sts` with `multipart/form-data`
-- STS token upload flow: `POST /upload/sts/token`
+- Base URL: `https://openapi.tripo3d.ai/v3` (China region: `https://openapi.tripo3d.com/v3`, override via `TRIPO_BASE_URL`).
+- Auth: `Authorization: Bearer <TRIPO_API_KEY>`.
+- Account balance check (`probe --validate`): `GET /v3/account/balance`.
+- File upload: `POST /v3/files` (`multipart/form-data`, field `file`; images `png/jpeg/webp` <= 20MB, 3D models `glb/gltf/fbx/obj/stl` <= 150MB) → returns `data.file_token`.
+- Task query: `GET /v3/tasks/:task_id`.
 
-Task responses use `code` and `data`. Treat nonzero `code` as an API error.
+Task responses use `code` (`0` = success, nonzero = API error) and `data`. Common v3 metadata fields include `created_at`, `completed_at`, and `credits_consumed`.
 
 ## Task Status
 
-Ongoing:
+Ongoing: `queued`, `running`.
 
-- `queued`
-- `running`
+Final: `success`, `failed`, `banned`, `expired`, `cancelled`, `unknown`.
 
-Final:
-
-- `success`
-- `failed`
-- `banned`
-- `expired`
-- `cancelled`
-- `unknown`
-
-Query a task with the same API key that created it. Output download URLs usually expire after a few minutes, so download immediately.
+Query a task with the same API key that created it. Output download URLs expire quickly (often within minutes to 2 hours), so download immediately.
 
 ## Checkpointed Jobs
 
@@ -39,116 +28,92 @@ Usage is in `SKILL.md` → Resuming and Recovery. The helper's guarantees behind
 - Remote input URLs are not stored; if an image task was never accepted, `resume PATH --image URL` supplies the source again. Local paths and completed files must stay available.
 - Safe GETs get up to four attempts with bounded exponential backoff and `Retry-After` handling; task POSTs are never auto-retried. A polling timeout leaves a resumable accepted job, and `resume` refreshes expired download URLs from task status.
 
-## Core Task Types
+## Core v3 Endpoints
 
-- `text_to_model`: prompt to model.
-- `image_to_model`: uploaded image token or image URL to model.
-- `multiview_to_model`: four directional views to model.
-- `import_model`: import an uploaded model file.
-- `texture_model`: retexture or PBR texture an existing model task.
-- `stylize_model`: stylize a model as LEGO, voxel, Voronoi, or Minecraft style when supported.
-- `animate_prerigcheck`: check whether a model can be rigged. See "Rigging and Animation".
-- `animate_rig`: auto-rig a model. See "Rigging and Animation".
-- `animate_retarget`: retarget preset animations onto a rig task. See "Rigging and Animation".
-- `conversion`: export/convert model format.
-- `mesh_segmentation`: segment model parts.
-- `mesh_completion`: complete selected model parts.
-- `highpoly_to_lowpoly`: smart low-poly conversion.
+Instead of v2's universal `POST /task` + `type`, v3 routes each capability to a dedicated REST path and uses `model` (instead of `model_version`) and `input` (`task_id`, `file_token`, or URL, instead of `original_model_task_id` / `file`):
+
+| Capability | v3 Endpoint | Notes |
+| --- | --- | --- |
+| Text to 3D | `POST /v3/generation/text-to-model` | `prompt`, `model` (`v3.1-20260211` H-series or `P2-20260801` P-series quads), `texture_quality` (`fast`/`standard`/`detailed`/`extreme`), `geometry_quality`, `pbr`, `face_limit`. |
+| Image to 3D | `POST /v3/generation/image-to-model` | `input` (`file_token` from `/v3/files` or URL), `model`, `enable_image_autofix`, `texture_alignment` (`original_image`/`geometry`), `orientation` (`default`/`align_image`). |
+| Multiview to 3D | `POST /v3/generation/multiview-to-model` | Directional reference inputs for higher silhouette accuracy. |
+| Retexture | `POST /v3/models/texture` | `input`, `model` (default `v3.5-20260815`), `texture_prompt` (`text`/`image`/`images`), `texture_quality`, `delight` (default `true` on v3.5). |
+| Format conversion | `POST /v3/models/convert` | `input`, `format` (`GLB`, `GLTF`, `FBX`, `OBJ`, `STL`, `USDZ`, `3MF`), `face_limit`, `quad`, `texture_size`, `texture_format` (`PNG`/`JPG`), `bake`, `flatten_bottom`, `pivot_to_center_bottom`, `scale_factor`, `export_orientation` (`+x`/`-x`/`+y`/`-y`), `texture_packaging` (`embedded`/`zip` for FBX). |
+| Smart low-poly / decimate | `POST /v3/mesh/decimate` | `input`, `model` (`v2.0` or `v3.0`), `face_limit` (`500–20000` tris / `500–10000` quads), `quad`, `smart_uv` (`v3.0`). |
+| Pre-rig check | `POST /v3/animations/rig-check` | Free check; `input` only → returns `riggable` (bool) and `rig_type`. |
+| Auto-rig | `POST /v3/animations/rig` | `input`, `model`, `rig_type`, `spec` (biped only), `out_format` (`glb`/`fbx`). |
+| Animation retarget | `POST /v3/animations/retarget` | `input` (the rig task ID), `animation` or `animations` (max 5), `out_format`. |
+
+> **Removed in v3:** `stylize_model` (LEGO / voxel / Voronoi / Minecraft) was deprecated and removed in Tripo API v3.
 
 ## Rigging and Animation
 
-Chain: generation task -> `animate_prerigcheck` -> `animate_rig` -> `animate_retarget`. Each step has different task-ID and version semantics; getting them wrong is the main cause of silent rig/animation failures.
+Chain: generation task → `POST /v3/animations/rig-check` → `POST /v3/animations/rig` → `POST /v3/animations/retarget`.
 
 ### Source-model requirements
 
-- Rig/retarget/prerigcheck accept source generation tasks with `model_version` `Turbo-v1.0-20250506` or `v2.0-20240919` and newer. 1.x generation tasks are not supported. `v3.1-20260211` works.
-- Generate characters as one fused mesh. `generate_parts` is incompatible with `texture=true`/`pbr=true` and with `quad=true`, so a parts-segmented character cannot be textured and does not fit the rig pipeline.
-- Avoid `quad=true` for characters bound for GLB: quad forces FBX output and defaults `face_limit` to 10000 when unset.
+- Generate characters as one fused mesh. `generate_parts` requires `texture=false` and `pbr=false`, so a parts-segmented character cannot be textured and does not fit the rig pipeline.
+- Avoid `quad=true` for characters bound for GLB: quad forces FBX output and caps default face counts.
 
-### `animate_prerigcheck`
+### `POST /v3/animations/rig-check`
 
-- Request takes only `type` and `original_model_task_id`. There is no `model_version` parameter.
-- Output: `riggable` (bool) plus detected `rig_type` (`biped`, `quadruped`, `hexapod`, `octopod`, `avian`, `serpentine`, `aquatic`).
-- Use the detected `rig_type` to choose the `animate_rig` rig type and compatible presets.
-- Official docs note `riggable=false` "doesn't necessarily mean it cannot be rigged". Treat false as a strong warning: the best response is to regenerate with a clearer full-body T-pose, not to force the rig.
+- Request takes only `input` (`task_id`, `file_token`, or model URL); no `model` parameter; free (0 credits).
+- Output: `riggable` (bool) plus detected `rig_type` (`biped`, `quadruped`, `hexapod`, `octopod`, `avian`, `serpentine`, `aquatic`, `others`).
+- Treat `riggable=false` as a strong warning: regenerate with a clearer full-body T-pose rather than forcing a rig.
 
-### `animate_rig`
+### `POST /v3/animations/rig`
 
-Version choice is the main quality lever, and the right answer differs by body plan (measured June 2026):
+Routing by body plan:
 
-- Humanoids: use `model_version=v1.0-20240301`. It produces a proper anatomical skeleton (Hip, Pelvis, Spine01/02, Head, L_/R_ Clavicle/Upperarm/Forearm/Hand/Thigh/Calf/Foot/ToeBase plus twist bones) and unlocks the large `preset:biped:*` clip library. The v2.x "Limb chain" rigger went 0/16 on humanoid test meshes (plate armor, fitted armor, T-pose, A-pose — always asymmetric chains like a 9-bone arm vs 4, or a 1-bone leg), while v1.0 produced a clean symmetric skeleton first try with 39-40 channel clips.
-- Creatures (quadruped/hexapod/octopod/avian/serpentine/aquatic): use `model_version=v2.5-20260210`. The v2.x limb-chain rigger handles creatures well (symmetric 5-6 bone chains observed on quadruped and avian dragons).
-- `original_model_task_id`: the generation task ID.
-- `rig_type`: defaults to `biped`. Pass the prerigcheck-detected type for creatures.
-- `spec`: `tripo` (default) or `mixamo`. Only `spec=tripo` rigs can be used with Tripo `animate_retarget`. Choose `mixamo` only when retargeting external animation libraries (Mixamo/custom clips) outside Tripo.
-- `out_format`: `glb` (default) or `fbx`.
+- **Humanoids & custom (`biped`, `others`):** Default to **`model: "v3.0-20260909"`**. Introduced in late 2026 as the recommended humanoid rigger, superseding the June 2026 v2.x limb-chain rigger (which went 0/16 on humanoids). Supports engine-standard biped skeleton `spec` values: `tripo` (default, required for Tripo preset retargeting), `mixamo`, `actorcore`, `unity`, `unreal`, and `vrm`. Still run `validate-rig` and inspect live motion in Three.js before multiplying clips.
+- **Creatures (`quadruped`, `hexapod`, `octopod`, `avian`, `serpentine`, `aquatic`):** Default to **`model: "v2.5-20260210"`** (verified symmetric 5–6 bone chains on quadrupeds/dragons).
+- **Legacy humanoid fallback (`v1.0-20240301`):** Pass `--rig-model-version v1.0-20240301` if you specifically need the v1.0 anatomical skeleton (`L_`/`R_` bones + twist bones). Remember v1.0 retargets must run **one clip per task**, omit `model` (`--model default`), and export **`out_format="fbx"`** because v1.0's GLB bake corrupts twist-bone space.
 
 ### Rig validation gate (mandatory before retargeting)
 
-`riggable=true` from prerigcheck does not guarantee a usable rig. Auto-rigging can silently produce a degenerate skeleton (observed in practice: a biped rig with only 9 bones — Root, Spine_0-2, and one arm; no legs, no right arm, no head). Every retarget on such a rig inherits the damage: clips contain channels only for the mapped bones and the character stays frozen in bind pose at runtime.
-
-After downloading the rig GLB and before spending retarget credits, validate the skeleton:
+`riggable=true` from rig-check does not guarantee a usable rig. Auto-rigging is nondeterministic and can still produce degenerate or asymmetric skeletons. Always validate the downloaded rig GLB before spending retarget credits:
 
 ```bash
 python3 .../threejs_3d_asset.py validate-rig path/to/rig-model.glb --rig-type biped
 ```
 
-A structurally valid rig has both `_Left_Limb_` and `_Right_Limb_` chains with matching chain depths per limb row (±1 bone is normal variance; healthy rigs are 5/5, 6/6, or 6/5 — broken ones are 9/4, 2/4, or 4/1, and a 1-bone leg cannot bend a knee, warping every clip), at least 3 bones per limb chain for biped/quadruped, two limb rows (`0_` arms, `1_` legs), and a plausible bone count. v1.0 rigs use anatomical names instead (validated as L_/R_ pairs: Clavicle, Upperarm, Forearm, Hand, Thigh, Calf, Foot). The `character-pipeline` command runs this check automatically; `validate-rig` runs it standalone, and `validate-animation` QAs the retargeted clips (scale tracks, limb-stretch translations, durations, channel coverage).
+`validate-rig` validates `tripo::` limb-chain depth/symmetry (v2.x/v3.0), legacy `L_`/`R_` anatomical pairs (v1.0), and standard skinned joint hierarchies (`mixamo`/`unity`/`unreal`/`vrm`/`actorcore`). `character-pipeline --rig-retries N` retries automatically (default 2) before regenerating the base model.
 
-Auto-rigging is nondeterministic: the same model can produce a degenerate skeleton on one attempt and a healthy one on the next. When validation fails, retry the rig task first (~25 credits) before regenerating the model (~30+ credits); `character-pipeline --rig-retries N` does this automatically (default 2). Hard-surface armored characters (plate knights, mechs) fail rig validation far more often than organic meshes — budget several retries or prefer visible-anatomy designs. If retries keep failing, regenerate the base model with clearer limb separation — strict T-pose, arms horizontal, legs apart and fully visible, no long skirt/tabard/cape/props fusing limbs into the body silhouette. Use `character-pipeline --model-task-id TASK_ID` to resume from an existing generation without paying for regeneration.
+### `POST /v3/animations/retarget`
 
-### `animate_retarget`
+- `input`: the **rig** task ID, not the generation task ID.
+- Supply exactly one of `animation` (single preset string) or `animations` (array, max length 5).
+- `out_format`: `glb` (default) or `fbx`. (`bake_animation` is largely obsolete in v3; `export_with_geometry` controls mesh inclusion.)
+- Batched GLB retargets name clips `NlaTrack`, `NlaTrack.001`, … in request order — map by index and rename after import.
+- **Avoid `animate_in_place=true`**: verified to corrupt baked clips on v1.0/v2.5 rigs (mirrored limbs / exploded skinning). Keep root motion baked and strip horizontal `Root.position` X/Z in Three.js (`references/threejs-integration.md`).
+- Out-of-credit error: code `2010` ("You don't have enough credit to create this task"). Surface as a top-up blocker; do not retry.
 
-- `original_model_task_id`: the rig task ID, not the original generation task ID.
-- For v2.5 rigs, pass `model_version: v2.5-20260210`. For v1.0 rigs, OMIT model_version entirely (the CLI accepts `--model-version default`): the retarget enum rejects an explicit `v1.0-20240301` with HTTP 400 `code: 2017` "The version value is invalid", but the server default retargets v1.0 rigs correctly.
-- Exactly one of `animation` (single preset string) or `animations` (array, max length 5) is required. For v2.5 rigs, batching reduces task overhead, not per-animation credits; v1.0 rigs require separate tasks as described below.
-- `out_format`: `glb` (default) or `fbx`. `bake_animation`: default true, glb only. `export_with_geometry`: default true.
-- v1.0 rigs take one animation per retarget task. Batching via `animations` makes the FBX contain one armature object per clip (`Armature.001`, `.002`, …) with name-colliding bones; engines bind takes to the wrong skeleton and the body pitches sideways/prone. Submit one task per preset (10 credits each — batching saves nothing).
-- v1.0 rigs retarget with `out_format=fbx`. Root cause (verified June 2026): Tripo's animation pipeline is FBX-native (their own tutorials are FBX end-to-end and never use GLB for animation). The GLB bake of v1.0 retargets exports twist-bone transforms in the wrong space — and the limb mesh is skinned almost entirely to twist bones, so arms/legs collapse into the torso in every engine (reproduced identically in three.js and Babylon; the FBX of the same task is correct, with real clip names like `walk_normal_m_remap` instead of `NlaTrack`). Load FBX with three.js `FBXLoader`, or convert FBX→GLB offline (Blender / FBX2glTF). v2.5 creature-rig retargets export GLB correctly.
-- Do not set `animate_in_place=true`. Verified June 2026: it corrupts the baked clips — on v1.0 rigs limbs mirror/cross sides (arms fold into the chest, legs cross the midline, "twisted opposite directions"), on v2.5 rigs skinned regions explode into shards. Keep root motion baked and strip the root translation track in the engine instead (see `threejs-integration.md`). Forward-kinematics fingerprint of the corruption: in a walk clip, both hands sit on the same side of the hip instead of mirrored sides.
-- Set quality expectations honestly: Tripo's own blog describes auto-rigging as "80-90% of the way there" with shoulders, hips, and fingers needing the most manual refinement. For hero characters, plan a manual pass (or a Mixamo pipeline via `spec=mixamo` + their FBX clips).
-- A batched task returns one GLB containing all requested clips, named `NlaTrack`, `NlaTrack.001`, … in request order. Map clips by index, not name.
-- Observed credits (June 2026): retarget costs ~10 credits per animation whether batched or separate (batch of 4 = 40); prerigcheck is free (0 credits); rig ~25; text_to_model with detailed texture ~30. Batching saves task count, not credits. Failed rig tasks consume 0 credits, but rig retries on success do — budget ~25 credits per retry when planning character work.
-- Out-of-credit error: HTTP 403 with `code: 2010` ("You don't have enough credit"). Surface this to the user as a purchase/top-up blocker; do not retry.
+### Preset catalog
 
-### Preset catalog (v2.5-20260210 / v2.0-20250506 rigs)
+There is no `preset:attack`; the biped attack presets are `preset:slash` and `preset:shoot`.
 
-This is the complete documented list. There is no `preset:attack`; the attack-like presets are `preset:slash` and `preset:shoot`.
-
-- Biped (11): `preset:idle`, `preset:walk`, `preset:run`, `preset:dive`, `preset:climb`, `preset:jump`, `preset:slash`, `preset:shoot`, `preset:hurt`, `preset:fall`, `preset:turn`.
-- Quadruped: `preset:quadruped:walk`. Hexapod: `preset:hexapod:walk`. Octopod: `preset:octopod:walk`. Serpentine: `preset:serpentine:march`. Aquatic: `preset:aquatic:march`.
-- Avian: no documented preset for v2.5 rigs.
-- The large legacy `preset:biped:*` library (~100 clips: dance variants, etc.) only works with `v1.0-20240301` rigs (biped only). Tradeoff: current-quality v2.5 rig with 16 presets vs legacy v1.0 rig with the big biped clip library.
-
-Non-biped coverage is one locomotion clip per rig type — there is no fly, crawl-variant, attack, idle, or hurt preset for creatures. Plan multi-mode creatures (e.g. a dragon that crawls AND flies) as:
-
-- Ground locomotion: rig the creature's ground rig type (e.g. quadruped) and retarget its walk preset.
-- Flight/secondary modes: rig the same model task again with `rig_type=avian` (a second ~25-credit rig task on one model is allowed) to get wing limb chains, then drive wing bones procedurally in the engine (sinusoidal flap on the wing chain) or retarget external clips via `spec=mixamo`.
-- Per-mode rigs are separate GLBs of the same mesh; swap or crossfade them at the engine level by game state.
+- **Biped (`v3.0-20260909` / `v2.5`):** `preset:idle`, `preset:walk`, `preset:run`, `preset:dive`, `preset:climb`, `preset:jump`, `preset:slash`, `preset:shoot`, `preset:hurt`, `preset:fall`, `preset:turn` (plus legacy `preset:biped:*` options on `v3.0` / `v1.0`).
+- **Non-biped:** `preset:quadruped:walk`, `preset:hexapod:walk`, `preset:octopod:walk`, `preset:serpentine:march`, `preset:aquatic:march`. (Avian has no documented preset — rig once for ground locomotion and a second time with `rig_type=avian` for procedural wing flapping or external retargeting.)
 
 ### Riggable-character generation recipe
 
-- Prompt or reference image: full-body T-pose or A-pose, arms away from body, legs separated, front-facing, symmetric, no props fused into the silhouette, whole body in frame.
-- The body must be anatomically complete, including a head. Over-constraining a prompt ("no cape, no shield, slim silhouette") can yield an empty/headless armor shell; the rig task then fails outright (`status: failed`, `error_code: 1001`, no credits consumed). Check the rendered preview for a complete head-to-feet body before rigging.
-- Keep `texture`/`pbr` on, `quad` off, `generate_parts` off, and a sane `face_limit`.
-- Before rigging, check `rendered_image` actually shows a T/A-pose. If not, regenerate with a stronger pose instruction or a `threejs-image-generator` T-pose reference image instead of rigging a bad pose.
-- For non-biped creatures, expect only the single locomotion preset for that rig type; plan extra animations via external retargeting (`spec=mixamo`) or procedural motion in Three.js.
+- Prompt or reference image: full-body T-pose or A-pose, arms horizontal and away from body, legs apart, front-facing, symmetric, anatomically complete head-to-feet body, no fused props/capes.
+- Keep `texture`/`pbr` on, `quad` off, `generate_parts` off, and inspect `rendered_image` before rigging.
 
-## Common Output Fields
+## Common v3 Output Fields
 
-- `model`: model download URL.
-- `base_model`: untextured/base model URL.
-- `pbr_model`: PBR model URL.
-- `rendered_image`: preview image URL.
-- `generated_image`: generated image URL.
-- `generate_multiview_image`: front/left/back/right view URLs.
+`GET /v3/tasks/{task_id}` returns `output` with v3 `*_url` keys (the helper normalizes both v3 `*_url` and legacy v2 keys):
+
+- `pbr_model_url` (or `pbr_model`): PBR model download URL (GLB unless `quad=true`).
+- `model_url` (or `model`): primary textured/rigged/converted model URL.
+- `base_model_url` (or `base_model`): untextured base mesh URL (when `texture=false` and `pbr=false`).
+- `rendered_image_url` (or `rendered_image`): rendered preview thumbnail URL.
+- `generated_image_url` (or `generated_image`): intermediate generated image URL.
 
 ## Game Defaults
 
-- Prefer H3 text/image-to-model: `v3.1-20260211` when quality matters.
-- Prefer GLB/PBR for Three.js runtime imports.
-- Use `texture_quality=detailed` for high-value hero assets; use `standard` for background assets.
-- Use `geometry_quality=detailed` only when the asset needs it and budget allows.
-- Use `face_limit`, `smart_low_poly`, conversion, or low-poly postprocess for browser/mobile budgets.
-- Use T-pose/A-pose references for rigged characters; keep `quad` and `generate_parts` off for anything that will be rigged.
-- Rig/retarget version routing: the CLI routes by `--rig-type` (biped -> `v1.0-20240301`, creatures -> `v2.5-20260210`; v1.0 retargets omit `model_version` because the enum rejects it). Pass `--rig-type` on standalone `postprocess` calls so the routing is correct; only pin `--model-version` to override. Raw API callers must pin explicitly — the server's unpinned defaults are legacy versions.
+- **Hero organic/AAA props:** `v3.1-20260211` (H3.1 flagship) with `texture_quality=detailed`, GLB/PBR.
+- **Clean game topology / native quads:** `P2-20260801` (Tripo P2.0) or `P1-20260311`, with `face_limit` matched to desktop/mobile budgets.
+- **Background props:** `texture_quality=standard` (or `fast` for quick drafts), plus `/v3/mesh/decimate` (`face_limit`) or `/v3/models/convert` (`pivot_to_center_bottom`, `texture_size`).
+- **Retexturing:** `/v3/models/texture` defaults to `v3.5-20260815` (`delight: true` by default for clean PBR albedo).
+- **Rigging:** CLI auto-routes `biped`/`others` → `v3.0-20260909` and creatures → `v2.5-20260210`; override with `--rig-model-version v1.0-20240301` when targeting legacy FBX bipeds.

@@ -19,6 +19,10 @@ from typing import Any
 BASE_URL = "https://api.elevenlabs.io/v1"
 DEFAULT_OUTPUT_FORMAT = "mp3_44100_128"
 DEFAULT_TTS_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"
+DEFAULT_SFX_MODEL_ID = "eleven_text_to_sound_v3"
+DEFAULT_MUSIC_MODEL_ID = "music_v2_5"
+DEFAULT_TTS_MODEL_ID = "eleven_v4"
+DEFAULT_STS_MODEL_ID = "eleven_multilingual_sts_v2"
 
 
 class AudioGeneratorError(RuntimeError):
@@ -34,6 +38,21 @@ def api_key(args: argparse.Namespace) -> str:
     if not key:
         raise AudioGeneratorError("Missing API key. Set ELEVENLABS_API_KEY or pass --api-key.")
     return key
+
+
+def accept_header_for(output_format: str | None) -> str:
+    fmt = (output_format or "").lower()
+    if fmt.startswith("mp3"):
+        return "audio/mpeg"
+    if fmt.startswith("pcm"):
+        return "audio/pcm"
+    if fmt.startswith("opus"):
+        return "audio/ogg"
+    if fmt.startswith(("ulaw", "alaw")):
+        return "audio/basic"
+    if fmt.startswith("wav"):
+        return "audio/wav"
+    return "*/*"
 
 
 def build_url(path: str, query: dict[str, Any] | None = None) -> str:
@@ -76,7 +95,7 @@ def post_json_audio(
         path,
         api_key(args),
         body=body,
-        headers={"Content-Type": "application/json", "Accept": "audio/mpeg"},
+        headers={"Content-Type": "application/json", "Accept": accept_header_for(args.output_format)},
         query={"output_format": args.output_format},
         timeout=timeout,
     )
@@ -127,7 +146,10 @@ def post_multipart_audio(
         path,
         api_key(args),
         body=body,
-        headers={"Content-Type": f"multipart/form-data; boundary={boundary}", "Accept": "audio/mpeg"},
+        headers={
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Accept": accept_header_for(args.output_format),
+        },
         query=query,
     )
     write_file(out, data)
@@ -160,7 +182,28 @@ def cmd_probe(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_models(args: argparse.Namespace) -> int:
+    data = request_bytes("GET", "/models", api_key(args))
+    models = json.loads(data.decode("utf-8"))
+    if args.json:
+        print(json.dumps(models, indent=2))
+        return 0
+    for model in models:
+        mid = model.get("model_id", "?")
+        name = model.get("name", "")
+        print(f"{mid}\t{name}")
+    return 0
+
+
 def cmd_sfx(args: argparse.Namespace) -> int:
+    if args.model_id == "eleven_text_to_sound_v2":
+        eprint("warning: eleven_text_to_sound_v2 is deprecated and retires March 1, 2027; prefer eleven_text_to_sound_v3.")
+    if not 0.0 <= args.prompt_influence <= 1.0:
+        raise AudioGeneratorError("--prompt-influence must be between 0.0 and 1.0.")
+    min_dur = 0.5 if args.model_id == "eleven_text_to_sound_v2" else 0.1
+    if args.duration is not None and not min_dur <= args.duration <= 30.0:
+        raise AudioGeneratorError(f"--duration must be between {min_dur} and 30 seconds for {args.model_id}.")
+
     payload: dict[str, Any] = {
         "text": args.prompt,
         "model_id": args.model_id,
@@ -176,9 +219,9 @@ def cmd_sfx(args: argparse.Namespace) -> int:
 def cmd_music(args: argparse.Namespace) -> int:
     if bool(args.prompt) == bool(args.plan):
         raise AudioGeneratorError("Pass exactly one of --prompt or --plan.")
-    payload: dict[str, Any] = {}
-    if args.model_id:
-        payload["model_id"] = args.model_id
+    if args.model_id == "music_v1":
+        eprint("warning: music_v1 is deprecated and retires January 31, 2027; prefer music_v2_5 or music_v2.")
+    payload: dict[str, Any] = {"model_id": args.model_id}
     if args.prompt:
         if args.seed is not None:
             raise AudioGeneratorError("--seed only applies with --plan; the API rejects it with --prompt.")
@@ -206,6 +249,11 @@ def cmd_music(args: argparse.Namespace) -> int:
 
 
 def cmd_tts(args: argparse.Namespace) -> int:
+    if args.model_id.startswith("eleven_v4") and args.style is not None:
+        raise AudioGeneratorError(
+            "--style is not supported on eleven_v4 / eleven_v4_turbo. "
+            "Control delivery with inline audio tags (e.g. [whispers], [laughs]) or pass --model-id eleven_multilingual_v2."
+        )
     payload: dict[str, Any] = {
         "text": args.text,
         "model_id": args.model_id,
@@ -231,6 +279,8 @@ def cmd_isolate(args: argparse.Namespace) -> int:
 
 
 def cmd_voice_change(args: argparse.Namespace) -> int:
+    if args.optimize_streaming_latency is not None:
+        eprint("warning: --optimize-streaming-latency is deprecated by ElevenLabs and ignored on newer models.")
     fields: dict[str, Any] = {
         "model_id": args.model_id,
         "remove_background_noise": args.remove_background_noise,
@@ -279,15 +329,21 @@ def build_parser() -> argparse.ArgumentParser:
     probe.add_argument("--validate", action="store_true", help="Call /user to validate the key.")
     probe.set_defaults(func=cmd_probe)
 
+    models = sub.add_parser("models", help="List ElevenLabs model IDs available to your account via GET /v1/models.")
+    add_common(models)
+    models.add_argument("--json", action="store_true", help="Print raw JSON model list.")
+    models.set_defaults(func=cmd_models)
+
     sfx = sub.add_parser("sfx", help="Generate sound effects or ambience from a prompt.")
     add_common(sfx)
     add_output_format(sfx)
     sfx.add_argument("--prompt", required=True)
     sfx.add_argument("--out", required=True)
-    sfx.add_argument("--duration", type=float, help="Duration in seconds, typically 0.5-30.")
+    sfx.add_argument("--duration", type=float, help="Duration in seconds (0.1-30 on v3; 0.5-30 on legacy v2).")
     sfx.add_argument("--prompt-influence", type=float, default=0.55)
     sfx.add_argument("--loop", action="store_true")
-    sfx.add_argument("--model-id", default="eleven_text_to_sound_v2")
+    sfx.add_argument("--model-id", default=DEFAULT_SFX_MODEL_ID,
+                     help=f"SFX model ID (default: {DEFAULT_SFX_MODEL_ID}; eleven_text_to_sound_v2 retires Mar 1, 2027).")
     sfx.set_defaults(func=cmd_sfx)
 
     music = sub.add_parser("music", help="Compose a music track from a prompt or a composition plan.")
@@ -299,7 +355,8 @@ def build_parser() -> argparse.ArgumentParser:
     music.add_argument("--duration", type=float, help="Length in seconds, 3-600 (prompt mode only).")
     music.add_argument("--instrumental", action="store_true", help="Guarantee no vocals (prompt mode only).")
     music.add_argument("--seed", type=int, help="Seed for reproducible output (plan mode only).")
-    music.add_argument("--model-id", help="Music model, e.g. music_v1; defaults to the API default.")
+    music.add_argument("--model-id", default=DEFAULT_MUSIC_MODEL_ID,
+                       help=f"Music model ID (default: {DEFAULT_MUSIC_MODEL_ID}; music_v1 retires Jan 31, 2027).")
     music.set_defaults(func=cmd_music)
 
     tts = sub.add_parser("tts", help="Generate a spoken line from text.")
@@ -309,7 +366,8 @@ def build_parser() -> argparse.ArgumentParser:
     tts.add_argument("--text", required=True)
     tts.add_argument("--out", required=True)
     tts.add_argument("--voice-id", default=DEFAULT_TTS_VOICE_ID)
-    tts.add_argument("--model-id", default="eleven_multilingual_v2")
+    tts.add_argument("--model-id", default=DEFAULT_TTS_MODEL_ID,
+                     help=f"TTS model ID (default: {DEFAULT_TTS_MODEL_ID}; also eleven_v4_turbo, eleven_v3, eleven_flash_v2_5, eleven_multilingual_v2).")
     tts.set_defaults(func=cmd_tts)
 
     isolate = sub.add_parser("isolate", help="Clean or isolate speech from a source audio file.")
@@ -317,7 +375,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_output_format(isolate)
     isolate.add_argument("--input", required=True)
     isolate.add_argument("--out", required=True)
-    isolate.add_argument("--file-format", default="other")
+    isolate.add_argument("--file-format", default="other", choices=["other", "pcm_s16le_16"])
     isolate.set_defaults(func=cmd_isolate)
 
     voice = sub.add_parser("voice-change", help="Convert source performance to a target voice.")
@@ -327,11 +385,12 @@ def build_parser() -> argparse.ArgumentParser:
     voice.add_argument("--input", required=True)
     voice.add_argument("--out", required=True)
     voice.add_argument("--voice-id", default=DEFAULT_TTS_VOICE_ID)
-    voice.add_argument("--model-id", default="eleven_multilingual_sts_v2")
-    voice.add_argument("--file-format", default="other")
+    voice.add_argument("--model-id", default=DEFAULT_STS_MODEL_ID)
+    voice.add_argument("--file-format", default="other", choices=["other", "pcm_s16le_16"])
     voice.add_argument("--seed", type=int)
     voice.add_argument("--remove-background-noise", action="store_true")
-    voice.add_argument("--optimize-streaming-latency", type=int, choices=range(0, 5))
+    voice.add_argument("--optimize-streaming-latency", type=int, choices=range(0, 5),
+                       help="Deprecated by ElevenLabs; omit for standard offline asset generation.")
     voice.set_defaults(func=cmd_voice_change)
 
     return parser

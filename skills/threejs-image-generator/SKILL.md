@@ -24,10 +24,23 @@ For premium graphics work with generation in scope, generate the high-value 2D s
 The script reads `--api-key` or `GEMINI_API_KEY`. Keys never go in skill files, game code, or reports.
 
 ```bash
-uv run <this-skill-dir>/scripts/generate_image.py probe   # GEMINI_API_KEY=SET|MISSING
+uv run <this-skill-dir>/scripts/generate_image.py probe             # GEMINI_API_KEY=SET|MISSING
+uv run <this-skill-dir>/scripts/generate_image.py probe --validate  # verifies key + model access (no image credits)
 ```
 
 Keys defined only in a shell profile can be absent from the process env. If the plain probe unexpectedly prints MISSING, use `threejs-game-director/scripts/probe_asset_credentials.sh`, which sources the profile and probes all three providers.
+
+## Models and Aspect Ratios
+
+> **Preview retirement:** `gemini-3-pro-image-preview` and `gemini-3.1-flash-image-preview` were shut down on June 25, 2026. Use the stable GA models below.
+
+| Model (`--model`) | Best for | Resolutions (`--resolution`) |
+| --- | --- | --- |
+| `gemini-3-pro-image` *(default)* | Hero concepts, crisp UI/title typography, complex image-to-3D inputs, multi-turn edits | `1K`, `2K` *(default)*, `4K` |
+| `gemini-3.1-flash-image` | Fast production textures, skies, multi-reference asset consistency, wide banners/trim sheets (`1:4`, `4:1`, `1:8`, `8:1`) | `512px`, `1K`, `2K`, `4K` |
+| `gemini-3.1-flash-lite-image` | Rapid low-cost draft icons and concept exploration | `512px`, `1K`, `2K` |
+
+Recommended `--aspect-ratio` by asset role: `1:1` for textures, decals, icons, and single-prop 3D inputs · `3:4` for full-body T-pose character sheets · `16:9` or `21:9` for skies, horizon plates, and menu backgrounds · `4:1` (with `gemini-3.1-flash-image`) for trim sheets and HUD banners.
 
 ## Commands
 
@@ -35,15 +48,22 @@ Run from the game project so output lands in it:
 
 ```bash
 uv run <this-skill-dir>/scripts/generate_image.py \
-  --prompt "your image description" --filename assets/concepts/output.png --resolution 2K
+  --prompt "your image description" --filename assets/concepts/output.png \
+  --aspect-ratio 1:1 --resolution 2K
 
+uv run <this-skill-dir>/scripts/generate_image.py \
+  --model gemini-3.1-flash-image --aspect-ratio 16:9 --resolution 2K \
+  --prompt "wide twilight cyberpunk skyline backdrop plate, readable horizon, no foreground subject" \
+  --filename assets/textures/sky-backdrop.png
+
+# Edit or enforce multi-reference consistency (repeat --input-image for multiple references):
 uv run <this-skill-dir>/scripts/generate_image.py \
   --input-image assets/concepts/ship.png \
   --prompt "battle-worn red racing livery with clearer material zones" \
   --filename assets/concepts/ship-red-livery.png --resolution 2K
 ```
 
-Resolution: `1K` for quick concepts, icons, and draft sheets · `2K` (the default) for production references, image-to-3D, textures, backgrounds, UI panels · `4K` for hero splash art, high-detail texture references, and large sky plates.
+Resolution: `512px` (Flash) / `1K` for quick concepts, icons, and drafts · `2K` (default) for production references, image-to-3D, textures, backgrounds, UI panels · `4K` for hero splash art, high-detail texture references, and large sky plates.
 
 ## Prompt patterns
 

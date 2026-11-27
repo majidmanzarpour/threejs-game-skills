@@ -22,10 +22,10 @@ Textures, trim sheets, decals, logos, icons, menu art, and backdrop cards go str
 
 ## 3D Generator Handoff
 
-After generating a 2D reference:
+After generating a 2D reference (use `--aspect-ratio 1:1` for props/vehicles or `3:4` for full-body T-pose characters, and repeatable `--input-image` on `gemini-3-pro-image` / `gemini-3.1-flash-image` to keep faction palettes consistent):
 
 1. Save the image in the working project, usually `assets/concepts/`.
-2. Use the `threejs-3d-generator` `image` command with `--image <path>`.
+2. Use the `threejs-3d-generator` `image` command with `--image <path>` (uploads via Tripo v3 `POST /v3/files` automatically).
 3. Use `--enable-image-autofix` for rough images.
 4. Use `--texture-alignment original_image` when visual match matters.
 5. Use `--texture-alignment geometry` when structural accuracy matters.

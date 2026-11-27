@@ -1,4 +1,4 @@
-"""Offline CLI recovery tests; every provider request is intercepted by FakeTripo."""
+"""Offline Tripo API v3 CLI recovery and schema tests; requests intercepted by FakeTripo."""
 
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 import copy
@@ -20,6 +20,8 @@ SPEC = importlib.util.spec_from_file_location("tripo_jobs", SCRIPT)
 tripo = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(tripo)
 
+ENDPOINT_TO_TYPE = {endpoint: task_type for task_type, endpoint in tripo.TASK_ENDPOINTS.items()}
+
 
 def glb(nodes=None, document=None):
     if document is None:
@@ -33,6 +35,22 @@ def legacy_rig():
     return glb([{"name": side + part} for side in ("L_", "R_") for part in tripo.LEGACY_BIPED_PAIRED_BONES])
 
 
+def v3_skinned_biped_rig():
+    joint_names = [
+        "mixamorig:Hips", "mixamorig:Spine", "mixamorig:Spine1", "mixamorig:Head",
+        "mixamorig:LeftShoulder", "mixamorig:LeftArm", "mixamorig:LeftForeArm", "mixamorig:LeftHand",
+        "mixamorig:RightShoulder", "mixamorig:RightArm", "mixamorig:RightForeArm", "mixamorig:RightHand",
+        "mixamorig:LeftUpLeg", "mixamorig:LeftLeg", "mixamorig:LeftFoot",
+        "mixamorig:RightUpLeg", "mixamorig:RightLeg", "mixamorig:RightFoot",
+    ]
+    nodes = [{"name": name} for name in joint_names]
+    return glb(document={
+        "asset": {"version": "2.0"},
+        "nodes": nodes,
+        "skins": [{"joints": list(range(len(nodes)))}],
+    })
+
+
 def creature_rig():
     return glb([{"name": f"tripo::{row}_{side}_Limb_{depth}"} for row in range(2) for side in ("Left", "Right") for depth in range(4)])
 
@@ -41,7 +59,7 @@ def http_error(status, code=None, retry_after=None):
     headers = Message()
     if retry_after is not None:
         headers["Retry-After"] = str(retry_after)
-    return error.HTTPError("https://api.tripo3d.ai/task", status, "test failure", headers,
+    return error.HTTPError("https://openapi.tripo3d.ai/v3/generation/text-to-model", status, "test failure", headers,
                            io.BytesIO(json.dumps({"code": code}).encode()))
 
 
@@ -63,6 +81,7 @@ class Response:
 class FakeTripo:
     def __init__(self):
         self.posts = []
+        self.post_endpoints = []
         self.tasks = {}
         self.assets = {}
         self.status_reads = []
@@ -72,6 +91,7 @@ class FakeTripo:
         self.post_events = []
         self.before_post = None
         self.upload_count = 0
+        self.balance_reads = 0
         self.rig_count = 0
         self.bad_rigs = 0
         self.missing_rigs = False
@@ -100,38 +120,54 @@ class FakeTripo:
 
     def __call__(self, req, timeout):
         url = req.full_url
-        if req.get_method() == "POST" and url.endswith("/upload/sts"):
+        base = tripo.active_base_url()
+        if req.get_method() == "GET" and url == f"{base}/account/balance":
+            self.balance_reads += 1
+            return Response({"code": 0, "data": {"balance": 420.5, "frozen": 0}})
+        if req.get_method() == "POST" and url == f"{base}/files":
             self.upload_count += 1
-            return Response({"code": 0, "data": {"image_token": "private-upload-token"}})
-        if req.get_method() == "POST" and url.endswith("/task"):
+            return Response({"code": 0, "data": {"file_token": "private-upload-token"}})
+        if req.get_method() == "POST" and url.startswith(base + "/"):
+            endpoint = url[len(base):]
+            kind = ENDPOINT_TO_TYPE.get(endpoint)
+            if not kind:
+                raise AssertionError(f"Unexpected v3 POST endpoint: {endpoint}")
             payload = json.loads(req.data)
             if self.before_post is not None:
                 self.before_post(payload)
             self.posts.append(payload)
+            self.post_endpoints.append(endpoint)
             task_id = f"task-{len(self.posts)}"
-            kind = payload["type"]
             if kind == "animate_prerigcheck":
                 output = {"riggable": True, "rig_type": self.rig_type}
             elif kind == "animate_rig":
                 self.rig_count += 1
-                content = legacy_rig() if payload.get("model_version", "").startswith("v1.0") else creature_rig()
+                model = payload.get("model", "")
+                if model.startswith("v1.0"):
+                    content = legacy_rig()
+                elif model.startswith("v3.0"):
+                    content = v3_skinned_biped_rig()
+                else:
+                    content = creature_rig()
                 if self.rig_count <= self.bad_rigs:
                     content = glb([{"name": "tripo::Head"}])
                 if self.malformed_rigs:
                     content = b"glTF\0broken"
-                output = {} if self.missing_rigs else {"model": self.output(task_id, "model", "glb", content)}
+                output = {} if self.missing_rigs else {"model_url": self.output(task_id, "model", "glb", content)}
             elif kind == "animate_retarget":
                 ext = payload.get("out_format", "glb")
-                output = {"model": self.output(task_id, "model", ext, b"FBX test" if ext == "fbx" else glb())}
+                output = {"model_url": self.output(task_id, "model", ext, b"FBX test" if ext == "fbx" else glb())}
             else:
-                output = {"model": self.output(task_id, "model", "glb", glb()),
-                          "rendered_image": self.output(task_id, "preview", "png", b"PNG preview")}
+                output = {
+                    "model_url": self.output(task_id, "model", "glb", glb()),
+                    "rendered_image_url": self.output(task_id, "preview", "png", b"PNG preview"),
+                }
             self.tasks[task_id] = {"task_id": task_id, "type": kind, "status": "success", "progress": 100, "output": output}
-            if "original_model_task_id" in payload:
-                self.tasks[task_id]["original_model_task_id"] = payload["original_model_task_id"]
+            if "input" in payload and kind != "image_to_model":
+                self.tasks[task_id]["input"] = payload["input"]
             event = self.event(self.post_events)
             return Response(event if event is not None else {"code": 0, "data": {"task_id": task_id}})
-        if req.get_method() == "GET" and url.startswith(tripo.BASE_URL + "/task/"):
+        if req.get_method() == "GET" and url.startswith(base + "/tasks/"):
             task_id = parse.unquote(url.rsplit("/", 1)[-1])
             self.status_reads.append(task_id)
             event = self.event(self.status_events.get(task_id))
@@ -155,7 +191,8 @@ class TripoJobTests(unittest.TestCase):
         self.stack.enter_context(mock.patch.object(tripo.request, "urlopen", side_effect=self.provider))
         self.sleeps = self.stack.enter_context(mock.patch.object(tripo.time, "sleep"))
         self.stack.enter_context(mock.patch.dict(os.environ, {"TRIPO_API_KEY": "private-api-key"}))
-        self.stack.enter_context(redirect_stdout(io.StringIO()))
+        self.stdout_buf = io.StringIO()
+        self.stack.enter_context(redirect_stdout(self.stdout_buf))
         self.stack.enter_context(redirect_stderr(io.StringIO()))
 
     def run_job(self, *argv):
@@ -178,6 +215,45 @@ class TripoJobTests(unittest.TestCase):
 
     def resume(self, *extra):
         self.run_job("resume", str(self.checkpoint), *extra)
+
+    def test_v3_endpoints_and_probe_validate(self):
+        self.run_job("probe", "--validate")
+        self.assertEqual(self.provider.balance_reads, 1)
+        self.assertIn("TRIPO_API_KEY=SET", self.stdout_buf.getvalue())
+        self.assertIn("BALANCE=420.5", self.stdout_buf.getvalue())
+
+        self.run_job("text", "--prompt", "mech", "--model", "P2-20260801", "--texture-quality", "fast")
+        self.run_job("postprocess", "--type", "texture_model", "--input", "task-1", "--texture-prompt", "rusted steel")
+        self.run_job("postprocess", "--type", "conversion", "--input", "task-1", "--format", "GLB", "--pivot-to-center-bottom")
+        self.run_job("postprocess", "--type", "decimate", "--input", "task-1", "--face-limit", "5000", "--smart-uv")
+
+        self.assertEqual(
+            self.provider.post_endpoints,
+            ["/generation/text-to-model", "/models/texture", "/models/convert", "/mesh/decimate"],
+        )
+        self.assertEqual(self.provider.posts[0]["model"], "P2-20260801")
+        self.assertEqual(self.provider.posts[1]["model"], "v3.5-20260815")
+        self.assertEqual(self.provider.posts[1]["input"], "task-1")
+        self.assertEqual(self.provider.posts[2]["format"], "GLB")
+        self.assertTrue(self.provider.posts[2]["pivot_to_center_bottom"])
+        self.assertEqual(self.provider.posts[3]["model"], "v2.0")
+        self.assertTrue(self.provider.posts[3]["smart_uv"])
+
+    def test_removed_stylize_model_fails_fast_without_network(self):
+        with self.assertRaisesRegex(tripo.TripoError, "removed in Tripo API v3"):
+            self.run_job("postprocess", "--type", "stylize_model", "--input", "task-1", "--style", "voxel")
+        self.assertEqual(len(self.provider.posts), 0)
+
+    def test_output_url_extraction_normalizes_and_deduplicates(self):
+        urls = tripo.extract_output_urls({
+            "model_url": "https://cdn.test/a.glb",
+            "model": "https://cdn.test/a.glb",
+            "rendered_image_url": "https://cdn.test/preview.png",
+        })
+        self.assertEqual(urls, {
+            "model": "https://cdn.test/a.glb",
+            "rendered_image": "https://cdn.test/preview.png",
+        })
 
     def test_accepted_task_interruption_resumes_without_generation(self):
         self.provider.status_events["task-1"] = [KeyboardInterrupt()]
@@ -272,7 +348,7 @@ class TripoJobTests(unittest.TestCase):
             {"task_id": None}, {"task_id": {}}, {"state": []}, {"files": []},
             {"files": {"model": {"path": [], "size": "8", "sha256": False}}},
             {"task": {"task_id": "task-1", "status": "success", "output": []}},
-            {"request": {"type": "text_to_model", "original_model_task_id": []}},
+            {"request": {"type": "text_to_model", "input": []}},
         ]
         for mutation in mutations:
             with self.subTest(mutation=mutation):
@@ -307,6 +383,7 @@ class TripoJobTests(unittest.TestCase):
         self.assertIsNone(self.saved()["args"]["image"])
         self.assertEqual(self.provider.upload_count, 0)
         self.assertEqual(len(self.provider.posts), 1)
+        self.assertEqual(self.provider.post_endpoints[0], "/generation/image-to-model")
 
     def test_local_image_upload_is_not_repeated_on_resume(self):
         image_path = self.root / "hero.png"
@@ -315,6 +392,7 @@ class TripoJobTests(unittest.TestCase):
         image_path.unlink()
         self.resume()
         self.assertEqual(self.provider.upload_count, 1)
+        self.assertEqual(self.provider.posts[0]["input"], "private-upload-token")
         self.assertNotIn("private-upload-token", self.checkpoint.read_text())
 
     def test_rejected_remote_image_needs_fresh_input_before_submission(self):
@@ -333,18 +411,19 @@ class TripoJobTests(unittest.TestCase):
         with self.assertRaisesRegex(tripo.TripoError, "requires a character-pipeline"):
             self.resume("--stop-after", "rig")
         self.resume("--stop-after", "model")
-        self.assertEqual([p["type"] for p in self.provider.posts], ["image_to_model"])
+        self.assertEqual(self.provider.post_endpoints, ["/generation/image-to-model"])
 
     def test_postprocess_resume_keeps_legacy_fbx_workaround(self):
-        self.run_job("postprocess", "--type", "retarget", "--original-task-id", "existing-rig",
-                     "--animation", "preset:biped:walk", "--checkpoint", str(self.checkpoint))
+        self.run_job("postprocess", "--type", "retarget", "--input", "existing-rig",
+                     "--model", "default", "--animation", "preset:biped:walk", "--checkpoint", str(self.checkpoint))
         self.resume()
         payload = self.provider.posts[0]
+        self.assertEqual(self.provider.post_endpoints[0], "/animations/retarget")
         self.assertEqual(payload["out_format"], "fbx")
-        self.assertNotIn("model_version", payload)
+        self.assertNotIn("model", payload)
         self.assertEqual(len(self.provider.posts), 1)
 
-    def test_pipeline_stops_for_model_and_rig_inspection_then_resumes(self):
+    def test_pipeline_stops_for_model_and_rig_inspection_then_resumes_v3_biped(self):
         self.pipeline("--stop-after", "model")
         self.assertEqual(len(self.provider.posts), 1)
         self.assertTrue(self.saved()["stages"]["model"]["downloads_complete"])
@@ -352,27 +431,42 @@ class TripoJobTests(unittest.TestCase):
         self.assertEqual(len(self.provider.posts), 3)
         self.assertEqual(self.saved()["stages"]["rig-1"]["rig_validation"], "valid")
         self.resume()
-        self.assertEqual(len(self.provider.posts), 5)
-        self.assertEqual(self.provider.posts[0]["model_version"], "v3.1-20260211")
-        self.assertEqual(self.provider.posts[2]["model_version"], "v1.0-20240301")
-        for payload in self.provider.posts[3:]:
-            self.assertEqual(payload["original_model_task_id"], "task-3")
-            self.assertEqual(payload["out_format"], "fbx")
-            self.assertNotIn("model_version", payload)
-            self.assertNotIn("animate_in_place", payload)
-            self.assertEqual(len(payload["animations"]), 1)
-            self.assertTrue(payload["animations"][0].startswith("preset:biped:"))
+        # v3.0-20260909 batches both biped presets into one GLB retarget task (4 posts total).
+        self.assertEqual(len(self.provider.posts), 4)
+        self.assertEqual(self.provider.post_endpoints, [
+            "/generation/text-to-model",
+            "/animations/rig-check",
+            "/animations/rig",
+            "/animations/retarget",
+        ])
+        self.assertEqual(self.provider.posts[0]["model"], "v3.1-20260211")
+        self.assertEqual(self.provider.posts[2]["model"], "v3.0-20260909")
+        retarget = self.provider.posts[3]
+        self.assertEqual(retarget["input"], "task-3")
+        self.assertEqual(retarget["out_format"], "glb")
+        self.assertEqual(retarget["animations"], ["preset:idle", "preset:walk"])
         previous_gets = len(self.provider.status_reads)
         previous_downloads = len(self.provider.download_reads)
         self.resume()
-        self.assertEqual(len(self.provider.posts), 5)
+        self.assertEqual(len(self.provider.posts), 4)
         self.assertEqual(len(self.provider.status_reads), previous_gets)
         self.assertEqual(len(self.provider.download_reads), previous_downloads)
+
+    def test_legacy_v1_biped_override_keeps_fbx_single_clip_path(self):
+        self.pipeline("--rig-model-version", "v1.0-20240301")
+        self.assertEqual(len(self.provider.posts), 5)
+        self.assertEqual(self.provider.posts[2]["model"], "v1.0-20240301")
+        for payload in self.provider.posts[3:]:
+            self.assertEqual(payload["input"], "task-3")
+            self.assertEqual(payload["out_format"], "fbx")
+            self.assertNotIn("model", payload)
+            self.assertNotIn("animate_in_place", payload)
+            self.assertTrue(payload["animation"].startswith("preset:biped:"))
 
     def test_pipeline_partial_animation_completion_reuses_every_accepted_stage(self):
         self.provider.status_events["task-5"] = [KeyboardInterrupt()]
         with self.assertRaises(KeyboardInterrupt):
-            self.pipeline()
+            self.pipeline("--rig-model-version", "v1.0-20240301")
         self.assertEqual(self.saved()["stages"]["animation-1"]["state"], "success")
         self.assertEqual(self.saved()["stages"]["animation-2"]["task_id"], "task-5")
         before_downloads = list(self.provider.download_reads)
@@ -395,9 +489,14 @@ class TripoJobTests(unittest.TestCase):
     def test_pipeline_reuses_external_model_task(self):
         self.run_job("image", "--image", "https://images.test/hero.png")
         self.run_job("character-pipeline", "--model-task-id", "task-1", "--animations", "",
-                     "--checkpoint", str(self.checkpoint))
+                     "--spec", "unity", "--checkpoint", str(self.checkpoint))
         self.resume()
-        self.assertEqual([p["type"] for p in self.provider.posts], ["image_to_model", "animate_prerigcheck", "animate_rig"])
+        self.assertEqual(self.provider.post_endpoints, [
+            "/generation/image-to-model",
+            "/animations/rig-check",
+            "/animations/rig",
+        ])
+        self.assertEqual(self.provider.posts[2]["spec"], "unity")
 
     def test_paid_rig_retry_budget_survives_interruption(self):
         self.provider.bad_rigs = 2
@@ -432,7 +531,7 @@ class TripoJobTests(unittest.TestCase):
         with self.assertRaises(tripo.TripoError):
             self.resume()
         self.assertEqual(self.provider.rig_count, 3)
-        self.assertFalse(any(p["type"] == "animate_retarget" for p in self.provider.posts))
+        self.assertNotIn("/animations/retarget", self.provider.post_endpoints)
 
     def test_failed_prerigcheck_cannot_be_forced_into_paid_rigging(self):
         self.provider.status_events["task-2"] = [{"task_id": "task-2", "status": "failed", "error_code": 1001}]
@@ -458,22 +557,23 @@ class TripoJobTests(unittest.TestCase):
             self.pipeline("--force-rig", "--rig-retries", "0")
         self.assertEqual(failed.exception.category, "invalid_artifact")
         self.assertEqual(self.provider.rig_count, 1)
-        self.assertFalse(any(p["type"] == "animate_retarget" for p in self.provider.posts))
+        self.assertNotIn("/animations/retarget", self.provider.post_endpoints)
 
     def test_degenerate_but_readable_rig_force_override_is_preserved(self):
         self.provider.bad_rigs = 1
         self.pipeline("--force-rig", "--rig-retries", "0")
         self.assertEqual(self.provider.rig_count, 1)
         self.assertEqual(self.saved()["stages"]["rig-1"]["rig_validation"], "invalid")
-        self.assertEqual(len([p for p in self.provider.posts if p["type"] == "animate_retarget"]), 2)
+        self.assertEqual(self.provider.post_endpoints.count("/animations/retarget"), 1)
 
     def test_creature_rig_version_and_root_motion_options_are_preserved(self):
         self.provider.rig_type = "quadruped"
         self.pipeline("--rig-type", "quadruped", "--animations", "preset:quadruped:walk", "--animate-in-place")
-        self.assertEqual(self.provider.posts[2]["model_version"], "v2.5-20260210")
+        self.assertEqual(self.provider.posts[2]["model"], "v2.5-20260210")
         retarget = self.provider.posts[3]
-        self.assertEqual(retarget["model_version"], "v2.5-20260210")
+        self.assertEqual(retarget["model"], "v2.5-20260210")
         self.assertEqual(retarget["out_format"], "glb")
+        self.assertEqual(retarget["animation"], "preset:quadruped:walk")
         self.assertTrue(retarget["animate_in_place"])
 
     def test_status_reads_retry_transient_errors_and_honor_retry_after(self):
@@ -497,16 +597,16 @@ class TripoJobTests(unittest.TestCase):
     def test_partial_download_recovery_reuses_files_and_refreshes_urls(self):
         self.text_job()
         task = self.provider.tasks["task-1"]
-        old_url = task["output"]["rendered_image"]
-        model_url = task["output"]["model"]
+        old_url = task["output"]["rendered_image_url"]
+        model_url = task["output"]["model_url"]
         self.provider.download_events[old_url] = [http_error(503) for _ in range(tripo.GET_ATTEMPTS)]
         with self.assertRaises(tripo.TripoError):
             self.resume()
         self.assertEqual(set(self.saved()["stages"]["task"]["files"]), {"model"})
-        task["output"]["rendered_image"] = self.provider.output("task-1", "new-preview", "png", b"PNG refreshed")
+        task["output"]["rendered_image_url"] = self.provider.output("task-1", "new-preview", "png", b"PNG refreshed")
         self.resume()
         self.assertEqual(self.provider.download_reads.count(model_url), 1)
-        self.assertIn(task["output"]["rendered_image"], self.provider.download_reads)
+        self.assertIn(task["output"]["rendered_image_url"], self.provider.download_reads)
         self.assertEqual(len(self.provider.posts), 1)
 
     def test_corrupted_completed_file_is_redownloaded_without_generation(self):
@@ -520,23 +620,23 @@ class TripoJobTests(unittest.TestCase):
     def test_expired_download_is_not_misclassified_as_missing_api_credentials(self):
         self.text_job()
         task = self.provider.tasks["task-1"]
-        old_url = task["output"]["model"]
+        old_url = task["output"]["model_url"]
         self.provider.download_events[old_url] = [http_error(403)]
         with self.assertRaises(tripo.TripoError) as failed:
             self.resume()
         self.assertEqual(failed.exception.category, "expired_download")
-        task["output"]["model"] = self.provider.output("task-1", "refreshed-model", "glb", glb())
+        task["output"]["model_url"] = self.provider.output("task-1", "refreshed-model", "glb", glb())
         self.resume()
         self.assertEqual(len(self.provider.posts), 1)
 
     def test_keyboard_interrupt_during_download_preserves_prior_files(self):
         self.text_job()
         urls = self.provider.tasks["task-1"]["output"]
-        self.provider.download_events[urls["rendered_image"]] = [KeyboardInterrupt()]
+        self.provider.download_events[urls["rendered_image_url"]] = [KeyboardInterrupt()]
         with self.assertRaises(KeyboardInterrupt):
             self.resume()
         self.resume()
-        self.assertEqual(self.provider.download_reads.count(urls["model"]), 1)
+        self.assertEqual(self.provider.download_reads.count(urls["model_url"]), 1)
         self.assertEqual(len(self.provider.posts), 1)
 
     def test_credentials_credits_and_invalid_input_are_distinct(self):
@@ -639,6 +739,17 @@ class TripoJobTests(unittest.TestCase):
                     tripo.validate_rig_glb(path, "biped")
                 self.assertEqual(failed.exception.category, "invalid_artifact")
 
+    def test_standard_skinned_rig_rejects_tiny_skeleton(self):
+        tiny = glb(document={
+            "asset": {"version": "2.0"},
+            "nodes": [{"name": "Hips"}, {"name": "Spine"}],
+            "skins": [{"joints": [0, 1]}],
+        })
+        path = self.root / "tiny-skinned.glb"
+        path.write_bytes(tiny)
+        _desc, problems = tripo.validate_rig_glb(path, "biped")
+        self.assertTrue(any("suspiciously small" in p for p in problems))
+
     def test_http_error_responses_are_closed(self):
         response_error = http_error(403, 2010)
         self.provider.post_events = [response_error]
@@ -655,7 +766,12 @@ class TripoJobTests(unittest.TestCase):
 
     def test_without_checkpoint_default_pipeline_still_runs_to_completion(self):
         self.run_job("character-pipeline", "--prompt", "paladin", "--animations", "preset:idle")
-        self.assertEqual([p["type"] for p in self.provider.posts], ["text_to_model", "animate_prerigcheck", "animate_rig", "animate_retarget"])
+        self.assertEqual(self.provider.post_endpoints, [
+            "/generation/text-to-model",
+            "/animations/rig-check",
+            "/animations/rig",
+            "/animations/retarget",
+        ])
         self.assertFalse(self.checkpoint.exists())
 
 
