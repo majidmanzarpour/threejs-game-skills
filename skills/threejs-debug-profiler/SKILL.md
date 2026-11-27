@@ -1,11 +1,13 @@
 ---
 name: threejs-debug-profiler
-description: "Debug and profile Three.js browser games: blank canvases, render and runtime bugs, asset and audio loading, animation, resize, mobile input, plus performance profiling of draw calls, triangles, textures, memory, shader and post-processing cost, and bundle size."
+description: "Debug and profile Three.js browser games: blank canvases, HDR bloom NaN blackouts, composer/depth feedback bugs, render and runtime errors, asset and audio loading, animation/retargeting bugs, resize, mobile input, plus performance profiling of draw calls, triangles, textures, memory, shader/VFX/post-processing cost, and bundle size. Use when diagnosing defects or optimizing frame times; not for greenfield feature authoring."
 ---
 
 # Three.js Debug Profiler
 
 Find root causes and optimize measured bottlenecks without breaking playability.
+
+Resolve `<this-skill-dir>` from the actual loaded skill file; resolve sibling skills beside it before runner-discovered alternatives.
 
 Follow the changed behavior's scope. Reuse the lead's existing reproduction and evidence; verify the affected path after a fix. A passing focused check only needs broader testing when shared behavior changed or an unresolved risk warrants it. Return measurements and defects to the lead for the consolidated verification pass.
 

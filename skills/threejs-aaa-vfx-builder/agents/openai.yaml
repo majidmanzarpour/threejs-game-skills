@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js AAA VFX Builder"
+  short_description: "Build AAA real-time VFX, shaders, trails, and optical impact passes"
+  default_prompt: "Use $threejs-aaa-vfx-builder to design and implement AAA real-time VFX with distinct silhouettes, disciplined timing, depth-softened shaders, and selective HDR bloom."

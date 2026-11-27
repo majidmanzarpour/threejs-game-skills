@@ -4,15 +4,38 @@ Ordered triage for blank canvases, runtime errors, asset and audio loading, anim
 
 ## Contents
 
-- Triage order · Blank or bad canvas · Asset loading · Audio · Loop and physics · Input and mobile · Profiling order · Optimizations · Diagnostics object
+- Symptom matrix · Triage order · Blank or bad canvas · Asset loading · Audio · Loop and physics · Input and mobile · Profiling order · Optimizations · Diagnostics object
+
+## Quick Symptom → Root Cause → First Check
+
+Scan this table before deep debugging — these account for most stubborn WebGL/Three.js failures:
+
+| Symptom | Likely Root Cause | First Check |
+| --- | --- | --- |
+| Black screen ONLY when bloom is on or a specific shader/angle enters view | **HDR `NaN` blackout**: unguarded `pow(x, y)` with `x <= 0` (even `pow(neg, 2.0)`), `normalize(vec3(0))`, or `0/0` poisoning the `HalfFloatType` bloom mip chain | Toggle `bloomPass.enabled = false`; audit custom shaders for `pow()` → `pow(max(0.0001, x), p)` or `x * x` |
+| Bloom ignores `emissiveIntensity > 1.0`, or lowering threshold washes out walls | **8-bit composer clamping**: `new EffectComposer(renderer)` defaults to `UnsignedByteType` clamping HDR to `[0, 1]` | Pass explicit `WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4 })` and set `threshold >= 1.05` |
+| Black canvas + console `GL_INVALID_OPERATION: Feedback loop` | **DepthTexture feedback loop**: a VFX mesh sampling `tDepth` stayed visible during the opaque depth pre-pass | Set `vfxRootGroup.visible = false` while rendering `depthTarget`, then restore before `composer.render()` |
+| Imported GLB cloak/submesh renders pitch black while rest of model is lit | **Spurious `COLOR_0` attribute**: DCC weight/pin mask interpreted as `vertexColors` | Check `mesh.geometry.attributes.color`; set `mat.vertexColors = false; mat.needsUpdate = true` |
+| Character flips 90° face-down or spins wildly on Mixamo clip playback | **Blender Z-up Hips bind mismatch**: GLB has `Rig +90° X` / `Hips -90° X` while FBX clip assumes identity bind | Premultiply retargeted `Hips.quaternion` keyframes by `targetHips.quaternion` (`threejs-3d-generator/references/threejs-integration.md`) |
+| Controls/orbit drag dead over part of canvas | **HUD container swallowing pointer events** | Set `pointer-events: none` on full-screen HUD overlays and `pointer-events: auto` only on interactive buttons |
+| FPS great locally in headful browser, terrible in Playwright | **Software rasterizer (SwiftShader)** from Playwright `chromium_headless_shell` | Check `gpu.softwareRendered` in inspector output; launch with `channel: 'chromium'` |
 
 ## Triage order
 
-Reproduce with the same command and URL the user used → capture console, page, and network errors → confirm the expected build is serving on that port (not another local server) → identify the owner (renderer, scene, camera, loop, assets, audio, input, physics, UI, CSS, base path, performance) → fix in the owning module → retest the exact broken path.
+1. Reproduce with the exact command and URL the user used.
+2. Capture console, page, and network errors.
+3. Confirm the expected build is serving on that port (not a stale dev server).
+4. Identify the owning module (`renderer`, `scene`, `camera`, `loop`, `vfx/post`, `assets`, `audio`, `input`, `physics`, `ui`, `css`, `base path`).
+5. Fix the root cause in the owning module and retest the exact broken path.
 
-## Blank or bad canvas — check in this order
+## Blank or bad canvas — check in order
 
-Canvas exists in the DOM → CSS size is non-zero and visible → drawing-buffer size is non-zero and matches expected DPR → WebGL context creation succeeded → exactly one active render loop → camera aspect, projection matrix, near/far, and aim → scene has visible objects at expected transforms and scale → material visibility (opacity, `transparent`, `side`, depth, color space, fog interaction) → lights exist for lit materials → background/fog is not the same value as the objects → resize updates renderer, camera, composer, and CSS → no CSS overlay covering the canvas → render target or composer output is actually displayed.
+1. **DOM & buffer**: `<canvas>` exists, non-zero CSS size, non-zero drawing buffer matching expected DPR, no CSS overlay covering it.
+2. **Context & loop**: WebGL2 context created cleanly, no `webglcontextlost`, exactly one active `requestAnimationFrame` loop.
+3. **Post & render targets**: composer/renderTarget actually outputs to screen (`OutputPass`), no HDR `NaN` bloom blackout, no `DepthTexture` feedback loop.
+4. **Camera & scene**: valid `aspect`, `updateProjectionMatrix()` called, `near`/`far` sane, objects in frustum at expected scale, background/fog not masking objects.
+5. **Materials & lights**: lights + `RoomEnvironment` IBL present for PBR materials, `opacity`/`transparent`/`side`/`depthWrite`/`vertexColors` valid.
+6. **Resize**: updates canvas, renderer, camera, composer, bloom resolution, and depth target together.
 
 ## Asset loading
 

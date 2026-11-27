@@ -66,11 +66,11 @@ python3 <this-skill-dir>/scripts/threejs_audio_asset.py voice-change \
 - Ambience: 8–30s with `--loop`, prompt influence 0.3–0.55.
 - Music: `music --prompt` (`--duration` 3–600s, `--instrumental`) or `--plan FILE` with a `composition_plan` JSON for sectioned tracks (`--seed` works only with plans). The API has no loop flag; lengths, looping, and layering are in the reference's Music Strategy.
 - Voice: TTS for clean generated lines; `voice-change` when timing and acting from a scratch performance matter. Isolate noisy speech first.
-- Runtime: generate into the game project and load through Web Audio. Follow the project's asset/version-control policy; do not commit or publish unless asked. No API keys in browser code.
+- Runtime: generate into the game project and load through Web Audio. For multi-phase spells/abilities authored with `threejs-aaa-vfx-builder`, align discrete SFX cues (anticipation, release, impact, tail) to VFX timeline beats rather than fixed `setTimeout` guesses. Follow the project's asset/version-control policy; do not commit or publish unless asked. No API keys in browser code.
 
 ## Recovery and Coordination
 
-For coordinated games use the director's `references/asset-recovery.md`. Preserve outputs and the audio trigger mapping before retrying work. Distinguish missing credentials, permissions, exhausted credits, invalid input, and transient service failures. Reconcile an uncertain paid request before resubmitting; these one-shot commands do not implement Tripo task resume. Keep independent gameplay work moving and provide a local/synthesized fallback with honest limitations when genuinely blocked.
+For coordinated games use `threejs-game-director/references/asset-recovery.md`. Preserve outputs and the audio trigger mapping before retrying work. Distinguish missing credentials, permissions, exhausted credits, invalid input, and transient service failures. Reconcile an uncertain paid request before resubmitting; these one-shot commands do not implement Tripo task resume. Keep independent gameplay work moving and provide a local/synthesized fallback with honest limitations when genuinely blocked.
 
 Listen to a representative effect or line before generating a batch. Test it through its real game event, then give the lead paths and local playback findings for one consolidated QA pass.
 

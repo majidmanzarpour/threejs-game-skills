@@ -1,13 +1,13 @@
 # Agent Instructions
 
-This repo contains agent workflow assets for Three.js browser-game development. For broad requests to build, upgrade, polish, or finish a Three.js game, start from `skills/threejs-game-director/SKILL.md` — it routes work across the specialist skills (gameplay, AAA graphics, UI, debug/profile, QA/release, 3D/image/audio generation). The user should not have to name every specialist skill.
+This repo contains agent workflow assets for Three.js browser-game development. For broad requests to build, upgrade, polish, or finish a Three.js game, start from `skills/threejs-game-director/SKILL.md` — it routes work across the specialist skills (gameplay, AAA graphics, AAA VFX, UI, debug/profile, QA/release, 3D/image/audio generation). The user should not have to name every specialist skill.
 
-The same nine skills serve Codex and Claude Code. The user's requested scope, art style, constraints, and prior decisions take precedence over skill defaults. Use the runner's available tools.
+The same ten skills serve Codex, Claude Code, and Antigravity. The user's requested scope, art style, constraints, and prior decisions take precedence over skill defaults. Use the runner's available tools.
 
 ## Coordination
 
-- The lead owns scope, shared interfaces, integration, and one consolidated verification pass. Delegate independent work when it improves quality or saves time, normally to at most two workers with separate file ownership and explicit outputs. One focused independent review is useful for substantial gameplay, graphics, or animation changes. Continue directly when delegation tools are unavailable.
-- Complete games load the five production specialists and relevant generators; narrow changes load only affected skills and references. Read each phase's relevant references before doing that work.
+- The lead owns scope, shared interfaces, integration, and one consolidated verification pass. Delegate independent work when it improves quality or saves time, normally to at most two workers with separate file ownership and explicit outputs. One focused independent review is useful for substantial gameplay, graphics, VFX, or animation changes. Continue directly when delegation tools are unavailable.
+- Load specialist skills and their references phase-by-phase as each phase begins rather than dumping every reference upfront; narrow changes load only affected skills and references.
 - For substantial builds, keep `artifacts/game-progress.md` current with intent, constraints, completed work, pending task IDs/checkpoints, defects, and next actions. Apply user corrections to pending work and preserve completed assets.
 
 ## Default Technical Stack

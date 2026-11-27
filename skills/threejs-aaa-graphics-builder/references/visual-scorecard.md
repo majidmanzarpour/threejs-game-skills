@@ -25,7 +25,7 @@ Scale: **0** placeholder / no evidence · **1** basic styled · **2** premium st
 | World/environment | themed but sparse repeated blocks | layered prop kit, foreground/midground/background, scale cues | dense authored world that aids readability |
 | Materials/textures | basic roughness/metalness or emissive color | shared material roles, procedural decals, trim, panel lines, wear | rich cohesive material language, measured resource use |
 | Lighting/render | fog and bloom used as the style | intentional tone mapping, exposure, key/fill/rim, contact, depth | cinematic but readable, disciplined post |
-| VFX/motion | generic particles and trails | event-driven VFX: boost, pickup, hit, fail, combo, shield, spawn | high-impact effects that clarify gameplay and stay cheap |
+| VFX/motion | generic particles, spinning rings, or glow blobs | event-driven VFX with clear silhouettes and game-state sync | studio-grade layered VFX: anticipation → impact → aftermath timing, distinct 3D topologies, depth-softened contact, disciplined HDR bloom |
 | UI/HUD | generic stat-card dashboard | genre-specific states, meters/icons, responsive text fit | cohesive interface, strong hierarchy, polished transitions |
 | Performance evidence | informal "seems fine" | renderer counts, build/browser QA, target-viewport shots, budget notes | baseline/post metrics, bottleneck notes, asset strategy, tradeoffs |
 

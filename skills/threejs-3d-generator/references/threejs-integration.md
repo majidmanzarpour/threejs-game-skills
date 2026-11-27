@@ -12,12 +12,19 @@ Use this after `threejs-3d-generator` generates or post-processes a model.
 
 ## Import Pattern
 
-Use `GLTFLoader`:
+Use `GLTFLoader` (wire `DRACOLoader` / `MeshoptDecoder` when models use Draco or meshopt compression):
 
 ```ts
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const loader = new GLTFLoader();
+const draco = new DRACOLoader();
+draco.setDecoderPath('/draco/'); // optional: only when Draco-compressed GLBs are used
+loader.setDRACOLoader(draco);
+loader.setMeshoptDecoder(MeshoptDecoder);
+
 const gltf = await loader.loadAsync('/assets/models/asset/model.glb');
 scene.add(gltf.scene);
 ```
@@ -62,6 +69,26 @@ FBX intake specifics (v1.0 humanoid retargets):
 - Play the clips otherwise untouched. Every loader-side "fix" beyond the single root-position strip has been tested and makes things worse.
 - FBXLoader produces Phong materials (darker than GLB PBR). For final art parity, convert FBX→GLB offline (Blender import/export or FBX2glTF) — the corrected animation survives conversion.
 - Tripo preset retargeting only works on `spec=tripo` rigs. A `spec=mixamo` rig is for external animation pipelines (Mixamo clips, custom libraries) — retarget those in a DCC tool or at runtime with `SkeletonUtils.retargetClip`, and expect to supply bone-name mappings and check bind-pose orientation when skeleton conventions differ.
+
+### Mixamo FBX → Blender Z-Up GLB Hips Bind Compensation
+
+Blender-exported GLBs frequently have an armature rotation of `+90° X` compensated by a `Hips` bind quaternion of `-90° X` (`~[-0.707, 0, 0, 0.707]`), whereas Y-up Mixamo FBX clips author `Hips.quaternion` assuming a `0°` identity bind pose. Copying raw FBX `Hips.quaternion` tracks onto such a GLB flips the character **90° face-down horizontal** and twists crossfades. Fix it once during clip retargeting by premultiplying every `Hips` quaternion keyframe by the target skeleton's `hipsBindQuat`:
+
+```ts
+const hipsBindQuat = targetHipsBone.quaternion.clone(); // e.g., -90° around X
+const qRaw = new THREE.Quaternion();
+const qFixed = new THREE.Quaternion();
+const v = hipsQuatTrack.values;
+for (let i = 0; i < v.length; i += 4) {
+  qRaw.set(v[i], v[i + 1], v[i + 2], v[i + 3]);
+  qFixed.copy(hipsBindQuat).multiply(qRaw);
+  v[i] = qFixed.x; v[i + 1] = qFixed.y; v[i + 2] = qFixed.z; v[i + 3] = qFixed.w;
+}
+```
+
+### Detached Submesh / Cloth `vertexColors` Black-Mesh Trap
+
+DCC exports (especially cloaks, skirts, or vertex-painted weight masks) often include a `COLOR_0` attribute filled with black or pin weights. Three.js enables `material.vertexColors` automatically when `COLOR_0` is present, turning the mesh pitch black under PBR lighting. Inspect imported meshes and clear `mat.vertexColors = false; mat.needsUpdate = true;` whenever `COLOR_0` is a weight/mask channel rather than authored albedo tint.
 
 ## Asset Intake Checklist
 

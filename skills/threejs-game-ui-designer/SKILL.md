@@ -1,11 +1,13 @@
 ---
 name: threejs-game-ui-designer
-description: "Design premium Three.js game UI: HUDs, menus, overlays, pause/win/lose screens, settings, icon controls, touch UI, typography, responsive layout, safe areas, text fit, and UI/world cohesion."
+description: "Design premium Three.js game UI: HUDs, menus, overlays, pause/win/lose screens, settings, icon controls, touch UI, typography, responsive layout, safe areas, text fit, and UI/world cohesion. Use for HUD and overlay layout or styling; not for 3D scene rendering, shaders, or VFX (threejs-aaa-graphics-builder, threejs-aaa-vfx-builder)."
 ---
 
 # Three.js Game UI Designer
 
 Make game UI intentional, readable, responsive, and specific to the genre.
+
+Resolve `<this-skill-dir>` from the actual loaded skill file; resolve sibling skills beside it before runner-discovered alternatives.
 
 Preserve the user's requested scope and style. For a narrow HUD fix, retain the existing design and check the changed state and target viewports. For a complete UI pass, use the full workflow below. Mobile input is required when mobile is a target, not because a desktop-only game has UI.
 

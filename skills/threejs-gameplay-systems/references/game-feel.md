@@ -204,7 +204,15 @@ flashHit(material: THREE.MeshStandardMaterial, peak = 2.4, durationSec = 0.22): 
 }
 ```
 
-For big events (explosion, death), add a one-frame full-screen white flash: a `position: fixed` DOM `<div>` with `pointer-events: none`, animated `opacity: 0.8 -> 0` over ~90-120ms via `element.animate(...)`. Cheaper than a render-target flash and it never touches the 3D pipeline.
+For big events (explosion, death), a one-frame full-screen DOM white flash (`position: fixed; pointer-events: none`, `opacity: 0.8 -> 0` over ~90-120ms via `element.animate(...)`) works well for lightweight arcade games.
+
+## VFX Choreography Coupling
+
+`game-feel.md` owns **kinesthetic timing and camera/input weight** (hitstop, trauma shake, FOV punch, squash-stretch, gamepad rumble, audio ducking). For rich multi-layered 3D effects — bone-anchored hand/muzzle anticipation, telegraph geometry, 1–3 frame bespoke anime/optical impact frames, expanding radial shockwave refraction, depth-softened particles, and cooling aftermath — emit typed gameplay events (`castStart`, `impact`, `aftermath`) and hand off the visual pipeline to `threejs-aaa-vfx-builder`:
+
+- Pair **hitstop (60–90ms)** with `threejs-aaa-vfx-builder`'s **pre-impact hold + 1–3 frame optical impact frame** and **radial shockwave** so the freeze frames an unmistakable visual peak.
+- Drive VFX systems with the **real** render delta during impact frames/shockwaves (or a dedicated effect clock) while simulation crawls under `gameplayDelta`.
+- Gate strobing impact frames and heavy camera shake behind `setReducedMotion(true)`.
 
 ## Pickup Pop
 

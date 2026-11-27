@@ -1,6 +1,6 @@
 ---
 name: threejs-3d-generator
-description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games via the Tripo API. Use for text-to-3D, image-to-3D, game-ready GLB/FBX, characters, creatures, buildings, props, weapons, terrain, auto-rigging, animation retargeting, model texturing, voxel/LEGO stylization, and low-poly conversion. Pair with threejs-image-generator for concept and texture references first."
+description: "Generate, texture, rig, animate, stylize, convert, and download 3D assets for Three.js games via the Tripo API. Use for text-to-3D, image-to-3D, game-ready GLB/FBX hero characters, creatures, vehicles, buildings, props, weapons, auto-rigging, and animation retargeting; not for procedural kits (threejs-aaa-graphics-builder) or real-time VFX (threejs-aaa-vfx-builder). Pair with threejs-image-generator for concepts first."
 ---
 
 # Three.js 3D Generator
@@ -91,25 +91,22 @@ For background single-task generation omit `--wait`, retain the printed task ID/
 
 The helper retries safe status/download reads with bounded backoff, never paid task submissions. Missing credentials, exhausted credits, invalid input, transient errors, and uncertain submissions are reported distinctly. On interruption, resume the existing job rather than starting over. If a POST may have succeeded but no task ID was received, find it in provider history and use `resume CHECKPOINT --task-id RECOVERED_ID`; do not invent an ID or submit a replacement blindly. Without a recoverable ID, report the uncertainty before any potentially duplicate charge.
 
-For coordinated games follow the director's `references/asset-recovery.md`; continue independent implementation while generation runs. Explicitly procedural or no-external-service requests override generated-asset defaults. Record pending jobs and user corrections in the project note, preserving completed assets instead of repeating generation.
+For coordinated games follow `threejs-game-director/references/asset-recovery.md`; continue independent implementation while generation runs. Explicitly procedural or no-external-service requests override generated-asset defaults. Record pending jobs and user corrections in the project note, preserving completed assets instead of repeating generation.
 
-## Rigging and animation
+## Rigging and animation guardrails
 
-These rules prevent nearly every expensive failure. Full parameter tables and the measurements behind them are in `references/api-notes.md`.
+Hard-stop rules preventing the expensive failure modes (full measurements, preset tables, and engine fixes live in `references/api-notes.md` and `references/threejs-integration.md`):
 
-- Generate characters as one fused mesh: keep `--quad` and `--generate-parts` off (`generate_parts` disables texturing, `quad` forces FBX output).
-- Require full-body T-pose or A-pose, arms away from the body, symmetric, no props fused to the silhouette. Check the rendered preview really is in that pose before rigging; regenerate if not.
-- Run `animate_prerigcheck` first (it takes no model version, costs nothing) and use the detected `rig_type`. `riggable=false` means regenerate with a clearer pose, not force a rig.
-- **Rig version is routed by body plan.** Humanoids use `v1.0-20240301` — the anatomical skeleton with twist bones and the large `preset:biped:*` library. The v2.x limb-chain rigger went 0/16 on humanoid meshes, armored or not, always producing asymmetric chains. Creatures use `v2.5-20260210`. `character-pipeline` routes this automatically.
-- `riggable=true` does not guarantee a usable rig. Validate the skeleton before retargeting — `validate-rig rig-model.glb --rig-type biped` — checking both bone presence and chain depth, since a 1-bone leg warps every clip. A missing or malformed rig GLB is a failure, including with `--force-rig`. Auto-rigging is nondeterministic: on failure retry the rig task (~25 credits) within the chosen budget before regenerating the model. Armored hard-surface characters need the most retries.
-- `animate_retarget` takes the **rig** task ID, not the generation task ID. Non-biped rigs batch up to 5 presets per task; batched clips come back as `NlaTrack`, `NlaTrack.001`, … in request order, so map by index and rename after import.
-- Retarget v1.0 rigs with `--model-version default` — the enum rejects an explicit `v1.0-20240301` with HTTP 400 code 2017, but the server default handles them.
-- v1.0 retargets must use `--out-format fbx` (the script enforces it): Tripo's GLB bake on this path writes twist-bone transforms in the wrong space and limbs collapse into the torso. v2.5 creature retargets are fine as GLB.
-- **Never pass `--animate-in-place`.** It corrupts the bake — mirrored and crossed limbs on v1.0, exploded skinning on v2.5. Keep root motion baked and strip it at import instead; the engine snippet is in `references/threejs-integration.md`.
-- Creatures get one locomotion preset each, and there is no `preset:attack` (use `preset:slash` or `preset:shoot`). A creature's mesh stance drives how a preset reads — a quadruped walk on an upright dragon looks like a person walking, so generate creatures in the stance the animation expects.
-- Multi-mode creatures (a dragon that crawls and flies) need the same model rigged twice: the ground rig type for locomotion, `avian` for wing chains.
-- Use `--spec tripo` (default) when Tripo presets will be retargeted; `--spec mixamo` rigs cannot be retargeted by Tripo and are for external pipelines only.
-- After download, run `validate-animation clip.glb` (flags scale tracks, limb-stretching translation, extreme rotations, per-clip duration and channel coverage), then check `gltf.animations` names and counts before wiring the `AnimationMixer`.
+| Rule | Requirement |
+| --- | --- |
+| Source mesh | One fused mesh in full-body symmetric T-pose/A-pose (arms away, legs separated, complete head-to-feet body, no fused props). Keep `--quad` and `--generate-parts` off; verify `rendered_image` before rigging. |
+| Pre-rig check | Run free `animate_prerigcheck` first and use detected `rig_type`. `riggable=false` → regenerate pose, never force-rig. |
+| Rig version routing | Humanoids → `v1.0-20240301` (anatomical skeleton + `preset:biped:*`); creatures → `v2.5-20260210` (`character-pipeline` routes automatically). |
+| Mandatory rig gate | Run `validate-rig rig-model.glb --rig-type <type>` before spending retarget credits; retry degenerate rigs within budget before regenerating the model. |
+| Retarget input & version | Pass the **rig** task ID (not generation ID). On v1.0 rigs: one preset per task, `--model-version default`, `--out-format fbx` (GLB bakes corrupt twist bones). On v2.5 creatures: GLB is fine, up to 5 presets per task (map `NlaTrack*` by index). |
+| Root motion | **Never pass `--animate-in-place`** (corrupts limbs/skinning). Keep root motion baked and strip horizontal `Root.position` X/Z at import (`references/threejs-integration.md`). |
+| External rigs (`spec=mixamo`) | Only `--spec tripo` works with Tripo presets. Use `--spec mixamo` for external Mixamo/custom clips (and apply Blender Z-up Hips bind compensation from `references/threejs-integration.md` when retargeting onto Blender GLBs). |
+| Post-download QA | Run `validate-animation <clip>` and verify `gltf.animations` track counts before wiring `AnimationMixer`. Creatures have 1 locomotion preset each (use `preset:slash`/`preset:shoot` for biped attacks; rig a dragon twice for ground + `avian` wing chains). |
 
 ## Quality
 

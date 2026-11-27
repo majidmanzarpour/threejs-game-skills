@@ -83,6 +83,15 @@ Use a small audio manager instead of ad hoc `new Audio()` calls once a game has 
 - Do not trigger the same high-volume SFX every frame; add cooldowns or variant pools.
 - Pause/resume audio with the game pause state and page visibility.
 
+### Timeline-Synced VFX & Ability Audio
+
+When pairing with `threejs-aaa-vfx-builder` multi-phase effects (cast anticipation → release → impact → aftermath), drive audio from the same effect timeline rather than `setTimeout`:
+
+- Author discrete short cues per beat (e.g. `charge`, `launch`, `impact`, `tail`) or one beat-aligned cue sheet (`{ id, at }[]`).
+- Fire each cue once when `prevTime < cue.at && currTime >= cue.at` (`collectCrossedCues` in `threejs-aaa-vfx-builder/assets/vfx-kit/VfxTimeline.ts`).
+- On pause, reset, ability switch, or timeline scrub jump (`currTime < prevTime` or `dt > 0.25`), stop active ability sources and reset the cue cursor so scrubbing never stacks overlapping audio.
+- Match hitstop or slow-motion playback rates (`source.playbackRate.value = timeScale`) and duck ambience/music during major impact frames.
+
 Minimal Web Audio shape:
 
 ```ts

@@ -50,6 +50,12 @@ Match the genre: arcade racers need speed and status readability, fighters need 
 
 UI reads from a single source of truth and dispatches intents rather than mutating simulation internals. It updates on pause, restart, resize, orientation, mute, fail/win, score, health, boost, combo, inventory, and accessibility changes — with no stale values after a restart.
 
+## WebGL & Chromium Overlay Traps
+
+- **Pointer-event pass-through:** Give full-screen HUD/overlay wrapper containers `pointer-events: none` and opt in with `pointer-events: auto` only on interactive buttons/controls so empty HUD margins never swallow canvas drag, aim, or OrbitControls events.
+- **SVG `.hidden` specificity:** Never rely on a weak `.hidden { display: none }` utility on `<svg>` icons if a component rule sets `.icon svg { display: block }` with equal/higher specificity — use `[hidden] { display: none !important; }` or toggle explicit state classes.
+- **`<dialog>` + animated `backdrop-filter`:** Animating opacity/transform on a native `<dialog>` that also applies heavy `backdrop-filter: blur(...)` can cause Chromium text-compositing flicker over a WebGL canvas; prefer animating inner content opacity/transform while keeping the backdrop blur layer static or using crisp obsidian glass surfaces (`rgba(10, 14, 22, 0.82)` + `1px` subtle hairline border, avoiding redundant colored left-accent bars on compact cards).
+
 ## Recurring failures
 
-Generic stat-card HUD · nested cards and oversized decorative panels · UI covering threats, pickups, player, or the next decision · text explaining controls that should have been designed as affordances · ignored safe areas · touch controls that look right but emit nothing · layout shifting as values change · debug UI shipped as player UI.
+Generic stat-card HUD · nested cards and oversized decorative panels · UI covering threats, pickups, player, or the next decision · full-screen overlay containers eating canvas pointer events · text explaining controls that should have been designed as affordances · ignored safe areas · touch controls that look right but emit nothing · layout shifting as values change · debug UI shipped as player UI.

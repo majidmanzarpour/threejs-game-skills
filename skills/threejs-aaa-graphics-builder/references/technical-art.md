@@ -36,7 +36,9 @@ Shader and `onBeforeCompile` work earns its place through state readability (shi
 
 ## VFX
 
-Event-driven, tied to gameplay state, pooled, with geometries and materials reused:
+Event-driven, tied to gameplay state, pooled, with geometries and materials reused. For multi-phase combat/ability/spell/weapon/explosion VFX, depth-softened particles, flowmap shaders, dynamic trails/lightning, and optical impact post-passes, load `threejs-aaa-vfx-builder` (which also defines peak transparent-overdraw and dynamic-light VFX budgets).
+
+Baseline gameplay state cues:
 
 - Pickup: ring contraction, shard burst, score trail, brief HUD echo.
 - Hit/fail: impact ring, debris, damage flash, hit pause, camera impulse.
@@ -45,7 +47,7 @@ Event-driven, tied to gameplay state, pooled, with geometries and materials reus
 - Shield: refractive shell, rim pulse, absorbed-impact ripple, material swap.
 - Spawn/despawn: anticipation pulse, telegraph, dissolve or scale snap.
 
-Each effect should point at the player, a threat, a reward, or an impact, and clear the collision volume, the HUD, and the next decision. Heavy shake and strobe need a reduced-motion fallback.
+Each effect should point at the player, a threat, a reward, or an impact, and clear the collision volume, the HUD, and the next decision. Heavy shake, strobing impact frames, and flashes need a reduced-motion fallback.
 
 Threats read differently from rewards by shape and motion, not only hue; interactables separate from background by silhouette, value, and material. Anything conveyed by color alone needs a shape, icon, or motion backup.
 

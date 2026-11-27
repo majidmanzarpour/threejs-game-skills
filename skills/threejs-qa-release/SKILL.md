@@ -30,7 +30,7 @@ For a complete game use the full pass below. For narrow edits select checks cove
 7. When audio changed: user-gesture unlock, SFX triggers, ambience loop start and stop, pause and restart cleanup, mute and volume, decode errors.
 8. Decide on a visual test harness. For premium, release-ready, UI-heavy, or generated-asset work a harness is usually worth it; say so either way.
 9. Run the bot playtest (`tests/bot-playtest.template.ts` in scaffold games) for release-ready gameplay claims and report its metrics JSON.
-10. When animation changed, capture a short unpaused sequence and inspect locomotion, clip transitions, feet, rig deformation, and attack/contact timing using `references/visual-test-harness.md`.
+10. When animation or signature multi-phase VFX changed, capture a short unpaused sequence and inspect locomotion, clip transitions, feet, rig deformation, VFX anticipation → impact → aftermath timing, selective bloom readability, and attack/contact sync using `references/visual-test-harness.md`.
 
 Screenshots alone do not cover gameplay changes.
 
@@ -40,7 +40,7 @@ Screenshots alone do not cover gameplay changes.
 node <this-skill-dir>/scripts/inspect-threejs-canvas.mjs --manifest artifacts/evidence.json --url http://127.0.0.1:5188 --seed 42
 ```
 
-Declare the pass's viewport/state pairs in `artifacts/evidence.json` first, with a fresh run ID; the format and the test-hook contract are in the director's `references/evidence-manifest.md`. One command captures every declared pair in a single browser and prints one line per capture: PASS/FAIL, GPU, pixel metrics, over-budget rows, error counts, and the report and screenshot paths. Open a report file only when its line needs more detail. Include all requested states; do not remove a failing slot to make the manifest pass. For a one-off check, `--state <name> [--mobile]` captures a single view, and omitting `--state` checks only the current view. Scaffold games have their own copy as `npm run inspect:canvas`.
+Declare the pass's viewport/state pairs in `artifacts/evidence.json` first, with a fresh run ID; the format and the test-hook contract are in `threejs-game-director/references/evidence-manifest.md`. One command captures every declared pair in a single browser and prints one line per capture: PASS/FAIL, GPU, pixel metrics, over-budget rows, error counts, and the report and screenshot paths. Open a report file only when its line needs more detail. Include all requested states; do not remove a failing slot to make the manifest pass. For a one-off check, `--state <name> [--mobile]` captures a single view, and omitting `--state` checks only the current view. Scaffold games have their own copy as `npm run inspect:canvas`.
 
 The metrics are the Measured Evidence for the visual scorecard in `threejs-aaa-graphics-builder/references/visual-scorecard.md`. Over-budget rows need a documented tradeoff, and blank-canvas or error conditions exit non-zero.
 

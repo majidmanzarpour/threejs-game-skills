@@ -1,6 +1,6 @@
 ---
 name: threejs-game-director
-description: "Entrypoint for building, upgrading, and finishing Three.js browser games. Routes work across the sibling threejs-* skills for gameplay, graphics, UI, 3D/image/audio asset generation, debugging, and release. Use for any request to build, upgrade, polish, or ship a Three.js game as a whole, at any scope from a small arcade prototype to a premium release."
+description: "Entrypoint for building, upgrading, and finishing Three.js browser games. Routes work across the nine sibling threejs-* skills for gameplay, graphics, AAA VFX, UI, 3D/image/audio generation, debugging, and release. Use for any request to build, upgrade, polish, or ship a Three.js game as a whole, from a small arcade prototype to a premium release."
 ---
 
 # Three.js Game Director
@@ -25,20 +25,24 @@ Report what you ran and what you saw. If you couldn't run something, say that in
 
 ## Sibling skills
 
-Use the actual loaded skill directory as `<director-skill-dir>`. Resolve siblings through `../<skill>/SKILL.md` there. If absent, use the runner's discovered skill path, then a matching repo `skills/` directory or the active runner's install location (`~/.agents/skills` for Codex, `~/.claude/skills` for Claude Code, legacy `~/.codex/skills` last). Resolve references relative to the selected skill; avoid mixing installed versions.
+Use the actual loaded skill directory as `<director-skill-dir>`. Resolve siblings through `../<skill>/SKILL.md` there. If absent, use the runner's discovered skill path, then a matching repo `skills/` directory or the active runner's install location (`~/.agents/skills` for Codex, `~/.claude/skills` for Claude Code, `~/.gemini/config/skills` for Antigravity, legacy `~/.codex/skills` last). Resolve references relative to the selected skill; avoid mixing installed versions.
 
-| Phase | Skill |
-| --- | --- |
-| Design brief, core loop, levels, entities, input, camera, physics, feel | `threejs-gameplay-systems` |
-| Models, materials, shaders, VFX, lighting, render budget, scorecard | `threejs-aaa-graphics-builder` |
-| HUD, menus, overlays, responsive and touch UI | `threejs-game-ui-designer` |
-| Blank canvas, render/runtime bugs, mobile input, profiling | `threejs-debug-profiler` |
-| Browser QA, screenshots, canvas pixels, bot playtest, production build | `threejs-qa-release` |
-| Characters, vehicles, weapons, buildings, rigs, animation | `threejs-3d-generator` |
-| Concepts, textures, skies, logos, icons, GUI art, image-to-3D inputs | `threejs-image-generator` |
-| SFX, music, ambience, UI sounds, announcer and dialogue | `threejs-audio-generator` |
+| Phase | Owns | Skill |
+| --- | --- | --- |
+| 1. Loop & feel | Design brief, core loop, levels, entities, input, camera, physics, hitstop/shake | `threejs-gameplay-systems` |
+| 2. World & look | Hero/world models, PBR material kits, lighting, surface shaders, budgets, scorecard | `threejs-aaa-graphics-builder` |
+| 3. Signature VFX | Combat/ability/weapon/explosion/shield VFX, soft particles, trails, optical impact post | `threejs-aaa-vfx-builder` |
+| 4. Interface | HUD, menus, overlays, responsive and touch UI | `threejs-game-ui-designer` |
+| 5. Triage & perf | Blank canvas, render/shader/NaN/runtime bugs, mobile input, profiling | `threejs-debug-profiler` |
+| 6. QA & ship | Browser QA, screenshots, canvas pixels, motion captures, bot playtest, production build | `threejs-qa-release` |
+| Asset: 3D | Generated characters, vehicles, weapons, buildings, rigs, animation | `threejs-3d-generator` |
+| Asset: 2D | Concepts, textures, skies, logos, icons, GUI art, image-to-3D inputs | `threejs-image-generator` |
+| Asset: Audio | SFX, music, ambience, UI sounds, announcer and dialogue | `threejs-audio-generator` |
 
-For complete games and broad upgrades, read all five production skills before implementing, plus generators whose trigger surfaces exist. Read each phase's required references at phase entry. For narrow edits, load the affected specialists and references, preserving unrelated systems. Record actual loaded resources when reporting skill use; a phase label is not a skill invocation.
+**Phase-gated loading (do not dump every skill into context upfront):**
+- **Complete games / broad upgrades:** Load `threejs-gameplay-systems` first to establish the design brief and playable loop (kick off async 3D/image/audio generation early when external assets are in scope). Load `threejs-aaa-graphics-builder` at Phase 2, `threejs-aaa-vfx-builder` when combat/ability/impact/environmental VFX enter scope, `threejs-game-ui-designer` once game state is stable, `threejs-debug-profiler` on defects or bottlenecks, and `threejs-qa-release` for browser/release verification. Read each skill's reference files only when that task begins.
+- **Narrow edits:** Load only the affected specialist(s) and exact reference row(s), preserving unrelated systems.
+- Record actual loaded resources when reporting skill use; a phase label is not a skill invocation.
 
 ## Continuity and early quality
 
@@ -68,7 +72,7 @@ Read `references/asset-recovery.md` when sourcing external assets or recovering 
 
 ## Verification ownership
 
-The lead consolidates specialist results into one check set appropriate to the change. Full games need production build, real-input progression and retry, target-viewport captures, renderer diagnostics, and the premium scorecard when requested. Small edits need affected behavior/layout checks. Repeat checks only after relevant changes, failures, or unresolved concerns. For animated work include motion captures covering locomotion, transitions, and contact timing, not only stills.
+The lead consolidates specialist results into one check set appropriate to the change. Full games need production build, real-input progression and retry, target-viewport captures, renderer diagnostics, and the premium scorecard when requested. Small edits need affected behavior/layout checks. Repeat checks only after relevant changes, failures, or unresolved concerns. For animated models or signature multi-phase VFX, include unpaused motion captures covering anticipation, transitions, impact/contact timing, and aftermath — not only stills.
 
 ## Getting started and checking output
 

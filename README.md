@@ -1,10 +1,10 @@
 # Three.js Game Skills
 
-Self-contained Codex and Claude Code skills for building playable, polished Three.js browser games. Install the skills, then ask your agent to use `threejs-game-director`; the director routes gameplay, graphics, UI, asset generation, audio, debugging, and release verification without requiring users to choose every specialist skill manually.
+Self-contained Codex, Claude Code, and Antigravity skills for building playable, polished Three.js browser games. Install the skills, then ask your agent to use `threejs-game-director`; the director routes gameplay, graphics, AAA VFX, UI, asset generation, audio, debugging, and release verification without requiring users to choose every specialist skill manually.
 
-The package includes the runtime materials agents need: `SKILL.md` files, references, helper scripts, and a Vite + TypeScript + Three.js scaffold bundled inside the relevant skill folders. Generated games ship with deterministic test hooks, a seeded RNG, and Playwright templates for smoke tests, visual-regression baselines, and bot playtests so agents can verify their own work end to end.
+The package includes the runtime materials agents need: `SKILL.md` files, references, helper scripts, a drop-in TypeScript VFX starter kit, and a Vite + TypeScript + Three.js scaffold bundled inside the relevant skill folders. Generated games ship with deterministic test hooks, a seeded RNG, and Playwright templates for smoke tests, visual-regression baselines, and bot playtests so agents can verify their own work end to end.
 
-One shared pack of nine skills serves Codex and Claude Code. The director preserves your scope and art direction, uses specialist guidance automatically, delegates independent work when the runner supports it, and scales verification to the change. Full games get a complete production pass; a small HUD fix stays a small HUD fix. No particular model or paid API key is required.
+One shared pack of ten skills serves Codex, Claude Code, and Antigravity. The director preserves your scope and art direction, uses specialist guidance automatically, delegates independent work when the runner supports it, and scales verification to the change. Full games get a complete production pass; a small HUD fix stays a small HUD fix. No particular model or paid API key is required.
 
 Created by [Majid Manzarpour](https://x.com/majidmanzarpour).
 
@@ -32,13 +32,20 @@ Install all skills for Claude Code:
 npx skills add majidmanzarpour/threejs-game-skills --skill '*' -a claude-code -g -y
 ```
 
-If your installed `skills` CLI does not support one of these targets, install from a cloned checkout instead: `./install.sh --codex` for Codex, `./install.sh --claude` for Claude Code, or `./install.sh --all` for both.
+Install all skills for Antigravity:
+
+```bash
+npx skills add majidmanzarpour/threejs-game-skills --skill '*' -a antigravity -g -y
+```
+
+If your installed `skills` CLI does not support one of these targets, install from a cloned checkout instead: `./install.sh --codex` for Codex, `./install.sh --claude` for Claude Code, `./install.sh --antigravity` for Antigravity, or `./install.sh --all` for Codex and Claude.
 
 For local development from a cloned checkout:
 
 ```bash
 ./install.sh --codex
 ./install.sh --claude
+./install.sh --antigravity
 ./install.sh --all
 ```
 
@@ -50,24 +57,25 @@ The local installer copies `skills/` into the selected agent skills directory. I
 
 ## Use The Skills
 
-After installing, open Codex or Claude Code in an empty project folder, or in an existing Three.js game you want to improve. Then prompt the agent with the outcome you want and name the director skill:
+After installing, open Codex, Claude Code, or Antigravity in an empty project folder, or in an existing Three.js game you want to improve. Then prompt the agent with the outcome you want and name the director skill:
 
 ```text
 Use threejs-game-director to build a premium futuristic tower defense game from scratch.
-Automatically use the relevant gameplay, graphics, UI, asset generation, audio, debug,
+Automatically use the relevant gameplay, graphics, VFX, UI, asset generation, audio, debug,
 and QA skills. Build a playable loop first, then iterate until it passes browser,
 mobile, visual, UI, performance, and release checks.
 ```
 
-Both runners share the same `SKILL.md` files and auto-discover the skills once installed; the prompt above works in either:
+All runners share the same `SKILL.md` files and auto-discover the skills once installed; the prompt above works in any of them:
 
 - **Claude Code** reads skills from `~/.claude/skills` and routes from each `SKILL.md` description. Invoke the director with `/threejs-game-director`, or just name it in a prompt — it loads the sibling skills itself.
 - **Codex** discovers global skills in `~/.agents/skills` through the public install above. Each skill's `agents/openai.yaml` supplies its display name and a short `$skill-name` kickoff prompt. Use `$threejs-game-director` or name it naturally. The checkout's local `--codex` installer also supports the legacy `~/.codex/skills` location; avoid installing duplicate copies in both roots.
+- **Antigravity** discovers global skills in `~/.gemini/config/skills` (via the public install above or `./install.sh --antigravity`) and workspace skills in `.agents/skills`. Name `threejs-game-director` in your prompt — it activates via progressive disclosure and loads sibling skills automatically.
 
 The agent should:
 
 - Load `threejs-game-director` first for broad game work.
-- Load sibling skills for gameplay systems, AAA graphics, UI, debug/profile, QA/release, 3D generation, image generation, and audio generation when the request calls for them.
+- Load sibling skills phase-by-phase for gameplay systems, AAA graphics, AAA VFX, UI, debug/profile, QA/release, 3D generation, image generation, and audio generation when the request calls for them.
 - Use the bundled scaffold internally when starting from an empty folder.
 - Create or update the game code in your project.
 - Establish art direction, gameplay camera scale, and a representative playable scene before expanding levels or asset families.
@@ -119,7 +127,7 @@ Windows PowerShell, persistent for your user account:
 [Environment]::SetEnvironmentVariable("ELEVENLABS_API_KEY", "...", "User")
 ```
 
-After setting persistent Windows variables, restart your terminal, Codex, or Claude Code so the agent process can see the new environment.
+After setting persistent Windows variables, restart your terminal, Codex, Claude Code, or Antigravity so the agent process can see the new environment.
 
 The director skill includes a credential probe that sources common shell profiles before deciding a key is missing. Run it from wherever you installed the skills:
 
@@ -128,6 +136,8 @@ The director skill includes a credential probe that sources common shell profile
 bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 # Codex
 bash ~/.agents/skills/threejs-game-director/scripts/probe_asset_credentials.sh
+# Antigravity
+bash ~/.gemini/config/skills/threejs-game-director/scripts/probe_asset_credentials.sh
 ```
 
 It prints `TRIPO_API_KEY=SET|MISSING` (and the same for Gemini and ElevenLabs) without ever printing key values.
@@ -144,7 +154,8 @@ Provider notes:
 
 - Use `threejs-game-director` for complete games, major upgrades, premium polish, release-ready work, or anything broad.
 - Use `threejs-gameplay-systems` for mechanics, architecture, input, camera, physics, scoring, objectives, and game feel.
-- Use `threejs-aaa-graphics-builder` when screenshots look basic or the game needs stronger models, materials, lighting, VFX, world detail, or render polish.
+- Use `threejs-aaa-graphics-builder` when screenshots look basic or the game needs stronger models, materials, lighting, world detail, surface shaders, or render polish.
+- Use `threejs-aaa-vfx-builder` for AAA combat, ability, spell, weapon, explosion, shield, trail, boost, or environmental VFX, depth-softened particles, custom VFX shaders, and optical impact post-passes.
 - Use `threejs-game-ui-designer` for HUDs, menus, overlays, responsive layout, safe areas, icons, touch controls, and text fit.
 - Use `threejs-debug-profiler` for black screens, runtime errors, loading issues, resize/mobile bugs, performance, draw calls, triangles, textures, and memory.
 - Use `threejs-qa-release` for production builds, browser verification, screenshots, canvas pixels, mobile checks, release risk reports, and static-hosting readiness.
@@ -168,9 +179,17 @@ For visual upgrades:
 
 ```text
 Use threejs-game-director to upgrade this Three.js game from prototype visuals to
-premium browser-game quality. Use the AAA graphics, UI, image, 3D, audio, debug,
+premium browser-game quality. Use the AAA graphics, AAA VFX, UI, image, 3D, audio, debug,
 and QA skills as needed. Include the visual scorecard and evidence from active-play
 screenshots.
+```
+
+For AAA combat or ability VFX:
+
+```text
+Use threejs-aaa-vfx-builder to upgrade this game's spells, weapons, and impact effects
+with distinct 3D silhouettes, anticipation -> impact -> aftermath choreography,
+depth-softened particles, selective HDR bloom, and motion verification.
 ```
 
 For an existing broken game:
@@ -209,16 +228,17 @@ For a complete game, the skills should gather evidence before claiming success. 
 - visual test harness decision (screenshot baselines added/extended/skipped) for release-ready visual QA
 - bot playtest metrics for release-ready gameplay claims
 - generated asset paths and task IDs, or the credential probe output, when external assets are in scope
-- short motion captures for animated models: rig deformation, clip transitions, foot sliding, and attack/contact timing
+- short motion captures for animated models and signature multi-phase VFX: rig deformation, clip transitions, foot sliding, anticipation → impact → aftermath timing, and attack/contact sync
 - a current-run manifest declaring required viewport/state captures and artifact paths, with acknowledged states and a matching run ID
 
 Premium/AAA claims should not rely on a static scene, placeholder cubes, generic stat-card HUDs, or unverified screenshots. The game should have an active playable loop and a filled visual scorecard.
 
 ## Skill System
 
-- `threejs-game-director`: main entrypoint for complete game builds: scope and quality bar, specialist routing, bounded delegation, continuity notes, asset recovery, current-run evidence.
+- `threejs-game-director`: main entrypoint for complete game builds: scope and quality bar, phase-gated specialist routing, bounded delegation, continuity notes, asset recovery, current-run evidence.
 - `threejs-gameplay-systems`: playable loop, architecture, game design and level design, mechanics, entities, controls, camera, physics selection, and game feel (hitstop, screenshake, easing, impact feedback).
-- `threejs-aaa-graphics-builder`: visual scorecard with calibration anchors, technical art budgets, shader/material cookbook, asset architecture, models, materials, VFX, render polish.
+- `threejs-aaa-graphics-builder`: visual scorecard with calibration anchors, technical art budgets, PBR/surface shader cookbook, asset architecture, models, materials, lighting, render polish.
+- `threejs-aaa-vfx-builder`: real-time AAA game VFX: 5-beat choreography, anti-circle 3D topology diversity, 2-pass HDR `DepthTexture` soft particles & contact rims, procedural noise/flowmap atlases, dynamic trails/lightning, bone-anchored cast/muzzle anticipation, and optical impact post-passes.
 - `threejs-game-ui-designer`: HUDs, menus, overlays, responsive UI, icons, safe areas, UI states.
 - `threejs-debug-profiler`: scene/runtime/render bugs, mobile bugs, performance profiling, renderer metrics.
 - `threejs-qa-release`: browser QA, screenshots, canvas pixels with measured metrics, visual test harness, bot playtests, responsive checks, production build, release risk report.
@@ -232,6 +252,7 @@ Installed skills are self-contained. They do not depend on root docs, root scaff
 
 - `skills/`: the full public package. Each skill owns its required `SKILL.md`, `references/`, `scripts/`, and `assets/`.
 - `skills/threejs-gameplay-systems/assets/threejs-vite-game/`: packaged game scaffold used by the skills when starting from an empty project. Ships deterministic test hooks (`__THREE_GAME_TEST_HOOKS__`), a seeded RNG, and `tests/` templates for smoke tests, visual-regression baselines, and bot playtests.
+- `skills/threejs-aaa-vfx-builder/assets/vfx-kit/`: drop-in strict-TypeScript VFX starter kit (deterministic timeline curves, procedural seamless 4-channel noise atlas & 2D curl flowmap, parametric VFX geometry, camera-facing lightning/trails, NaN-safe depth-softened shaders, and optical `ImpactPostPass`).
 - `skills/threejs-qa-release/scripts/inspect-threejs-canvas.mjs`: packaged browser/canvas inspection helper: pixel metrics and render-budget rows. `--manifest` captures every declared viewport/state in one browser and prints one summary line per capture; explicit `--state` captures require an awaited matching acknowledgment.
 - `skills/threejs-aaa-graphics-builder/assets/scorecard-anchors/`: calibration reference screenshots for the visual scorecard.
 - `skills/threejs-game-director/scripts/check_evidence.py`: `--manifest` validates a declared capture set and run ID without scanning historical reports. The legacy `--report` interface checks cited artifact files but cannot prove freshness or complete capture coverage. Neither replaces visual inspection or gameplay tests.

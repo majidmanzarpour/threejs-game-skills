@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: ./install.sh [--codex] [--claude] [--all] [--agents] [--force] [--prune-managed]
+Usage: ./install.sh [--codex] [--claude] [--antigravity] [--all] [--agents] [--force] [--prune-managed]
 
 Installs the Three.js game skills from ./skills into local agent skill
 directories.
@@ -11,12 +11,14 @@ directories.
 Recommended:
   ./install.sh --codex
   ./install.sh --claude
+  ./install.sh --antigravity
   ./install.sh --all
 
 Targets:
-  --codex   Install into ${CODEX_HOME:-$HOME/.codex}/skills
-  --claude  Install into ${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}
-  --all     Install into Codex and Claude
+  --codex        Install into ${CODEX_HOME:-$HOME/.codex}/skills
+  --claude       Install into ${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}
+  --antigravity  Install into ${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/config/skills}
+  --all          Install into Codex and Claude
 
 Advanced:
   --agents  Install into ${AGENTS_SKILLS_DIR:-$HOME/.agents/skills}
@@ -33,6 +35,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="$script_dir/skills"
 codex="false"
 claude="false"
+antigravity="false"
 agents="false"
 force="false"
 prune="false"
@@ -45,6 +48,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --claude)
       claude="true"
+      shift
+      ;;
+    --antigravity)
+      antigravity="true"
       shift
       ;;
     --all)
@@ -75,7 +82,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$codex" != "true" && "$claude" != "true" && "$agents" != "true" ]]; then
+if [[ "$codex" != "true" && "$claude" != "true" && "$antigravity" != "true" && "$agents" != "true" ]]; then
   usage
   exit 1
 fi
@@ -164,6 +171,10 @@ fi
 
 if [[ "$claude" == "true" ]]; then
   install_skills "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" "Claude"
+fi
+
+if [[ "$antigravity" == "true" ]]; then
+  install_skills "${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/config/skills}" "Antigravity"
 fi
 
 if [[ "$agents" == "true" ]]; then

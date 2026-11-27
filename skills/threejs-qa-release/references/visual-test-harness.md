@@ -58,4 +58,6 @@ For substantial animated gameplay, rig, or clip changes, capture a short unpause
 
 Inspect for frozen rigs, collapsing or stretching limbs, foot sliding relative to world displacement, root-motion double application, snapping transitions, looping attacks, and hit/contact events that disagree with the visible motion. Note clip names, durations, mixer action changes, and event times alongside observed defects. Test active movement and interruption through real input, not only a forced pose. Rigid-body-only games need checks of their actual physics/motion, not an invented skeleton audit.
 
+For signature multi-phase VFX (`threejs-aaa-vfx-builder`), also capture an unpaused cast/trigger sequence and verify anticipation → impact → aftermath readability, selective bloom restraint (no full-screen blowout or HDR `NaN` blackouts), clean depth-softened floor/wall contacts, and `setReducedMotion(true)` impact-frame suppression.
+
 Declare motion files with the current-run capture manifest described in the director's `references/evidence-manifest.md`. File existence alone cannot establish good motion. Keep the detailed visual decision, states covered, commands, paths, thresholds, masks, motion findings, and flake risks in the lead's consolidated evidence artifact.

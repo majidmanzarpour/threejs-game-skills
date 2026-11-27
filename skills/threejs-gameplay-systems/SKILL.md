@@ -1,6 +1,6 @@
 ---
 name: threejs-gameplay-systems
-description: "Build and iterate playable Three.js game systems: starter scaffold, architecture, design briefs, core loops, level and encounter design, entities, input, camera, collision and physics, scoring, objectives, and game feel. Use for first playable slices, new Vite/TypeScript/Three.js setups, level/arena/track/wave/hole/puzzle design, combat encounters, difficulty tuning, and juice."
+description: "Build and iterate playable Three.js game systems: starter scaffold, architecture, design briefs, core loops, level and encounter design, entities, input, camera, collision and physics, scoring, objectives, and kinesthetic game feel (hitstop, trauma shake, FOV punch, squash-stretch). Use for first playable slices, new Vite/TS/Three.js setups, mechanics, physics, and feel; not for custom 3D VFX shaders (threejs-aaa-vfx-builder) or art/lighting passes (threejs-aaa-graphics-builder)."
 ---
 
 # Three.js Gameplay Systems
@@ -49,7 +49,7 @@ For broad game creation or a substantial design change, write three short artifa
 
 For coordinated work, define input intents, entity/asset interfaces, and events before delegating independent modules. Report changed behavior and local checks to the lead, who owns the consolidated browser pass. When a user changes requirements, update the existing brief and pending tasks instead of restarting completed work.
 
-Gameplay code emits audio events; `threejs-audio-generator` produces the actual assets and the runtime audio matrix.
+Gameplay code emits typed gameplay events (cast, impact, pickup, boost, hit, fail); `threejs-aaa-vfx-builder` consumes them for layered 3D/optical VFX and `threejs-audio-generator` produces the synced runtime audio matrix.
 
 ## Stack
 

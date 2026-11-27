@@ -2,7 +2,9 @@
 
 Concrete material, shader, and post-processing recipes. Use with `technical-art.md` (budgets, when shader work is justified) and `authoring-recipes.md` (render pipeline, lighting, fog, post).
 
-Targets three.js `^0.184`; imports use the `three/addons/*` alias (maps to `examples/jsm`). Every entry lists **When**, **Cost** (draw calls / fill rate / compile), and **Read** (the rule: effects clarify gameplay, never hide missing geometry).
+Targets three.js `^0.184`; imports use the `three/addons/*` alias (maps to `examples/jsm`). Every entry lists **When**, **Cost** (draw calls / fill rate / compile), and **Read** (the rule: effects clarify gameplay, never hide missing geometry). For multi-phase combat/ability VFX, depth-softened particles, flowmap atlases, and optical impact post-passes, use `threejs-aaa-vfx-builder`.
+
+> **HDR NaN-safety rule:** Under a `HalfFloatType` `EffectComposer` + `UnrealBloomPass`, a single `NaN` pixel propagates across the blur mip chain and blacks out the entire screen. In GLSL ES 3.0, `pow(x, y)` is undefined whenever `x < 0` (or `x == 0 && y <= 0`), even for `pow(x, 2.0)`. Use `x * x` for squares, `pow(max(0.0001, x), p)` for fractional powers, and `normalize(v + vec3(1e-5))` on vectors that can collapse to zero.
 
 ## Prerequisite: Renderer And Environment Map
 
@@ -101,7 +103,7 @@ material.onBeforeCompile = (shader) => {
     shader.fragmentShader.replace(
       '#include <emissivemap_fragment>',
       `#include <emissivemap_fragment>
-       float fres = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), uRimPower);
+       float fres = pow(max(0.0001, 1.0 - saturate(dot(normalize(vNormal + vec3(1e-5)), normalize(vViewPosition + vec3(1e-5))))), uRimPower);
        totalEmissiveRadiance += uRimColor * fres * uRimStrength;`
     );
 };
@@ -219,9 +221,9 @@ const sky = new THREE.Mesh(
       uniform vec3 uTop, uHorizon, uSunColor, uSunDir;
       void main(){
         float h = clamp(vDir.y * 0.5 + 0.5, 0.0, 1.0);
-        vec3 col = mix(uHorizon, uTop, pow(h, 0.6));
-        float d = clamp(dot(normalize(vDir), normalize(uSunDir)), 0.0, 1.0);
-        col += uSunColor * (pow(d, 800.0) + pow(d, 8.0) * 0.25); // disc + halo
+        vec3 col = mix(uHorizon, uTop, pow(max(0.0001, h), 0.6));
+        float d = clamp(dot(normalize(vDir + vec3(1e-5)), normalize(uSunDir + vec3(1e-5))), 0.0, 1.0);
+        col += uSunColor * (pow(max(0.0001, d), 800.0) + pow(max(0.0001, d), 8.0) * 0.25); // disc + halo
         gl_FragColor = vec4(col, 1.0);
       }`,
   })
@@ -236,7 +238,7 @@ scene.add(sky);
 
 ## Post-Processing Chain
 
-Finishing pass only. Move tone mapping/sRGB to `OutputPass`; keep `renderer.toneMapping` set so it reads it.
+Finishing pass only. **Always pass an explicit `HalfFloatType` render target to `EffectComposer`** — default `new EffectComposer(renderer)` allocates an 8-bit `UnsignedByteType` buffer that clamps HDR `emissiveIntensity > 1.0` to `1.0` before `UnrealBloomPass` sees it, breaking selective bloom. Place `OutputPass` before display-space overlays (vignette, optical impact frames) so tone mapping and sRGB conversion happen once on the HDR scene.
 
 ```ts
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -245,18 +247,26 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-const composer = new EffectComposer(renderer);
+// Explicit HalfFloatType MSAA target preserves HDR > 1.0 values for selective bloom.
+const hdrTarget = new THREE.WebGLRenderTarget(innerWidth, innerHeight, {
+  type: THREE.HalfFloatType,
+  samples: renderer.capabilities.isWebGL2 ? 4 : 0,
+});
+const composer = new EffectComposer(renderer, hdrTarget);
+composer.setPixelRatio(Math.min(devicePixelRatio, 2));
 composer.addPass(new RenderPass(scene, camera));
 
 // UnrealBloomPass(resolution, strength, radius, threshold)
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight),
-  0.45,  // strength: 0.35-0.6
-  0.3,   // radius: 0.2-0.4
-  0.85); // threshold: only pixels brighter than this bloom
+  0.38,  // strength: 0.25-0.5
+  0.28,  // radius: 0.2-0.35 (tight halo keeps graphic edges crisp)
+  1.05); // threshold > 1.0: ONLY true HDR emissives bloom, never white walls/skies
 composer.addPass(bloom);
 
+composer.addPass(new OutputPass()); // Tone mapping + sRGB on the HDR buffer
+
 const VignetteShader = {
-  uniforms: { tDiffuse: { value: null }, uStrength: { value: 0.85 }, uSize: { value: 0.72 } },
+  uniforms: { tDiffuse: { value: null }, uStrength: { value: 0.35 }, uSize: { value: 0.78 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: `uniform sampler2D tDiffuse; uniform float uStrength, uSize; varying vec2 vUv;
     void main(){
@@ -266,16 +276,15 @@ const VignetteShader = {
       gl_FragColor = c;
     }`,
 };
-composer.addPass(new ShaderPass(VignetteShader));
-composer.addPass(new OutputPass()); // ALWAYS last: tone mapping + sRGB
+composer.addPass(new ShaderPass(VignetteShader)); // Display-space finishing pass
 
 // loop: composer.render() instead of renderer.render()
-// resize: composer.setSize(w, h); composer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// resize: composer.setPixelRatio(Math.min(devicePixelRatio, 2)); composer.setSize(w, h); bloom.resolution.set(w, h);
 ```
 
-- **Bloom rule:** bloom sells authored emissive (threshold 0.85 keeps mid-bright materials out). It must never be the main source of detail — if a shape only reads because it glows, the geometry is missing.
-- **Vignette cost:** one full-screen ShaderPass; keep `uStrength` subtle, never darken the play path.
-- **Mobile:** the composer allocates full-resolution HDR targets, so cost scales with DPR². Cap DPR before adding passes. On low-end, skip the composer (call `renderer.render`) or run bloom-only via `composer.setPixelRatio(Math.min(devicePixelRatio, 1.25))`. Compare screenshots with post on/off and profile.
+- **Bloom rule:** selective HDR bloom (`threshold >= 1.05` on `HalfFloatType`) sells authored emissive (`emissiveIntensity: 1.5–3.5`) without washing out bright lit surfaces. Bloom must never replace authored geometry.
+- **Vignette & optical VFX:** keep `uStrength` subtle so the play path stays clear. For radial optical shockwaves, heat-haze, lensing, or 1–3 frame impact flashes, use `threejs-aaa-vfx-builder` (`ImpactPostPass`).
+- **Mobile:** HDR MSAA targets scale with `DPR²`. Drop `samples` to `0` and cap DPR to `1.25–1.5` before adding passes; on low-end devices bypass the composer (`renderer.render`) and compare screenshots/FPS with post on vs off.
 
 ## Cheap Tricks
 
